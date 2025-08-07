@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Tagda Fun",
+    "slug": "tagdafun",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/tagdafun-main-logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/tagdafun-main-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF6B00"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tagdafun.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/tagdafun-main-logo.png",
+        "backgroundColor": "#FF6B00"
+      },
+      "package": "com.tagdafun.app"
+    },
+    "web": {
+      "favicon": "./assets/tagdafun-main-logo.png"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0d2a7e00-7de0-4a52-aa51-43a90adfb50b"
+      }
+    },
+    "owner": "devmanushraky",
+    "newArchEnabled": true
+  }
+} 

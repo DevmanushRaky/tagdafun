@@ -1,13 +1,22 @@
 {
   "name": "tagdafun",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "ts:check": "tsc --noEmit"
+    "ts:check": "tsc --noEmit",
+    "build:android": "eas build --platform android --profile production",
+    "build:android-preview": "eas build --platform android --profile preview",
+    "build:android-dev": "eas build --platform android --profile development",
+    "build:ios": "eas build --platform ios --profile production",
+    "submit:android": "eas submit --platform android",
+    "submit:ios": "eas submit --platform ios",
+    "build:script": "powershell -ExecutionPolicy Bypass -File build-android.ps1",
+    "deploy:android": "npm run build:android && npm run submit:android",
+    "deploy": "eas build --platform android --profile production"
   },
   "dependencies": {
     "expo": "~52.0.0",

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tagda Fun",
     "slug": "tagdafun",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/tagdafun-main-logo.png",
     "userInterfaceStyle": "light",
@@ -23,7 +23,10 @@
         "foregroundImage": "./assets/tagdafun-main-logo.png",
         "backgroundColor": "#FF6B00"
       },
-      "package": "com.tagdafun.app"
+      "package": "com.tagdafun.app",
+      "versionCode": 2,
+      "permissions": [],
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.tagdafun.app"
     },
     "web": {
       "favicon": "./assets/tagdafun-main-logo.png"

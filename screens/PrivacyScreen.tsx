@@ -1,8 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { PrivacyScreenProps } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
+import { COLORS, TYPOGRAPHY } from '../constants/theme';
 
 export default function PrivacyScreen({ navigation }: PrivacyScreenProps): JSX.Element {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -11,31 +15,31 @@ export default function PrivacyScreen({ navigation }: PrivacyScreenProps): JSX.E
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Privacy Policy</Text>
+          <Text style={styles.title}>{t('privacy.title')}</Text>
           
           <View style={styles.policyContainer}>
             <Text style={styles.policyText}>
-              This app does not collect or store any personal information.
+              {t('privacy.intro')}
             </Text>
           </View>
 
           <View style={styles.infoContainer}>
-            <Text style={styles.infoTitle}>What we don't do:</Text>
-            <Text style={styles.infoText}>• Collect personal data</Text>
-            <Text style={styles.infoText}>• Store user information</Text>
-            <Text style={styles.infoText}>• Track your activity</Text>
-            <Text style={styles.infoText}>• Share data with third parties</Text>
+            <Text style={styles.infoTitle}>{t('privacy.section.dont')}</Text>
+            <Text style={styles.infoText}>• {t('privacy.dont.collect')}</Text>
+            <Text style={styles.infoText}>• {t('privacy.dont.store')}</Text>
+            <Text style={styles.infoText}>• {t('privacy.dont.track')}</Text>
+            <Text style={styles.infoText}>• {t('privacy.dont.share')}</Text>
           </View>
 
           <View style={styles.infoContainer}>
-            <Text style={styles.infoTitle}>What we do:</Text>
-            <Text style={styles.infoText}>• Generate random numbers locally</Text>
-            <Text style={styles.infoText}>• Provide a fun, simple experience</Text>
-            <Text style={styles.infoText}>• Respect your privacy</Text>
+            <Text style={styles.infoTitle}>{t('privacy.section.do')}</Text>
+            <Text style={styles.infoText}>• {t('privacy.do.local')}</Text>
+            <Text style={styles.infoText}>• {t('privacy.do.simple')}</Text>
+            <Text style={styles.infoText}>• {t('privacy.do.respect')}</Text>
           </View>
 
           <Text style={styles.footerText}>
-            Your privacy is important to us. Enjoy the app!
+            {t('privacy.footer')}
           </Text>
         </View>
       </ScrollView>
@@ -46,7 +50,7 @@ export default function PrivacyScreen({ navigation }: PrivacyScreenProps): JSX.E
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -59,52 +63,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#002244',
+    ...TYPOGRAPHY.h1,
+    color: COLORS.secondary,
     marginBottom: 30,
     textAlign: 'center',
   },
   policyContainer: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS.surface,
     padding: 20,
     borderRadius: 15,
     marginBottom: 30,
     borderLeftWidth: 4,
-    borderLeftColor: '#FF6B00',
+    borderLeftColor: COLORS.primary,
   },
   policyText: {
-    fontSize: 18,
-    color: '#002244',
+    ...TYPOGRAPHY.bodyBold,
+    color: COLORS.secondary,
     textAlign: 'center',
-    fontWeight: '600',
     lineHeight: 26,
   },
   infoContainer: {
-    backgroundColor: 'white',
+    backgroundColor: COLORS.background,
     padding: 20,
     borderRadius: 15,
     marginBottom: 20,
     width: '100%',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.border,
   },
   infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FF6B00',
+    ...TYPOGRAPHY.h3,
+    color: COLORS.primary,
     marginBottom: 15,
     textAlign: 'center',
   },
   infoText: {
-    fontSize: 16,
-    color: '#666',
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
     marginBottom: 8,
     lineHeight: 22,
   },
   footerText: {
-    fontSize: 16,
-    color: '#666',
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 20,

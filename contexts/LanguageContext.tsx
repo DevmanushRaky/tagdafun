@@ -50,6 +50,7 @@ const translations = {
     'td.result.badge': '{name} got {type}',
     'td.truth': 'Truth',
     'td.dare': 'Dare',
+    'td.validation.maxLength': 'Max 25 characters',
 
     // Name picker
     'names.title': '👥 Name Picker',
@@ -66,6 +67,7 @@ const translations = {
     'names.validation.alphabets': 'Only alphabets allowed',
     'names.validation.minimum': 'Please add at least 2 names',
     'names.validation.empty': 'Please enter at least one name',
+    'names.validation.maxLength': 'Max 25 characters',
     
     // Common
     'button.add': 'Add',
@@ -161,6 +163,7 @@ const translations = {
     'td.result.badge': '{name} को मिला {type}',
     'td.truth': 'सच',
     'td.dare': 'साहस',
+    'td.validation.maxLength': 'अधिकतम 25 अक्षर',
 
     // Name picker
     'names.title': '👥 नाम चुनने वाला',
@@ -177,6 +180,7 @@ const translations = {
     'names.validation.alphabets': 'केवल अक्षरों की अनुमति है',
     'names.validation.minimum': 'कृपया कम से कम 2 नाम जोड़ें',
     'names.validation.empty': 'कृपया कम से कम एक नाम दर्ज करें',
+    'names.validation.maxLength': 'अधिकतम 25 अक्षर',
     
     // Common
     'button.add': 'जोड़ें',

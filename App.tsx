@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 // Import screens
 import NumberScreen from './screens/NumberScreen';
 import NamesScreen from './screens/NamesScreen';
+import CoinScreen from './screens/CoinScreen';
+import TruthDareScreen from './screens/TruthDareScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 
 // Import types
@@ -56,15 +58,12 @@ const TabNavigatorWithLanguage = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
-          if (route.name === 'Number') {
-            iconName = focused ? 'dice' : 'dice-outline';
-          } else if (route.name === 'Names') {
-            iconName = focused ? 'people' : 'people-outline';
-          } else if (route.name === 'Privacy') {
-            iconName = focused ? 'lock-closed' : 'lock-closed-outline';
-          } else {
-            iconName = 'help-circle-outline';
-          }
+          if (route.name === 'Number') iconName = focused ? 'dice' : 'dice-outline';
+          else if (route.name === 'Names') iconName = focused ? 'people' : 'people-outline';
+          else if (route.name === 'Coin') iconName = focused ? 'sync-circle' : 'sync-circle-outline';
+          else if (route.name === 'TruthDare') iconName = focused ? 'help-buoy' : 'help-buoy-outline';
+          else if (route.name === 'Privacy') iconName = focused ? 'lock-closed' : 'lock-closed-outline';
+          else iconName = 'help-circle-outline';
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -88,21 +87,11 @@ const TabNavigatorWithLanguage = () => {
         headerRight: () => <HeaderLanguageSwitcher />,
       })}
     >
-      <Tab.Screen 
-        name="Number" 
-        component={NumberScreen}
-       
-      />
-      <Tab.Screen 
-        name="Names" 
-        component={NamesScreen}
-        
-      />
-      <Tab.Screen 
-        name="Privacy" 
-        component={PrivacyScreen}
-        options={{ title: 'Privacy Policy' }}
-      />
+      <Tab.Screen name="Number" component={NumberScreen} />
+      <Tab.Screen name="Names" component={NamesScreen}  />
+      <Tab.Screen name="Coin" component={CoinScreen}  />
+      <Tab.Screen name="TruthDare" component={TruthDareScreen}  />
+      <Tab.Screen name="Privacy" component={PrivacyScreen} options={{ title: 'Privacy Policy' }} />
     </Tab.Navigator>
   );
 };

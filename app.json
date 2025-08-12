@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tagda Fun",
     "slug": "tagdafun",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/tagdafun-main-logo.png",
     "userInterfaceStyle": "light",
@@ -24,7 +24,7 @@
         "backgroundColor": "#FF6B00"
       },
       "package": "com.tagdafun.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "targetSdkVersion": 35,
       "permissions": [],
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.tagdafun.app",

@@ -1,11 +1,13 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 export type RootTabParamList = {
-  Home: undefined;
+  Number: undefined;
+  Names: undefined;
   Privacy: undefined;
 };
 
-export type HomeScreenProps = BottomTabScreenProps<RootTabParamList, 'Home'>;
+export type NumberScreenProps = BottomTabScreenProps<RootTabParamList, 'Number'>;
+export type NamesScreenProps = BottomTabScreenProps<RootTabParamList, 'Names'>;
 export type PrivacyScreenProps = BottomTabScreenProps<RootTabParamList, 'Privacy'>;
 
 export interface AppState {
@@ -16,4 +18,18 @@ export interface AppState {
 export interface HomeScreenState {
   generatedNumber: number | null;
   isGenerating: boolean;
+}
+
+export type Language = 'en' | 'hi';
+
+export interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+export interface NameInput {
+  id: string;
+  value: string;
+  isValid: boolean;
 } 

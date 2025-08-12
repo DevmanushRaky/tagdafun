@@ -1,19 +1,111 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, Image, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 
 // Import screens
-import HomeScreen from './screens/HomeScreen';
+import NumberScreen from './screens/NumberScreen';
+import NamesScreen from './screens/NamesScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 
 // Import types
 import { RootTabParamList } from './types';
 
+// Import language context
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const { width, height } = Dimensions.get('window');
+
+// Tab Navigator Component with Language Switcher
+const TabNavigatorWithLanguage = () => {
+  const { t } = useLanguage();
+  // Language Switcher Component for Header - defined inside the provider context
+  const HeaderLanguageSwitcher = () => {
+    const { language, setLanguage } = useLanguage();
+
+    return (
+      <View style={headerStyles.languageContainer}>
+        <TouchableOpacity
+          style={[headerStyles.languageButton, language === 'en' && headerStyles.activeLanguage]}
+          onPress={() => setLanguage('en')}
+          activeOpacity={0.8}
+        >
+          <Text style={[headerStyles.languageText, language === 'en' && headerStyles.activeLanguageText]}>
+            EN
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[headerStyles.languageButton, language === 'hi' && headerStyles.activeLanguage]}
+          onPress={() => setLanguage('hi')}
+          activeOpacity={0.8}
+        >
+          <Text style={[headerStyles.languageText, language === 'hi' && headerStyles.activeLanguageText]}>
+            हि
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap;
+
+          if (route.name === 'Number') {
+            iconName = focused ? 'dice' : 'dice-outline';
+          } else if (route.name === 'Names') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'Privacy') {
+            iconName = focused ? 'lock-closed' : 'lock-closed-outline';
+          } else {
+            iconName = 'help-circle-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#FF6B00',
+        tabBarInactiveTintColor: '#002244',
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopWidth: 1,
+          borderTopColor: '#E0E0E0',
+          paddingBottom: 5,
+          paddingTop: 5,
+          height: 60,
+        },
+        headerStyle: {
+          backgroundColor: '#FF6B00',
+        },
+        headerTintColor: 'white',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        headerRight: () => <HeaderLanguageSwitcher />,
+      })}
+    >
+      <Tab.Screen 
+        name="Number" 
+        component={NumberScreen}
+       
+      />
+      <Tab.Screen 
+        name="Names" 
+        component={NamesScreen}
+        
+      />
+      <Tab.Screen 
+        name="Privacy" 
+        component={PrivacyScreen}
+        options={{ title: 'Privacy Policy' }}
+      />
+    </Tab.Navigator>
+  );
+};
 
 export default function App(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -167,54 +259,12 @@ export default function App(): JSX.Element {
   }
 
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName: keyof typeof Ionicons.glyphMap;
-
-            if (route.name === 'Home') {
-              iconName = focused ? 'dice' : 'dice-outline';
-            } else if (route.name === 'Privacy') {
-              iconName = focused ? 'lock-closed' : 'lock-closed-outline';
-            } else {
-              iconName = 'help-circle-outline';
-            }
-
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: '#FF6B00',
-          tabBarInactiveTintColor: '#002244',
-          tabBarStyle: {
-            backgroundColor: 'white',
-            borderTopWidth: 1,
-            borderTopColor: '#E0E0E0',
-            paddingBottom: 5,
-            paddingTop: 5,
-            height: 60,
-          },
-          headerStyle: {
-            backgroundColor: '#FF6B00',
-          },
-          headerTintColor: 'white',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        })}
-      >
-        <Tab.Screen 
-          name="Home" 
-          component={HomeScreen}
-          options={{ title: 'Tagda Fun' }}
-        />
-        <Tab.Screen 
-          name="Privacy" 
-          component={PrivacyScreen}
-          options={{ title: 'Privacy Policy' }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <LanguageProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <TabNavigatorWithLanguage />
+      </NavigationContainer>
+    </LanguageProvider>
   );
 }
 
@@ -265,6 +315,42 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
+  },
+});
+
+// Header styles for language switcher
+const headerStyles = StyleSheet.create({
+  languageContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    padding: 4,
+    marginRight: 16,
+  },
+  languageButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginHorizontal: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    minWidth: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeLanguage: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+  },
+  languageText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
+  },
+  activeLanguageText: {
+    color: '#FF6B00',
+    fontWeight: 'bold',
   },
 });
 

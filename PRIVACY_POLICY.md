@@ -12,11 +12,11 @@ Tagda Fun is a simple, offline-first mobile application that generates random nu
 
 ## Information We Collect
 
-### ✅ What We DO Collect:
+### ✅ What We DO Collect/Store (Device-only, non-personal):
 - **No personal information is collected**
-- **No user data is stored**
 - **No analytics or tracking data**
-- **No names or numbers are saved**
+- **Coin Toss stats (wins/losses)** are stored locally on your device to show your history. You can reset these at any time from within the app. These stats never leave your device.
+- **Names and numbers you enter** are processed locally in memory for the current session only and are not uploaded anywhere.
 
 ### ❌ What We DON'T Collect:
 - Personal identification information (name, email, phone number)
@@ -24,8 +24,8 @@ Tagda Fun is a simple, offline-first mobile application that generates random nu
 - Location data
 - Usage analytics or behavior tracking
 - Any data that could identify you personally
-- Names you enter for random selection
-- Numbers you generate or ranges you set
+- Names you enter for random selection (not stored by us; only processed in memory on your device)
+- Numbers you generate or ranges you set (not stored by us)
 
 ## How Our App Works
 
@@ -46,6 +46,17 @@ Tagda Fun is a simple, offline-first mobile application that generates random nu
 - Each name selection is a fresh random choice from your input
 - Clearing names removes them from memory immediately
 
+### Truth & Dare Feature
+- Requires entering player names (alphabets only); all processing is local to your device
+- A colorful spinning wheel runs locally to select a player at random
+- No player names are stored or transmitted; names exist only in memory during the session
+
+### Coin Toss Feature
+- Lets you pick Heads or Tails and flips a 3D coin animation locally
+- The result (win/lose) is calculated on-device and shown to you
+- Win/Loss counters are saved locally on your device so you can track your history
+- You can reset these counters at any time; nothing is synced or uploaded
+
 ## Third-Party Services
 
 ### Expo Framework
@@ -62,11 +73,12 @@ When you download our app from Google Play Store:
 
 ## Data Security
 
-Since we don't collect or store any personal data:
-- There's no personal information to secure
-- No data breaches are possible
-- Your privacy is inherently protected
-- Names and numbers you enter are never transmitted
+We don't collect or store any personal data. The only stored data are the optional, non-personal **Coin Toss win/loss counters**, which:
+- Remain on your device only (no cloud sync)
+- Can be reset at any time from within the app
+- Are not associated with any personal identity
+
+Names and numbers you enter are processed locally and are never transmitted.
 
 ## Children's Privacy
 
@@ -110,7 +122,7 @@ Since no data is collected or stored, there are no international data transfers 
 
 ## Data Retention
 
-We don't retain any data since we don't collect any data in the first place.
+We don't retain personal data. The only retained data are the optional, non-personal **Coin Toss win/loss counters**, which persist on your device until you reset them or uninstall the app.
 
 ## Automated Decision Making
 
@@ -146,8 +158,10 @@ No data leaves your device at any point in this process.
 ### Features
 - **Number Generator**: Creates random numbers within your specified range
 - **Name Picker**: Randomly selects from names you provide
+- **Truth & Dare**: Multiplayer spinner to pick a player, then choose truth or dare (no data stored)
+- **Coin Toss**: Flip a 3D coin with local win/loss counters you can reset
 - **Local Processing**: All operations happen on your device
-- **No Storage**: Nothing is saved between app sessions
+- **Local Storage (Non-personal)**: Only Coin Toss win/loss counters are stored on your device
 
 ---
 

@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   iconButtonPrimary: {
-    backgroundColor: COLORS.success,
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,

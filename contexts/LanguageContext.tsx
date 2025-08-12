@@ -8,8 +8,10 @@ const translations = {
     'app.tagline': 'Your Fun Random Generator',
     
     // Tab labels
-    'tab.number': '🎲 Number',
-    'tab.names': '👥 Names',
+    'tab.number': 'Tagda Fun',
+    'tab.names': 'Tagda Fun',
+    'tab.coin': 'Tagda Fun',
+    'tab.truthdare': 'Tagda Fun',
     
     // Number generator
     'number.title': '🎲 Number Generator',
@@ -23,6 +25,32 @@ const translations = {
     'number.result.title': 'Your lucky number!',
     'number.result.badge': 'Range: {min} - {max}',
     
+    // Coin toss
+    'coin.title': '🪙 Coin Toss',
+    'coin.subtitle': 'Choose Heads or Tails, then flip!',
+    'coin.choose': 'You call it:',
+    'coin.heads': 'Heads',
+    'coin.tails': 'Tails',
+    'coin.flip': 'Flip Coin',
+    'coin.flipping': 'Flipping...',
+    'coin.result.title': 'Coin Result',
+    'coin.result.badge': 'You chose: {choice}',
+    'coin.result.win': 'You won! 🎉',
+    'coin.result.lose': 'You lost! 😅',
+
+    // Truth/Dare
+    'td.title': '🎭 Truth & Dare',
+    'td.subtitle': 'Add players and spin to pick Truth or Dare',
+    'td.players': 'Players',
+    'td.addPlayer': 'Add Player',
+    'td.placeholder': 'Player name',
+    'td.start': 'Start Game',
+    'td.spinning': 'Spinning...',
+    'td.result.title': 'Your Turn!',
+    'td.result.badge': '{name} got {type}',
+    'td.truth': 'Truth',
+    'td.dare': 'Dare',
+
     // Name picker
     'names.title': '👥 Name Picker',
     'names.subtitle': 'Randomly select from a list of names',
@@ -91,8 +119,10 @@ const translations = {
     'app.tagline': 'आपका मज़ेदार रैंडम जनरेटर',
     
     // Tab labels
-    'tab.number': '🎲 नंबर',
-    'tab.names': '👥 नाम',
+    'tab.number': 'Tagda Fun',
+    'tab.names': 'Tagda Fun',
+    'tab.coin': 'Tagda Fun',
+    'tab.truthdare': 'Tagda Fun',
     
     // Number generator
     'number.title': '🎲 नंबर जनरेटर',
@@ -105,7 +135,33 @@ const translations = {
     'number.reset': 'डिफ़ॉल्ट पर रीसेट करें (1-100)',
     'number.result.title': 'आपका लकी नंबर!',
     'number.result.badge': 'रेंज: {min} - {max}',
-    
+
+    // Coin toss
+    'coin.title': '🪙 सिक्का उछाल',
+    'coin.subtitle': 'हेड या टेल चुनें, फिर फ्लिप करें!',
+    'coin.choose': 'आप क्या चुनते हैं:',
+    'coin.heads': 'हेड',
+    'coin.tails': 'टेल',
+    'coin.flip': 'सिक्का उछालें',
+    'coin.flipping': 'उछाल रहे हैं...',
+    'coin.result.title': 'सिक्का परिणाम',
+    'coin.result.badge': 'आपने चुना: {choice}',
+    'coin.result.win': 'आप जीते! 🎉',
+    'coin.result.lose': 'आप हार गए! 😅',
+
+    // Truth/Dare
+    'td.title': '🎭 सच और साहस',
+    'td.subtitle': 'खिलाड़ियों को जोड़ें और खेल शुरू करें',
+    'td.players': 'खिलाड़ी',
+    'td.addPlayer': 'खिलाड़ी जोड़ें',
+    'td.placeholder': 'खिलाड़ी का नाम',
+    'td.start': 'खेल शुरू करें',
+    'td.spinning': 'घुमा रहे हैं...',
+    'td.result.title': 'आपकी बारी!',
+    'td.result.badge': '{name} को मिला {type}',
+    'td.truth': 'सच',
+    'td.dare': 'साहस',
+
     // Name picker
     'names.title': '👥 नाम चुनने वाला',
     'names.subtitle': 'नामों की सूची से रैंडम चयन करें',

@@ -47,7 +47,7 @@ const { width, height } = Dimensions.get('window');
 interface ResultModalProps {
   visible: boolean;
   onClose: () => void;
-  type: 'number' | 'name';
+  type: 'number' | 'name' | 'coin' | 'truthdare';
   result: string | number;
   subtitle: string;
   badgeText: string;
@@ -109,11 +109,17 @@ export default function ResultModal({
   }, [visible, scaleAnim, fadeAnim, resultScaleAnim, resultFadeAnim]);
 
   const getIcon = () => {
-    return type === 'number' ? '🎲' : '👥';
+    if (type === 'number') return '🎲';
+    if (type === 'name') return '👥';
+    if (type === 'coin') return '🪙';
+    return '🎭';
   };
 
   const getTitle = () => {
-    return type === 'number' ? 'Your Lucky Number!' : 'The Chosen One!';
+    if (type === 'number') return 'Your Lucky Number!';
+    if (type === 'name') return 'The Chosen One!';
+    if (type === 'coin') return 'Coin Result';
+    return 'Truth or Dare';
   };
 
   return (

@@ -165,17 +165,18 @@ const NumberGenerator: React.FC<NumberGeneratorProps> = ({ onShowModal, onShowRe
             />
           </View>
         </View>
+
+        {/* Generate Button inside card */}
+        <TouchableOpacity
+          style={[styles.primaryButton, isGenerating && styles.primaryButtonDisabled]}
+          onPress={generateNumber}
+          disabled={isGenerating}
+          activeOpacity={0.8}
+        >
+          {renderButtonContent(isGenerating, t('number.generating'), t('number.generate'))}
+        </TouchableOpacity>
       </View>
 
-      {/* Generate Button */}
-      <TouchableOpacity
-        style={[styles.primaryButton, isGenerating && styles.primaryButtonDisabled]}
-        onPress={generateNumber}
-        disabled={isGenerating}
-        activeOpacity={0.8}
-      >
-        {renderButtonContent(isGenerating, t('number.generating'), t('number.generate'))}
-      </TouchableOpacity>
     </View>
   );
 };
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   inputContainer: {
     flex: 1,
@@ -259,7 +260,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    marginBottom: 24,
   },
   primaryButtonDisabled: {
     backgroundColor: COLORS.primaryDark,

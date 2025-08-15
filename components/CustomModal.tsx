@@ -25,7 +25,7 @@ export default function CustomModal({
   message, 
   onClose, 
   type = 'info' 
-}: CustomModalProps): JSX.Element {
+}: CustomModalProps): React.JSX.Element {
   const scaleAnim = React.useRef(new Animated.Value(0)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 

@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Import screens
 import NumberScreen from './screens/NumberScreen';
@@ -24,6 +25,8 @@ const { width, height } = Dimensions.get('window');
 // Tab Navigator Component with Language Switcher
 const TabNavigatorWithLanguage = () => {
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
+  
   // Language Switcher Component for Header - defined inside the provider context
   const HeaderLanguageSwitcher = () => {
     const { language, setLanguage } = useLanguage();
@@ -53,50 +56,58 @@ const TabNavigatorWithLanguage = () => {
   };
 
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
+    <View style={{ flex: 1 }}>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName: keyof typeof Ionicons.glyphMap;
 
-          if (route.name === 'Number') iconName = focused ? 'dice' : 'dice-outline';
-          else if (route.name === 'Names') iconName = focused ? 'people' : 'people-outline';
-          else if (route.name === 'Coin') iconName = focused ? 'sync-circle' : 'sync-circle-outline';
-          else if (route.name === 'TruthDare') iconName = focused ? 'help-buoy' : 'help-buoy-outline';
-          else if (route.name === 'Privacy') iconName = focused ? 'lock-closed' : 'lock-closed-outline';
-          else iconName = 'help-circle-outline';
+            if (route.name === 'Number') iconName = focused ? 'dice' : 'dice-outline';
+            else if (route.name === 'Names') iconName = focused ? 'people' : 'people-outline';
+            else if (route.name === 'Coin') iconName = focused ? 'sync-circle' : 'sync-circle-outline';
+            else if (route.name === 'TruthDare') iconName = focused ? 'help-buoy' : 'help-buoy-outline';
+            else if (route.name === 'Privacy') iconName = focused ? 'lock-closed' : 'lock-closed-outline';
+            else iconName = 'help-circle-outline';
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#FF6B00',
-        tabBarInactiveTintColor: '#002244',
-        tabBarStyle: {
-          backgroundColor: 'white',
-          borderTopWidth: 1,
-          borderTopColor: '#E0E0E0',
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
-        },
-        headerStyle: {
-          backgroundColor: '#FF6B00',
-        },
-        headerTintColor: 'white',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-        headerRight: () => <HeaderLanguageSwitcher />,
-      })}
-    >
-      <Tab.Screen name="Number" component={NumberScreen} />
-      <Tab.Screen name="Names" component={NamesScreen}  />
-      <Tab.Screen name="Coin" component={CoinScreen}  />
-      <Tab.Screen name="TruthDare" component={TruthDareScreen}  />
-      <Tab.Screen name="Privacy" component={PrivacyScreen} options={{ title: 'Privacy Policy' }} />
-    </Tab.Navigator>
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: '#FF6B00',
+          tabBarInactiveTintColor: '#002244',
+          tabBarStyle: {
+            backgroundColor: 'white',
+            borderTopWidth: 1,
+            borderTopColor: '#E0E0E0',
+            // paddingBottom: Math.max(insets.bottom, 5),
+            paddingTop: 2,
+            height:45 + insets.bottom,
+            position: 'absolute',
+            elevation: 0,
+            shadowOpacity: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+          },
+          headerStyle: {
+            backgroundColor: '#FF6B00',
+          },
+          headerTintColor: 'white',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+          headerRight: () => <HeaderLanguageSwitcher />,
+        })}
+      >
+        <Tab.Screen name="Number" component={NumberScreen} />
+        <Tab.Screen name="Names" component={NamesScreen}  />
+        <Tab.Screen name="Coin" component={CoinScreen}  />
+        <Tab.Screen name="TruthDare" component={TruthDareScreen}  />
+        <Tab.Screen name="Privacy" component={PrivacyScreen} options={{ title: 'Privacy Policy' }} />
+      </Tab.Navigator>
+    </View>
   );
 };
 
-export default function App(): JSX.Element {
+export default function App(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const logoScale = useRef(new Animated.Value(0)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
@@ -249,10 +260,12 @@ export default function App(): JSX.Element {
 
   return (
     <LanguageProvider>
-      <NavigationContainer>
-        <StatusBar style="light" />
-        <TabNavigatorWithLanguage />
-      </NavigationContainer>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <StatusBar style="light" />
+          <TabNavigatorWithLanguage />
+        </NavigationContainer>
+      </SafeAreaProvider>
     </LanguageProvider>
   );
 }

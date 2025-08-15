@@ -34,30 +34,24 @@ const TruthDareScreen: React.FC<TruthDareScreenProps> = () => {
   const onHideResult = () => setResult(prev => ({ ...prev, visible: false }));
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent} 
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.content}>
-            <TruthDare onShowModal={onShowModal} onShowResult={onShowResult} />
-          </View>
-        </ScrollView>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView 
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]} 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <TruthDare onShowModal={onShowModal} onShowResult={onShowResult} />
+        </View>
+      </ScrollView>
 
-        <CustomModal visible={modal.visible} title={modal.title} message={modal.message} type={modal.type} onClose={onHideModal} />
-        <ResultModal visible={result.visible} onClose={onHideResult} type={result.type} result={result.result} subtitle={result.subtitle} badgeText={result.badgeText} />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <CustomModal visible={modal.visible} title={modal.title} message={modal.message} type={modal.type} onClose={onHideModal} />
+      <ResultModal visible={result.visible} onClose={onHideResult} type={result.type} result={result.result} subtitle={result.subtitle} badgeText={result.badgeText} />
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({ 
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
   container: { 
     flex: 1, 
     backgroundColor: COLORS.background 

@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 16.17.4",
+    "version": ">= 17.0.0",
     "appVersionSource": "remote"
   },
   "build": {
@@ -9,21 +9,21 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "targetSdkVersion": 35
+        "gradleCommand": ":app:assembleDebug"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "targetSdkVersion": 35
+        "gradleCommand": ":app:assembleRelease"
       }
     },
     "production": {
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle",
-        "targetSdkVersion": 35
+        "gradleCommand": ":app:bundleRelease"
       }
     }
   },
@@ -34,5 +34,10 @@
         "track": "production"
       }
     }
+  },
+  "android": {
+    "compileSdkVersion": 35,
+    "targetSdkVersion": 35,
+    "buildToolsVersion": "35.0.0"
   }
 }

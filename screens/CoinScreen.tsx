@@ -6,7 +6,7 @@ import { COLORS, TYPOGRAPHY } from '../constants/theme';
 import CoinToss from '../components/CoinToss';
 import ResultModal from '../components/ResultModal';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomModal from '../components/CustomModal';
 
 interface ResultState {
@@ -86,7 +86,7 @@ const CoinScreen: React.FC<CoinScreenProps> = () => {
   const hideResultModal = () => setResultModal((prev: ResultModalState) => ({ ...prev, visible: false }));
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={styles.safeArea}>
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         {/* Top stats bar */}
         <View style={styles.statsBar}>
@@ -118,7 +118,7 @@ const CoinScreen: React.FC<CoinScreenProps> = () => {
 
         <ResultModal visible={result.visible} onClose={onHide} type={result.type} result={result.result} subtitle={result.subtitle} badgeText={result.badgeText} />
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

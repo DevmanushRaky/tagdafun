@@ -52,48 +52,42 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = () => {
   };
   
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView 
-        style={styles.container} 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.content}>
-          <Text style={styles.title}>{t('title')}</Text>
-          
-          <Text style={styles.sectionTitle}>{t('section1Title')}</Text>
-          <Text style={styles.text}>{t('section1Text')}</Text>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.content}>
+        <Text style={styles.title}>{t('title')}</Text>
+        
+        <Text style={styles.sectionTitle}>{t('section1Title')}</Text>
+        <Text style={styles.text}>{t('section1Text')}</Text>
 
-          <Text style={styles.sectionTitle}>{t('section2Title')}</Text>
-          <Text style={styles.text}>{t('section2Text')}</Text>
+        <Text style={styles.sectionTitle}>{t('section2Title')}</Text>
+        <Text style={styles.text}>{t('section2Text')}</Text>
 
-          <Text style={styles.sectionTitle}>{t('section3Title')}</Text>
-          <Text style={styles.text}>{t('section3Text')}</Text>
+        <Text style={styles.sectionTitle}>{t('section3Title')}</Text>
+        <Text style={styles.text}>{t('section3Text')}</Text>
 
-          <Text style={styles.sectionTitle}>{t('section4Title')}</Text>
-          <Text style={styles.text}>{t('section4Text')}</Text>
+        <Text style={styles.sectionTitle}>{t('section4Title')}</Text>
+        <Text style={styles.text}>{t('section4Text')}</Text>
 
-          <Text style={styles.sectionTitle}>{t('section5Title')}</Text>
-          <Text style={styles.text}>{t('section5Text')}</Text>
+        <Text style={styles.sectionTitle}>{t('section5Title')}</Text>
+        <Text style={styles.text}>{t('section5Text')}</Text>
 
-          <Text style={styles.sectionTitle}>{t('section6Title')}</Text>
-          <Text style={styles.text}>{t('section6Text')}</Text>
+        <Text style={styles.sectionTitle}>{t('section6Title')}</Text>
+        <Text style={styles.text}>{t('section6Text')}</Text>
 
-          <Text style={styles.sectionTitle}>{t('section7Title')}</Text>
-          <Text style={styles.text}>{t('section7Text')}</Text>
+        <Text style={styles.sectionTitle}>{t('section7Title')}</Text>
+        <Text style={styles.text}>{t('section7Text')}</Text>
 
-          <Text style={styles.lastUpdated}>{t('lastUpdated')}</Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        <Text style={styles.lastUpdated}>{t('lastUpdated')}</Text>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,

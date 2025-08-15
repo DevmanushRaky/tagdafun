@@ -34,31 +34,25 @@ const NamesScreen: React.FC<NamesScreenProps> = () => {
   const hideResultModal = () => setResultModal(prev => ({ ...prev, visible: false }));
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent} 
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.content}>
-            <NameGenerator onShowModal={showModal} onShowResult={showResultModal} />
-          </View>
-        </ScrollView>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView 
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]} 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <NameGenerator onShowModal={showModal} onShowResult={showResultModal} />
+        </View>
+      </ScrollView>
 
-        <CustomModal visible={modal.visible} title={modal.title} message={modal.message} type={modal.type} onClose={hideModal} />
+      <CustomModal visible={modal.visible} title={modal.title} message={modal.message} type={modal.type} onClose={hideModal} />
 
-        <ResultModal visible={resultModal.visible} onClose={hideResultModal} type={resultModal.type} result={resultModal.result} subtitle={resultModal.subtitle} badgeText={resultModal.badgeText} />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <ResultModal visible={resultModal.visible} onClose={hideResultModal} type={resultModal.type} result={resultModal.result} subtitle={resultModal.subtitle} badgeText={resultModal.badgeText} />
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({ 
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
   container: { 
     flex: 1, 
     backgroundColor: COLORS.background 

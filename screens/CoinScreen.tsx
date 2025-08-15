@@ -6,6 +6,8 @@ import { COLORS, TYPOGRAPHY } from '../constants/theme';
 import CoinToss from '../components/CoinToss';
 import ResultModal from '../components/ResultModal';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import CustomModal from '../components/CustomModal';
 
 interface ResultState {
   visible: boolean;
@@ -15,9 +17,27 @@ interface ResultState {
   badgeText: string;
 }
 
+interface ModalState {
+  visible: boolean;
+  title: string;
+  message: string;
+  type: 'error' | 'warning' | 'info';
+}
+
+interface ResultModalState {
+  visible: boolean;
+  type: 'name';
+  result: string | number;
+  subtitle: string;
+  badgeText: string;
+}
+
 const STORAGE_KEY = 'tagdafun.coin.stats';
 
 const CoinScreen: React.FC<CoinScreenProps> = () => {
+  const insets = useSafeAreaInsets();
+  const [modal, setModal] = useState<ModalState>({ visible: false, title: '', message: '', type: 'info' });
+  const [resultModal, setResultModal] = useState<ResultModalState>({ visible: false, type: 'name', result: '', subtitle: '', badgeText: '' });
   const [result, setResult] = useState<ResultState>({ visible: false, type: 'coin', result: '', subtitle: '', badgeText: '' });
   const [wins, setWins] = useState<number>(0);
   const [losses, setLosses] = useState<number>(0);
@@ -59,37 +79,58 @@ const CoinScreen: React.FC<CoinScreenProps> = () => {
     await saveStats(0, 0);
   };
 
+  const showModal = (title: string, message: string, type: 'error' | 'warning' | 'info' = 'info') => setModal({ visible: true, title, message, type });
+  const hideModal = () => setModal((prev: ModalState) => ({ ...prev, visible: false }));
+
+  const showResultModal = (type: 'name', result: string, subtitle: string, badgeText: string) => setResultModal({ visible: true, type, result, subtitle, badgeText });
+  const hideResultModal = () => setResultModal((prev: ResultModalState) => ({ ...prev, visible: false }));
+
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      {/* Top stats bar */}
-      <View style={styles.statsBar}>
-        <View style={styles.statPill}>
-          <Ionicons name="thumbs-up" size={16} color={COLORS.background} />
-          <Text style={styles.statText}>Wins: {wins}</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        {/* Top stats bar */}
+        <View style={styles.statsBar}>
+          <View style={styles.statPill}>
+            <Ionicons name="thumbs-up" size={16} color={COLORS.background} />
+            <Text style={styles.statText}>Wins: {wins}</Text>
+          </View>
+          <View style={[styles.statPill, styles.lossPill]}>
+            <Ionicons name="thumbs-down" size={16} color={COLORS.background} />
+            <Text style={styles.statText}>Losses: {losses}</Text>
+          </View>
+          <TouchableOpacity style={styles.resetButton} onPress={resetStats} activeOpacity={0.85}>
+            <Ionicons name="refresh" size={18} color={COLORS.primary} />
+            <Text style={styles.resetText}>Reset</Text>
+          </TouchableOpacity>
         </View>
-        <View style={[styles.statPill, styles.lossPill]}>
-          <Ionicons name="thumbs-down" size={16} color={COLORS.background} />
-          <Text style={styles.statText}>Losses: {losses}</Text>
-        </View>
-        <TouchableOpacity style={styles.resetButton} onPress={resetStats} activeOpacity={0.85}>
-          <Ionicons name="refresh" size={18} color={COLORS.primary} />
-          <Text style={styles.resetText}>Reset</Text>
-        </TouchableOpacity>
-      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.content}>
-          <CoinToss onShowResult={onShowResult} />
-        </View>
-      </ScrollView>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent} 
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            <CoinToss onShowResult={onShowResult} />
+          </View>
+        </ScrollView>
 
-      <ResultModal visible={result.visible} onClose={onHide} type={result.type} result={result.result} subtitle={result.subtitle} badgeText={result.badgeText} />
-    </KeyboardAvoidingView>
+        <CustomModal visible={modal.visible} title={modal.title} message={modal.message} type={modal.type} onClose={hideModal} />
+
+        <ResultModal visible={result.visible} onClose={onHide} type={result.type} result={result.result} subtitle={result.subtitle} badgeText={result.badgeText} />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  container: { 
+    flex: 1, 
+    backgroundColor: COLORS.background 
+  }, 
   statsBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -123,8 +164,17 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   resetText: { ...TYPOGRAPHY.captionBold, color: COLORS.primary },
-  scrollContent: { flexGrow: 1 },
-  content: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 20 },
+  scrollContent: { 
+    flexGrow: 1,
+    // Dynamic padding will be applied inline using insets
+  }, 
+  content: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    paddingHorizontal: 20, 
+    paddingVertical: 20 
+  }, 
 });
 
 export default CoinScreen;

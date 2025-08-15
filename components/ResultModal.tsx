@@ -60,7 +60,7 @@ export default function ResultModal({
   result, 
   subtitle, 
   badgeText 
-}: ResultModalProps): JSX.Element {
+}: ResultModalProps): React.JSX.Element {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const resultScaleAnim = useRef(new Animated.Value(0.5)).current;
@@ -174,14 +174,7 @@ export default function ResultModal({
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={onClose}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryButtonText}>Awesome!</Text>
-            </TouchableOpacity>
-            
+           
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={onClose}

@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PrivacyScreenProps } from '../types';
 import { COLORS, TYPOGRAPHY } from '../constants/theme';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const PrivacyScreen: React.FC<PrivacyScreenProps> = () => {
   const insets = useSafeAreaInsets();
@@ -13,6 +15,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = () => {
     const translations = {
       en: {
         title: 'Privacy Policy',
+        subtitle: 'Your privacy is our priority',
         section1Title: 'Information We Collect',
         section1Text: 'Our app does not collect, store, or transmit any personal information. All data generated within the app (such as random numbers, names, or game results) is stored locally on your device and is not shared with us or any third parties.',
         section2Title: 'How We Use Information',
@@ -27,10 +30,14 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = () => {
         section6Text: 'We may update this privacy policy from time to time. Any changes will be reflected in the app and users will be notified of significant updates.',
         section7Title: 'Contact Us',
         section7Text: 'If you have any questions about this privacy policy, please contact us through the app store or our support channels.',
-        lastUpdated: 'Last updated: August 2025'
+        lastUpdated: 'Last updated: August 2025',
+        privacyBadge: '🔒 100% Private',
+        offlineBadge: '📱 Works Offline',
+        localBadge: '💾 Local Storage Only'
       },
       hi: {
         title: 'गोपनीयता नीति',
+        subtitle: 'आपकी गोपनीयता हमारी प्राथमिकता है',
         section1Title: 'जानकारी जो हम एकत्र करते हैं',
         section1Text: 'हमारा ऐप किसी भी व्यक्तिगत जानकारी को एकत्र, संग्रहीत या प्रसारित नहीं करता। ऐप के भीतर उत्पन्न सभी डेटा (जैसे यादृच्छिक संख्याएं, नाम, या गेम परिणाम) आपके डिवाइस पर स्थानीय रूप से संग्रहीत किया जाता है और हमारे साथ या किसी तृतीय पक्ष के साथ साझा नहीं किया जाता।',
         section2Title: 'हम जानकारी का उपयोग कैसे करते हैं',
@@ -45,45 +52,75 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = () => {
         section6Text: 'हम समय-समय पर इस गोपनीयता नीति को अपडेट कर सकते हैं। कोई भी परिवर्तन ऐप में प्रतिबिंबित होगा और उपयोगकर्ताओं को महत्वपूर्ण अपडेट के बारे में सूचित किया जाएगा।',
         section7Title: 'हमसे संपर्क करें',
         section7Text: 'यदि आपको इस गोपनीयता नीति के बारे में कोई प्रश्न है, तो कृपया ऐप स्टोर या हमारे सहायता चैनलों के माध्यम से हमसे संपर्क करें।',
-        lastUpdated: 'अंतिम अपडेट: अगस्त 2025'
+        lastUpdated: 'अंतिम अपडेट: दिसंबर 2024',
+        privacyBadge: '🔒 100% निजी',
+        offlineBadge: '📱 ऑफलाइन काम करता है',
+        localBadge: '💾 केवल स्थानीय संग्रहण'
       }
     };
     return translations[language as keyof typeof translations]?.[key as keyof typeof translations.en] || key;
   };
+
+  const renderSection = (title: string, text: string, icon: string) => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionIcon}>{icon}</Text>
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
+      <Text style={styles.text}>{text}</Text>
+    </View>
+  );
+
+  const renderBadge = (text: string, color: string) => (
+    <View style={[styles.badge, { backgroundColor: color }]}>
+      <Text style={styles.badgeText}>{text}</Text>
+    </View>
+  );
   
   return (
-    <ScrollView 
-      style={styles.container} 
-      contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.content}>
-        <Text style={styles.title}>{t('title')}</Text>
-        
-        <Text style={styles.sectionTitle}>{t('section1Title')}</Text>
-        <Text style={styles.text}>{t('section1Text')}</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Section */}
+        <LinearGradient
+          colors={[COLORS.primary, COLORS.primaryDark]}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <View style={styles.titleContainer}>
+              <Ionicons name="shield-checkmark" size={32} color="white" />
+              <Text style={styles.title}>{t('title')}</Text>
+            </View>
+            <Text style={styles.subtitle}>{t('subtitle')}</Text>
+            
+            {/* Privacy Badges */}
+            <View style={styles.badgesContainer}>
+              {renderBadge(t('privacyBadge'), 'rgba(255, 255, 255, 0.2)')}
+              {renderBadge(t('offlineBadge'), 'rgba(255, 255, 255, 0.2)')}
+              {renderBadge(t('localBadge'), 'rgba(255, 255, 255, 0.2)')}
+            </View>
+          </View>
+        </LinearGradient>
 
-        <Text style={styles.sectionTitle}>{t('section2Title')}</Text>
-        <Text style={styles.text}>{t('section2Text')}</Text>
-
-        <Text style={styles.sectionTitle}>{t('section3Title')}</Text>
-        <Text style={styles.text}>{t('section3Text')}</Text>
-
-        <Text style={styles.sectionTitle}>{t('section4Title')}</Text>
-        <Text style={styles.text}>{t('section4Text')}</Text>
-
-        <Text style={styles.sectionTitle}>{t('section5Title')}</Text>
-        <Text style={styles.text}>{t('section5Text')}</Text>
-
-        <Text style={styles.sectionTitle}>{t('section6Title')}</Text>
-        <Text style={styles.text}>{t('section6Text')}</Text>
-
-        <Text style={styles.sectionTitle}>{t('section7Title')}</Text>
-        <Text style={styles.text}>{t('section7Text')}</Text>
-
-        <Text style={styles.lastUpdated}>{t('lastUpdated')}</Text>
-      </View>
-    </ScrollView>
+        {/* Content Sections */}
+        <View style={styles.content}>
+          {renderSection(t('section1Title'), t('section1Text'), '📊')}
+          {renderSection(t('section2Title'), t('section2Text'), '🔍')}
+          {renderSection(t('section3Title'), t('section3Text'), '💾')}
+          {renderSection(t('section4Title'), t('section4Text'), '🚫')}
+          {renderSection(t('section5Title'), t('section5Text'), '👶')}
+          {renderSection(t('section6Title'), t('section6Text'), '📝')}
+          {renderSection(t('section7Title'), t('section7Text'), '📞')}
+          
+          <View style={styles.lastUpdatedContainer}>
+            <Text style={styles.lastUpdated}>{t('lastUpdated')}</Text>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -92,37 +129,105 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  scrollContent: {
-    // Dynamic padding will be applied inline using insets
+  scrollView: {
+    flex: 1,
   },
-  content: {
-    padding: 20,
-    paddingTop: 20,
+  scrollContent: {
+    flexGrow: 1,
+  },
+  headerGradient: {
+   
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   title: {
     ...TYPOGRAPHY.h1,
-    color: COLORS.primary,
+    color: 'white',
+    marginLeft: 12,
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    ...TYPOGRAPHY.body,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 15,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  badge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  badgeText: {
+    ...TYPOGRAPHY.caption,
+    color: 'white',
+    fontWeight: '600',
+  },
+  content: {
+    padding: 20,
+    paddingTop: 10,
+  },
+  section: {
+    marginBottom: 20,
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionIcon: {
+    fontSize: 24,
+    marginRight: 12,
   },
   sectionTitle: {
     ...TYPOGRAPHY.h3,
     color: COLORS.text,
-    marginTop: 25,
-    marginBottom: 10,
+    flex: 1,
+    fontWeight: '600',
   },
   text: {
     ...TYPOGRAPHY.body,
     color: COLORS.textSecondary,
-    lineHeight: 22,
-    marginBottom: 15,
+    lineHeight: 24,
+  },
+  lastUpdatedContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
   lastUpdated: {
     ...TYPOGRAPHY.caption,
     color: COLORS.textLight,
-    textAlign: 'center',
-    marginTop: 30,
     fontStyle: 'italic',
+    textAlign: 'center',
   },
 });
 

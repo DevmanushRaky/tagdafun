@@ -11,6 +11,7 @@ import NumberScreen from './screens/NumberScreen';
 import NamesScreen from './screens/NamesScreen';
 import CoinScreen from './screens/CoinScreen';
 import TruthDareScreen from './screens/TruthDareScreen';
+import MastermindScreen from './screens/MastermindScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 
 // Import types
@@ -66,6 +67,7 @@ const TabNavigatorWithLanguage = () => {
             else if (route.name === 'Names') iconName = focused ? 'people' : 'people-outline';
             else if (route.name === 'Coin') iconName = focused ? 'sync-circle' : 'sync-circle-outline';
             else if (route.name === 'TruthDare') iconName = focused ? 'help-buoy' : 'help-buoy-outline';
+            else if (route.name === 'Mastermind') iconName = focused ? 'grid' : 'grid-outline';
             else if (route.name === 'Privacy') iconName = focused ? 'lock-closed' : 'lock-closed-outline';
             else iconName = 'help-circle-outline';
 
@@ -101,6 +103,7 @@ const TabNavigatorWithLanguage = () => {
         <Tab.Screen name="Names" component={NamesScreen}  />
         <Tab.Screen name="Coin" component={CoinScreen}  />
         <Tab.Screen name="TruthDare" component={TruthDareScreen}  />
+        <Tab.Screen name="Mastermind" component={MastermindScreen} />
         <Tab.Screen name="Privacy" component={PrivacyScreen} options={{ title: 'Privacy Policy' }} />
       </Tab.Navigator>
     </View>

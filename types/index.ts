@@ -5,6 +5,7 @@ export type RootTabParamList = {
   Names: undefined;
   Coin: undefined;
   TruthDare: undefined;
+  Mastermind: undefined;
   Privacy: undefined;
 };
 
@@ -12,6 +13,7 @@ export type NumberScreenProps = BottomTabScreenProps<RootTabParamList, 'Number'>
 export type NamesScreenProps = BottomTabScreenProps<RootTabParamList, 'Names'>;
 export type CoinScreenProps = BottomTabScreenProps<RootTabParamList, 'Coin'>;
 export type TruthDareScreenProps = BottomTabScreenProps<RootTabParamList, 'TruthDare'>;
+export type MastermindScreenProps = BottomTabScreenProps<RootTabParamList, 'Mastermind'>;
 export type PrivacyScreenProps = BottomTabScreenProps<RootTabParamList, 'Privacy'>;
 
 export interface AppState {

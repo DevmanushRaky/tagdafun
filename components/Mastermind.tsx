@@ -49,6 +49,9 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const [currentPegIndex, setCurrentPegIndex] = useState(0);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showExitAlert, setShowExitAlert] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [isPaused, setIsPaused] = useState(false);
+  const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
     if (gameStarted) {
@@ -57,8 +60,34 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       setCurrentGuess([undefined, undefined, undefined, undefined]);
       setCurrentRow(0);
       setCurrentPegIndex(0);
+      setTimeLeft(60); // 1 minute for the entire first row (all 4 pegs)
+      setTimerActive(true);
+      setIsPaused(false);
+      console.log('⏰ Game started! 1 minute timer for first row begins...');
     }
   }, [gameStarted]);
+
+  // Timer countdown effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (timerActive && !isPaused && timeLeft > 0 && !gameOver) {
+      interval = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            // Time's up! Lose this attempt
+            handleTimeUp();
+            return 60; // Reset for next attempt
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [timerActive, isPaused, timeLeft, gameOver]);
 
   const generateSecretCode = () => {
     const newCode: Peg[] = [];
@@ -95,48 +124,50 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
     setCurrentPegIndex(0);
   };
 
-  const placePeg = () => {
-    if (!selectedColor) return;
+  const selectColor = (colorOption: typeof COLORS_OPTIONS[0]) => {
+    if (isPaused) return; // Don't allow color selection when paused
     
-    const newGuess = [...currentGuess];
-    newGuess[currentPegIndex] = {
-      id: currentPegIndex,
-      color: selectedColor.color,
-      value: selectedColor.value,
-    };
-    setCurrentGuess(newGuess);
+    // Find the first empty peg position (not necessarily the currentPegIndex)
+    const emptyPosition = currentGuess.findIndex(peg => peg === undefined);
     
-    // Move to next peg position automatically
-    if (currentPegIndex < 3) {
-      setCurrentPegIndex(currentPegIndex + 1);
+    if (emptyPosition !== -1) {
+      // Fill the first empty position found
+      const newGuess = [...currentGuess];
+      newGuess[emptyPosition] = {
+        id: emptyPosition,
+        color: colorOption.color,
+        value: colorOption.value,
+      };
+      setCurrentGuess(newGuess);
+      
+      // Update current peg index to the next empty position
+      const nextEmptyPosition = newGuess.findIndex(peg => peg === undefined);
+      setCurrentPegIndex(nextEmptyPosition !== -1 ? nextEmptyPosition : 4);
+      
+      console.log('⏰ Color selected and placed at position', emptyPosition, 'Time left:', timeLeft);
     }
     
     // Clear selected color after placing
     setSelectedColor(null);
   };
 
-  const selectColor = (colorOption: typeof COLORS_OPTIONS[0]) => {
-    setSelectedColor(colorOption);
-    // Automatically place the color in the current peg position
-    placePeg();
-  };
-
   const removePeg = (position: number) => {
+    if (isPaused) return; // Don't allow peg removal when paused
+    
     const newGuess = [...currentGuess];
     newGuess[position] = undefined;
     setCurrentGuess(newGuess);
     
-    // Update current peg index to the last filled position
-    let lastFilledIndex = -1;
-    for (let i = 0; i < newGuess.length; i++) {
-      if (newGuess[i] !== undefined) {
-        lastFilledIndex = i;
-      }
-    }
-    setCurrentPegIndex(lastFilledIndex + 1);
+    // Update current peg index to the first empty position
+    const firstEmptyPosition = newGuess.findIndex(peg => peg === undefined);
+    setCurrentPegIndex(firstEmptyPosition !== -1 ? firstEmptyPosition : 4);
+    
+    console.log('⏰ Peg removed from position', position, 'New current index:', firstEmptyPosition);
   };
 
   const submitGuess = () => {
+    if (isPaused) return; // Don't allow guess submission when paused
+    
     if (currentGuess.filter(peg => peg !== undefined).length !== 4) {
       Alert.alert(
         language === 'hi' ? 'अधूरी अनुमान' : 'Incomplete Guess',
@@ -171,6 +202,9 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       setCurrentRow(currentRow + 1);
       setCurrentPegIndex(0);
       setCurrentGuess([undefined, undefined, undefined, undefined]);
+      setTimeLeft(60); // Reset timer for next row (1 minute for all 4 pegs)
+      setSelectedColor(null);
+      console.log('⏰ Moving to next row, timer reset to 60 seconds for new row');
     }
   };
 
@@ -223,11 +257,51 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
     setCurrentRow(0);
     setCurrentPegIndex(0);
     setShowGameOverModal(false);
+    setTimeLeft(60);
+    setIsPaused(false);
+    setTimerActive(false);
   };
 
   const closeGameOverModal = () => {
     setShowGameOverModal(false);
     resetGame();
+  };
+
+  const handleTimeUp = () => {
+    console.log('⏰ Time\'s up for this row! Losing this attempt...');
+    console.log('Current attempts:', attempts, 'Current row:', currentRow);
+    
+    // Create a failed attempt with empty feedback (no pegs to avoid rendering errors)
+    const failedGuess: Guess = {
+      pegs: [], // Empty array instead of undefined pegs
+      feedback: { black: 0, white: 0 }
+    };
+    
+    const newGuesses = [...guesses, failedGuess];
+    setGuesses(newGuesses);
+    setAttempts(attempts + 1);
+    
+    console.log('Added failed guess, new attempts:', attempts + 1);
+    
+    // Check if game is over
+    if (attempts + 1 >= 8) {
+      console.log('Game over due to time running out!');
+      setGameOver(true);
+      setShowGameOverModal(true);
+    } else {
+      // Move to next row and reset timer
+      console.log('Moving to next row, resetting timer to 60 seconds for new row');
+      setCurrentRow(currentRow + 1);
+      setCurrentPegIndex(0);
+      setCurrentGuess([undefined, undefined, undefined, undefined]);
+      setTimeLeft(60);
+      setSelectedColor(null);
+    }
+  };
+
+  const togglePause = () => {
+    setIsPaused(!isPaused);
+    console.log(isPaused ? '▶️ Game resumed' : '⏸️ Game paused');
   };
 
   const renderPeg = (peg: Peg | undefined, position: number, rowIndex: number, isCurrentGuess: boolean = false) => {
@@ -246,16 +320,19 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
     return (
       <TouchableOpacity
         style={styles.pegContainer}
-        onPress={() => placePeg()}
-        disabled={!selectedColor || gameOver || !isCurrentGuess}
+        onPress={() => {
+          // Allow tapping on empty pegs to show they're selectable
+          // The actual color selection happens in selectColor function
+        }}
+        disabled={gameOver || !isCurrentGuess || isPaused}
       >
         <View style={[
           styles.peg, 
           styles.emptyPeg,
           isHighlighted && styles.highlightedPeg
         ]}>
-          {selectedColor && isHighlighted && !gameOver && (
-            <View style={[styles.pegPreview, { backgroundColor: selectedColor.color }]} />
+          {isHighlighted && !gameOver && !isPaused && (
+            <View style={[styles.pegPreview, { backgroundColor: '#dee2e6' }]} />
           )}
         </View>
       </TouchableOpacity>
@@ -304,12 +381,22 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       step2: { en: '2. Tap on empty pegs to place your colors', hi: '2. अपने रंग रखने के लिए खाली पेग पर टैप करें' },
       step3: { en: '3. Submit your guess when you have 4 pegs', hi: '3. जब आपके पास 4 पेग हों तो अपनी अनुमान जमा करें' },
       step4: { en: '4. Use the feedback to improve your next guess', hi: '4. अपनी अगली अनुमान को बेहतर बनाने के लिए फीडबैक का उपयोग करें' },
+      step5: { en: '5. You have 60 seconds to complete each row.', hi: '5. प्रत्येक पंक्ति को 60 सेकंड में पूरा करें।' },
       close: { en: 'Close', hi: 'बंद करें' },
       startGame: { en: 'Start Game', hi: 'खेल शुरू करें' },
       rules: { en: 'Game Rules', hi: 'खेल के नियम' },
       totalAttempts: { en: 'Total Attempts: 8', hi: 'कुल प्रयास: 8' },
       placeColors: { en: 'Place your 4 colors', hi: 'अपने 4 रंग रखें' },
       feedback: { en: 'Feedback', hi: 'फीडबैक' },
+      time: { en: 'Time', hi: 'समय' },
+      timeUp: { en: 'Time\'s up!', hi: 'समय समाप्त!' },
+      pause: { en: 'Pause', hi: 'रोकें' },
+      resume: { en: 'Resume', hi: 'जारी रखें' },
+      timerRule: { en: 'You have 60 seconds to complete each row.', hi: 'प्रत्येक पंक्ति को 60 सेकंड में पूरा करें।' },
+      timerRuleIcon: { en: '⏰', hi: '⏰' },
+      timerInfoTitle: { en: 'Time Limit', hi: 'समय सीमा' },
+      timerInfoText: { en: 'You have 60 seconds to complete each row. If you run out of time, your guess will be marked as a failed attempt.', hi: 'प्रत्येक पंक्ति को 60 सेकंड में पूरा करें। यदि समय समाप्त हो जाता है, तो आपका अनुमान एक विफल प्रयास के रूप में चिह्नित हो जाएगा।' },
+      timerPauseInfo: { en: 'You can pause and resume the timer during your turn.', hi: 'आप अपने टर्म के दौरान टाइमर को रोक और फिर से शुरू कर सकते हैं।' },
     };
     return translations[key]?.[language] || translations[key]?.en || key;
   };
@@ -318,7 +405,29 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   console.log('Rendering initial screen, gameStarted:', gameStarted);
   if (!gameStarted) {
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContentContainer}
+      >
+        {/* Start Button - Moved to Top */}
+        <View style={styles.startButtonContainer}>
+          <TouchableOpacity 
+            style={styles.enhancedStartButton} 
+            onPress={startGame}
+          >
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.primaryDark]}
+              style={styles.enhancedStartButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Ionicons name="play-circle" size={32} color="white" />
+              <Text style={styles.enhancedStartButtonText}>{t('startGame')}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
         {/* Combined Instructions & Colors Section */}
         <View style={styles.combinedInstructionsColorsSection}>
           <Text style={styles.combinedSectionTitle}>{t('howToPlay')}</Text>
@@ -329,6 +438,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
             <Text style={styles.combinedInstructionText}>{t('step2')}</Text>
             <Text style={styles.combinedInstructionText}>{t('step3')}</Text>
             <Text style={styles.combinedInstructionText}>{t('step4')}</Text>
+            <Text style={styles.combinedInstructionText}>{t('step5')}</Text>
           </View>
 
           {/* Rules */}
@@ -345,6 +455,22 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
               </View>
               <Text style={styles.combinedRuleText}>{t('whitePin')}</Text>
             </View>
+            <View style={styles.combinedRuleItem}>
+              <View style={styles.combinedRuleIcon}>
+                <Text style={styles.timerRuleIcon}>⏰</Text>
+              </View>
+              <Text style={styles.combinedRuleText}>{t('timerRule')}</Text>
+            </View>
+          </View>
+
+          {/* Timer Information Section */}
+          <View style={styles.timerInfoSection}>
+            <View style={styles.timerInfoHeader}>
+              <Text style={styles.timerInfoIcon}>⏰</Text>
+              <Text style={styles.timerInfoTitle}>{t('timerInfoTitle')}</Text>
+            </View>
+            <Text style={styles.timerInfoText}>{t('timerInfoText')}</Text>
+            <Text style={styles.timerInfoText}>{t('timerPauseInfo')}</Text>
           </View>
 
           {/* Colors */}
@@ -366,28 +492,12 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
             </View>
           </View>
         </View>
-
-        {/* Start Button */}
-        <View style={styles.startButtonContainer}>
-          <TouchableOpacity 
-            style={styles.enhancedStartButton} 
-            onPress={startGame}
-          >
-            <LinearGradient
-              colors={[COLORS.primary, COLORS.primaryDark]}
-              style={styles.enhancedStartButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Ionicons name="play-circle" size={32} color="white" />
-              <Text style={styles.enhancedStartButtonText}>{t('startGame')}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
         
         {/* Extra Spacing for Better Scrolling */}
         <View style={styles.bottomSpacing} />
-
+        
+        {/* Additional Bottom Spacing */}
+        <View style={styles.extraBottomSpacing} />
 
       </ScrollView>
     );
@@ -402,6 +512,36 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
           <Text style={styles.attemptsLabel}>{t('remaining')}</Text>
           <Text style={styles.attemptsValue}>{8 - attempts}</Text>
         </View>
+        
+        {/* Timer Display */}
+        <View style={styles.timerDisplay}>
+          <Text style={styles.timerLabel}>
+            {t('time')}
+          </Text>
+          <Text style={[
+            styles.timerValue,
+            timeLeft <= 10 && styles.timerWarning
+          ]}>
+            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+          </Text>
+        </View>
+        
+        {/* Pause/Resume Button */}
+        <TouchableOpacity 
+          style={[
+            styles.pauseButton,
+            isPaused && styles.pauseButtonActive
+          ]} 
+          onPress={togglePause}
+          disabled={gameOver}
+        >
+          <Ionicons 
+            name={isPaused ? "play" : "pause"} 
+            size={24} 
+            color={isPaused ? "white" : COLORS.primary} 
+          />
+        </TouchableOpacity>
+        
         <TouchableOpacity style={styles.exitButton} onPress={() => setShowExitAlert(true)}>
           <Ionicons name="exit" size={24} color={COLORS.primary} />
         </TouchableOpacity>
@@ -418,14 +558,19 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
             {COLORS_OPTIONS.map((colorOption) => (
               <TouchableOpacity
                 key={colorOption.value}
-                style={styles.sidebarColorOption}
+                style={[
+                  styles.sidebarColorOption,
+                  isPaused && styles.sidebarColorOptionDisabled
+                ]}
                 onPress={() => selectColor(colorOption)}
+                disabled={isPaused}
               >
                 <View
                   style={[
                     styles.sidebarColorCircle,
                     { backgroundColor: colorOption.color },
                     selectedColor?.value === colorOption.value && styles.selectedSidebarColor,
+                    isPaused && styles.sidebarColorCircleDisabled
                   ]}
                 >
                   {selectedColor?.value === colorOption.value && (
@@ -442,10 +587,10 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
           <TouchableOpacity
             style={[
               styles.sidebarOkButton,
-              currentGuess.filter(peg => peg !== undefined).length !== 4 && styles.sidebarOkButtonDisabled,
+              (currentGuess.filter(peg => peg !== undefined).length !== 4 || isPaused) && styles.sidebarOkButtonDisabled,
             ]}
             onPress={submitGuess}
-            disabled={currentGuess.filter(peg => peg !== undefined).length !== 4}
+            disabled={currentGuess.filter(peg => peg !== undefined).length !== 4 || isPaused}
           >
             <LinearGradient
               colors={currentGuess.filter(peg => peg !== undefined).length === 4 ? [COLORS.primary, COLORS.primaryDark] : ['#ccc', '#999']}
@@ -462,21 +607,45 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
         <View style={styles.centerGameArea}>
           <Text style={styles.centerTitle}>{t('placeColors')}</Text>
           
+          {/* Pause Overlay */}
+          {isPaused && (
+            <View style={styles.pauseOverlay}>
+              <Text style={styles.pauseText}>{t('pause')}</Text>
+            </View>
+          )}
+          
           {/* Game Board with 8 Rows */}
           <View style={styles.gameBoard}>
             {/* Previous Rows (completed attempts) */}
             {guesses.map((guess, rowIndex) => (
               <View key={rowIndex} style={styles.gameRow}>
                 <View style={styles.centerPegsContainer}>
-                  {guess.pegs.map((peg, pegIndex) => (
-                    <View key={pegIndex} style={styles.centerPegWrapper}>
-                      <View style={[styles.peg, { backgroundColor: peg.color }]} />
-                    </View>
-                  ))}
+                  {guess.pegs.length > 0 ? (
+                    // Render pegs if they exist
+                    guess.pegs.map((peg, pegIndex) => (
+                      <View key={pegIndex} style={styles.centerPegWrapper}>
+                        <View style={[styles.peg, { backgroundColor: peg.color }]} />
+                      </View>
+                    ))
+                  ) : (
+                    // Render empty pegs for failed attempts (time ran out)
+                    [0, 1, 2, 3].map((position) => (
+                      <View key={position} style={styles.centerPegWrapper}>
+                        <View style={[styles.peg, styles.emptyPeg, styles.failedPeg]} />
+                      </View>
+                    ))
+                  )}
                 </View>
                 {/* Feedback for completed rows */}
                 <View style={styles.feedbackContainer}>
-                  {renderFeedback(guess.feedback)}
+                  {guess.pegs.length > 0 ? (
+                    renderFeedback(guess.feedback)
+                  ) : (
+                    // Show time's up indicator for failed attempts
+                    <View style={styles.timeUpIndicator}>
+                      <Text style={styles.timeUpText}>⏰</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             ))}
@@ -643,6 +812,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
+  scrollContentContainer: {
+    flexGrow: 1,
+    paddingBottom: 60,
+  },
   // New Enhanced Initial Screen Styles
   simpleHeader: {
     backgroundColor: 'white',
@@ -676,6 +849,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    marginBottom: 20,
   },
   combinedSectionTitle: {
     fontSize: 20,
@@ -718,6 +892,7 @@ const styles = StyleSheet.create({
   },
   combinedColorsContent: {
     marginTop: 12,
+    marginBottom: 16,
   },
   combinedColorsTitle: {
     fontSize: 16,
@@ -730,15 +905,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
+    marginBottom: 8,
   },
   combinedColorOption: {
     alignItems: 'center',
   },
   combinedColorCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -750,7 +926,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   combinedColorName: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
     color: 'white',
     textShadowColor: 'rgba(0,0,0,0.5)',
@@ -759,7 +935,7 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   combinedColorNameHi: {
-    fontSize: 7,
+    fontSize: 6,
     fontWeight: '600',
     color: 'white',
     textShadowColor: 'rgba(0,0,0,0.5)',
@@ -1019,11 +1195,13 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   startButtonContainer: {
-    padding: 16,
-    paddingBottom: 20,
+    padding: 20,
+    paddingTop: 40,
+    paddingBottom: 24,
     alignItems: 'center',
     margin: 16,
-    marginBottom: 20,
+    marginTop: 20,
+    marginBottom: 16,
   },
   enhancedStartButton: {
     borderRadius: 30,
@@ -1052,7 +1230,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   bottomSpacing: {
-    height: 20,
+    height: 80,
+  },
+  extraBottomSpacing: {
+    height: 40,
   },
   gameContainer: {
     flex: 1,
@@ -1320,6 +1501,9 @@ const styles = StyleSheet.create({
   sidebarColorOption: {
     alignItems: 'center',
   },
+  sidebarColorOptionDisabled: {
+    opacity: 0.5,
+  },
   sidebarColorCircle: {
     width: 40,
     height: 40,
@@ -1333,6 +1517,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
+  },
+  sidebarColorCircleDisabled: {
+    opacity: 0.5,
   },
   selectedSidebarColor: {
     borderColor: COLORS.primary,
@@ -1393,7 +1580,7 @@ const styles = StyleSheet.create({
   },
   centerPegsContainer: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 2,
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
@@ -1401,12 +1588,12 @@ const styles = StyleSheet.create({
   },
   centerPegWrapper: {
     alignItems: 'center',
-    marginHorizontal: 2,
+    marginHorizontal: 1,
   },
   centerPegSelected: {
     borderWidth: 2,
     borderColor: COLORS.primary,
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 2,
   },
   centerPegClickable: {
@@ -1491,10 +1678,10 @@ const styles = StyleSheet.create({
   },
   feedbackContainer: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 20,
+    marginLeft: 8,
     minWidth: 80,
   },
   feedbackPinContainer: {
@@ -1632,9 +1819,9 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   peg: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 2,
     borderColor: '#e9ecef',
     justifyContent: 'center',
@@ -1652,9 +1839,9 @@ const styles = StyleSheet.create({
     borderColor: '#dee2e6',
   },
   pegPreview: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
   },
   removeButton: {
     position: 'absolute',
@@ -1700,7 +1887,7 @@ const styles = StyleSheet.create({
   highlightedPeg: {
     borderWidth: 3,
     borderColor: COLORS.primary,
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 2,
   },
   gameOverModal: {
@@ -1752,9 +1939,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   modalPeg: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 2,
     borderColor: '#e9ecef',
     justifyContent: 'center',
@@ -1844,6 +2031,122 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
+  },
+  timerDisplay: {
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
+  },
+  timerLabel: {
+    fontSize: 11,
+    color: '#7f8c8d',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  timerValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  timerWarning: {
+    color: '#ff4757',
+    fontWeight: '900',
+  },
+  pauseButton: {
+    padding: 10,
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
+    marginHorizontal: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    borderWidth: 0,
+  },
+  pauseButtonActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    borderWidth: 2,
+  },
+  pauseOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  pauseText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  failedPeg: {
+    backgroundColor: '#e74c3c', // Red background for failed attempts
+  },
+  timeUpIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#ff4757',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  timeUpText: {
+    fontSize: 20,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  timerRuleIcon: {
+    fontSize: 16,
+  },
+  timerInfoSection: {
+    backgroundColor: 'white',
+    margin: 12,
+    padding: 16,
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    marginTop: 16,
+  },
+  timerInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  timerInfoIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  timerInfoTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  timerInfoText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
   },
 });
 

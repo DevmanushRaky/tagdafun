@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Modal, Dimensions, Share, Platform } from 'react-native';
 import { COLORS, TYPOGRAPHY } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 interface Peg {
   id: number;
@@ -23,6 +25,17 @@ interface MastermindProps {
   onShowResult: (type: 'mastermind', result: string, subtitle: string, badgeText: string, win: boolean) => void;
 }
 
+interface GameStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  bestScore: number;
+  bestTime: number;
+  bestAttempts: number;
+  totalPlayTime: number;
+  achievements: string[];
+  achievementCounts: { [key: string]: number };
+}
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const COLORS_OPTIONS = [
@@ -33,6 +46,8 @@ const COLORS_OPTIONS = [
   { color: '#FF6348', value: 5, name: 'Orange', nameHi: 'नारंगी', gradient: [COLORS.primary, '#FF4757'] },
   { color: '#A55EEA', value: 6, name: 'Purple', nameHi: 'बैंगनी', gradient: [COLORS.secondary, '#8B5CF6'] },
 ];
+
+const STORAGE_KEY = 'tagdafun.mastermind.stats';
 
 const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const { language } = useLanguage();
@@ -52,6 +67,16 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isPaused, setIsPaused] = useState(false);
   const [timerActive, setTimerActive] = useState(false);
+  const [gameStats, setGameStats] = useState<GameStats>({
+    gamesPlayed: 0,
+    gamesWon: 0,
+    bestScore: 0,
+    bestTime: 0,
+    bestAttempts: 0,
+    totalPlayTime: 0,
+    achievements: [],
+    achievementCounts: {},
+  });
 
   useEffect(() => {
     if (gameStarted) {
@@ -66,6 +91,200 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       console.log('⏰ Game started! 1 minute timer for first row begins...');
     }
   }, [gameStarted]);
+
+  // Load stats when component mounts
+  useEffect(() => {
+    loadGameStats();
+  }, []);
+
+  const loadGameStats = async () => {
+    try {
+      const savedStats = await AsyncStorage.getItem(STORAGE_KEY);
+      if (savedStats) {
+        const parsedStats = JSON.parse(savedStats);
+        // Ensure achievementCounts is always an object
+        if (!parsedStats.achievementCounts) {
+          parsedStats.achievementCounts = {};
+        }
+        setGameStats(parsedStats);
+      }
+    } catch (error) {
+      console.log('Error loading stats:', error);
+    }
+  };
+
+  const saveGameStats = async (newStats: GameStats) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newStats));
+      setGameStats(newStats);
+    } catch (error) {
+      console.log('Error saving stats:', error);
+    }
+  };
+
+  const shareGameResult = async () => {
+    try {
+      const timeUsed = 60 - timeLeft;
+      const score = calculateScore(attempts, timeUsed);
+      const date = new Date().toLocaleDateString();
+      const time = new Date().toLocaleTimeString();
+      
+      let shareMessage = '';
+      
+      if (language === 'hi') {
+        shareMessage = `🎯 मास्टरमाइंड गेम में जीत! 🎉\n\n` +
+          `🏆 स्कोर: ${score} अंक\n` +
+          `⏰ समय: ${Math.floor(timeUsed / 60)}:${(timeUsed % 60).toString().padStart(2, '0')}\n` +
+          `🎲 प्रयास: ${attempts}\n` +
+          `📅 तारीख: ${date}\n` +
+          `🕐 समय: ${time}\n\n` +
+          `🎮 TagDaFun ऐप से खेलें!\n` +
+          `📱 डाउनलोड करें: https://play.google.com/store/apps/details?id=com.tagdafun.app\n\n` +
+          `#TagDaFun #Mastermind #PuzzleGame #BrainGame`;
+      } else {
+        shareMessage = `🎯 Mastermind Game Victory! 🎉\n\n` +
+          `🏆 Score: ${score} points\n` +
+          `⏰ Time: ${Math.floor(timeUsed / 60)}:${(timeUsed % 60).toString().padStart(2, '0')}\n` +
+          `🎲 Attempts: ${attempts}\n` +
+          `📅 Date: ${date}\n` +
+          `🕐 Time: ${time}\n\n` +
+          `🎮 Play on TagDaFun App!\n` +
+          `📱 Download: https://play.google.com/store/apps/details?id=com.tagdafun.app\n\n` +
+          `#TagDaFun #Mastermind #PuzzleGame #BrainGame`;
+      }
+      
+      const shareOptions = {
+        message: shareMessage,
+        title: language === 'hi' ? 'मास्टरमाइंड गेम जीत!' : 'Mastermind Game Victory!',
+        url: 'https://play.google.com/store/apps/details?id=com.tagdafun.app',
+      };
+      
+      if (Platform.OS === 'android') {
+        await Share.share(shareOptions);
+      } else {
+        await Share.share(shareOptions);
+      }
+      
+      console.log('📤 Game result shared successfully!');
+    } catch (error) {
+      console.log('Error sharing game result:', error);
+      Alert.alert(
+        language === 'hi' ? 'शेयर करने में त्रुटि' : 'Share Error',
+        language === 'hi' ? 'गेम रिजल्ट शेयर करने में समस्या आई।' : 'There was an issue sharing the game result.'
+      );
+    }
+  };
+
+  const shareGameStats = async () => {
+    try {
+      const date = new Date().toLocaleDateString();
+      const time = new Date().toLocaleTimeString();
+      
+      let shareMessage = '';
+      
+      if (language === 'hi') {
+        shareMessage = `🎯 मास्टरमाइंड गेम स्टैट्स 📊\n\n` +
+          `🎮 कुल खेल: ${gameStats.gamesPlayed}\n` +
+          `🏆 जीते गए: ${gameStats.gamesWon}\n` +
+          `📈 जीत दर: ${gameStats.gamesPlayed > 0 ? Math.round((gameStats.gamesWon / gameStats.gamesPlayed) * 100) : 0}%\n` +
+          `💯 सर्वश्रेष्ठ स्कोर: ${gameStats.bestScore}\n` +
+          `⏰ सर्वश्रेष्ठ समय: ${gameStats.bestTime > 0 ? `${Math.floor(gameStats.bestTime / 60)}:${(gameStats.bestTime % 60).toString().padStart(2, '0')}` : '-'}\n` +
+          `🎲 सर्वश्रेष्ठ प्रयास: ${gameStats.bestAttempts > 0 ? gameStats.bestAttempts : '-'}\n` +
+          `🏅 उपलब्धियां: ${gameStats.achievements.length}/4\n\n` +
+          `📅 तारीख: ${date}\n` +
+          `🕐 समय: ${time}\n\n` +
+          `🎮 TagDaFun ऐप से खेलें!\n` +
+          `📱 डाउनलोड करें: https://play.google.com/store/apps/details?id=com.tagdafun.app\n\n` +
+          `#TagDaFun #Mastermind #GameStats #PuzzleGame`;
+      } else {
+        shareMessage = `🎯 Mastermind Game Statistics 📊\n\n` +
+          `🎮 Total Games: ${gameStats.gamesPlayed}\n` +
+          `🏆 Games Won: ${gameStats.gamesWon}\n` +
+          `📈 Win Rate: ${gameStats.gamesPlayed > 0 ? Math.round((gameStats.gamesWon / gameStats.gamesPlayed) * 100) : 0}%\n` +
+          `💯 Best Score: ${gameStats.bestScore}\n` +
+          `⏰ Best Time: ${gameStats.bestTime > 0 ? `${Math.floor(gameStats.bestTime / 60)}:${(gameStats.bestTime % 60).toString().padStart(2, '0')}` : '-'}\n` +
+          `🎲 Best Attempts: ${gameStats.bestAttempts > 0 ? gameStats.bestAttempts : '-'}\n` +
+          `🏅 Achievements: ${gameStats.achievements.length}/4\n\n` +
+          `📅 Date: ${date}\n` +
+          `🕐 Time: ${time}\n\n` +
+          `🎮 Play on TagDaFun App!\n` +
+          `📱 Download: https://play.google.com/store/apps/details?id=com.tagdafun.app\n\n` +
+          `#TagDaFun #Mastermind #GameStats #PuzzleGame`;
+      }
+      
+      const shareOptions = {
+        message: shareMessage,
+        title: language === 'hi' ? 'मास्टरमाइंड गेम स्टैट्स' : 'Mastermind Game Statistics',
+        url: 'https://play.google.com/store/apps/details?id=com.tagdafun.app',
+      };
+      
+      await Share.share(shareOptions);
+      console.log('📤 Game stats shared successfully!');
+    } catch (error) {
+      console.log('Error sharing game stats:', error);
+      Alert.alert(
+        language === 'hi' ? 'शेयर करने में त्रुटि' : 'Share Error',
+        language === 'hi' ? 'गेम स्टैट्स शेयर करने में समस्या आई।' : 'There was an issue sharing the game stats.'
+      );
+    }
+  };
+
+  const checkAchievements = (attempts: number, timeUsed: number, score: number): string[] => {
+    const newAchievements: string[] = [];
+    
+    // Speed Demon - Win in under 2 minutes (120 seconds)
+    if (timeUsed >= 60 && timeUsed <= 120) {
+      newAchievements.push('Speed Demon');
+    }
+    
+    // Mastermind - Win in 1-2 attempts
+    if (attempts <= 2) {
+      newAchievements.push('Mastermind');
+    }
+    
+    // Persistent - Win after 6+ attempts
+    if (attempts >= 6) {
+      newAchievements.push('Persistent');
+    }
+    
+    // Perfect Game - Score 180+ points
+    if (score >= 180) {
+      newAchievements.push('Perfect Game');
+    }
+    
+    return newAchievements;
+  };
+
+  const updateGameStats = (won: boolean, attempts: number, timeUsed: number, score: number) => {
+    const newAchievements = checkAchievements(attempts, timeUsed, score);
+    const allAchievements = [...new Set([...gameStats.achievements, ...newAchievements])];
+    
+    // Update achievement counts - ensure achievementCounts is always an object
+    const currentAchievementCounts = gameStats.achievementCounts || {};
+    const newAchievementCounts = { ...currentAchievementCounts };
+    newAchievements.forEach(achievement => {
+      newAchievementCounts[achievement] = (newAchievementCounts[achievement] || 0) + 1;
+    });
+    
+    const newStats: GameStats = {
+      gamesPlayed: gameStats.gamesPlayed + 1,
+      gamesWon: gameStats.gamesWon + (won ? 1 : 0),
+      bestScore: Math.max(gameStats.bestScore, score),
+      bestTime: won && (gameStats.bestTime === 0 || timeUsed < gameStats.bestTime) ? timeUsed : gameStats.bestTime,
+      bestAttempts: won && (gameStats.bestAttempts === 0 || attempts < gameStats.bestAttempts) ? attempts : gameStats.bestAttempts,
+      totalPlayTime: gameStats.totalPlayTime + timeUsed,
+      achievements: allAchievements,
+      achievementCounts: newAchievementCounts,
+    };
+    
+    saveGameStats(newStats);
+    
+    // Show new achievements
+    const newUnlocked = newAchievements.filter(achievement => !gameStats.achievements.includes(achievement));
+    if (newUnlocked.length > 0) {
+      console.log('🏆 New achievements unlocked:', newUnlocked);
+    }
+  };
 
   // Timer countdown effect
   useEffect(() => {
@@ -193,10 +412,12 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       setGameWon(true);
       setGameOver(true);
       setShowGameOverModal(true);
+      updateGameStats(true, attempts + 1, 60 - timeLeft, calculateScore(attempts + 1, 60 - timeLeft));
     } else if (attempts + 1 >= 8) {
       console.log('😔 GAME OVER! Showing game over modal...');
       setGameOver(true);
       setShowGameOverModal(true);
+      updateGameStats(false, attempts + 1, 60 - timeLeft, calculateScore(attempts + 1, 60 - timeLeft));
     } else {
       // Move to next row below (increment currentRow)
       setCurrentRow(currentRow + 1);
@@ -237,12 +458,31 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
     return { black, white };
   };
 
-  const calculateScore = (attemptNumber: number): number => {
-    if (attemptNumber === 1) return 50;
-    if (attemptNumber <= 4) return 30;
-    if (attemptNumber <= 7) return 20;
-    if (attemptNumber === 8) return 10;
-    return 0;
+  const calculateScore = (attemptNumber: number, timeUsed: number): number => {
+    let baseScore = 0;
+    
+    // Base score based on attempts
+    if (attemptNumber === 1) baseScore = 100;
+    else if (attemptNumber <= 3) baseScore = 80;
+    else if (attemptNumber <= 5) baseScore = 60;
+    else if (attemptNumber <= 7) baseScore = 40;
+    else baseScore = 20;
+    
+    // Time bonus (faster = more points)
+    let timeBonus = 0;
+    if (timeUsed <= 30) timeBonus = 50;      // Under 30 seconds
+    else if (timeUsed <= 45) timeBonus = 30; // Under 45 seconds
+    else if (timeUsed <= 55) timeBonus = 15; // Under 55 seconds
+    
+    // Perfect attempt bonus
+    let perfectBonus = 0;
+    if (attemptNumber === 1) perfectBonus = 30;
+    else if (attemptNumber === 2) perfectBonus = 20;
+    
+    const totalScore = baseScore + timeBonus + perfectBonus;
+    console.log(`🎯 Score calculation: Base(${baseScore}) + Time(${timeBonus}) + Perfect(${perfectBonus}) = ${totalScore}`);
+    
+    return totalScore;
   };
 
   const resetGame = () => {
@@ -288,6 +528,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       console.log('Game over due to time running out!');
       setGameOver(true);
       setShowGameOverModal(true);
+      updateGameStats(false, attempts + 1, 60, calculateScore(attempts + 1, 60));
     } else {
       // Move to next row and reset timer
       console.log('Moving to next row, resetting timer to 60 seconds for new row');
@@ -397,6 +638,18 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       timerInfoTitle: { en: 'Time Limit', hi: 'समय सीमा' },
       timerInfoText: { en: 'You have 60 seconds to complete each row. If you run out of time, your guess will be marked as a failed attempt.', hi: 'प्रत्येक पंक्ति को 60 सेकंड में पूरा करें। यदि समय समाप्त हो जाता है, तो आपका अनुमान एक विफल प्रयास के रूप में चिह्नित हो जाएगा।' },
       timerPauseInfo: { en: 'You can pause and resume the timer during your turn.', hi: 'आप अपने टर्म के दौरान टाइमर को रोक और फिर से शुरू कर सकते हैं।' },
+      gameStats: { en: 'Game Statistics', hi: 'खेल सांख्यिकी' },
+      gamesPlayed: { en: 'Games Played', hi: 'खेल खेले गए' },
+      gamesWon: { en: 'Games Won', hi: 'खेल जीते गए' },
+      winRate: { en: 'Win Rate', hi: 'जीत दर' },
+      bestScore: { en: 'Best Score', hi: 'अच्छी स्कोर' },
+      bestTime: { en: 'Best Time', hi: 'अच्छी समय' },
+      bestAttempts: { en: 'Best Attempts', hi: 'अच्छी प्रयास' },
+      achievements: { en: 'Achievements', hi: 'अर्हान्वाद' },
+      totalUnlocked: { en: 'Total Unlocked', hi: 'कुल अनलॉक किए गए' },
+      totalUnlocks: { en: 'Total Unlocks', hi: 'कुल अनलॉक किए गए' },
+      share: { en: 'Share', hi: 'शेयर करें' },
+      shareStats: { en: 'Share Stats', hi: 'स्टैट्स शेयर करें' },
     };
     return translations[key]?.[language] || translations[key]?.en || key;
   };
@@ -424,6 +677,107 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
             >
               <Ionicons name="play-circle" size={32} color="white" />
               <Text style={styles.enhancedStartButtonText}>{t('startGame')}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        {/* Game Statistics Section */}
+        <View style={styles.statsSection}>
+          <Text style={styles.statsSectionTitle}>{t('gameStats')}</Text>
+          
+          {/* Stats Cards */}
+          <View style={styles.statsCardsContainer}>
+            <View style={styles.statsCard}>
+              <Text style={styles.statsCardValue}>{gameStats.gamesPlayed}</Text>
+              <Text style={styles.statsCardLabel}>{t('gamesPlayed')}</Text>
+            </View>
+            <View style={styles.statsCard}>
+              <Text style={styles.statsCardValue}>{gameStats.gamesWon}</Text>
+              <Text style={styles.statsCardLabel}>{t('gamesWon')}</Text>
+            </View>
+            <View style={styles.statsCard}>
+              <Text style={styles.statsCardValue}>{gameStats.gamesPlayed > 0 ? Math.round((gameStats.gamesWon / gameStats.gamesPlayed) * 100) : 0}%</Text>
+              <Text style={styles.statsCardLabel}>{t('winRate')}</Text>
+            </View>
+          </View>
+
+          {/* Best Records */}
+          <View style={styles.bestRecordsContainer}>
+            <View style={styles.bestRecordItem}>
+              <Text style={styles.bestRecordLabel}>{t('bestScore')}</Text>
+              <Text style={styles.bestRecordValue}>{gameStats.bestScore}</Text>
+            </View>
+            <View style={styles.bestRecordItem}>
+              <Text style={styles.bestRecordLabel}>{t('bestTime')}</Text>
+              <Text style={styles.bestRecordValue}>{gameStats.bestTime > 0 ? `${Math.floor(gameStats.bestTime / 60)}:${(gameStats.bestTime % 60).toString().padStart(2, '0')}` : '-'}</Text>
+            </View>
+            <View style={styles.bestRecordItem}>
+              <Text style={styles.bestRecordLabel}>{t('bestAttempts')}</Text>
+              <Text style={styles.bestRecordValue}>{gameStats.bestAttempts > 0 ? gameStats.bestAttempts : '-'}</Text>
+            </View>
+          </View>
+
+          {/* Achievements */}
+          {gameStats.achievements.length > 0 && (
+            <View style={styles.achievementsContainer}>
+              <Text style={styles.achievementsTitle}>{t('achievements')}</Text>
+              
+              {/* Achievement Summary */}
+              <View style={styles.achievementSummary}>
+                <Text style={styles.achievementSummaryText}>
+                  {t('totalUnlocked')}: {gameStats.achievements.length}/4
+                </Text>
+                <Text style={styles.achievementSummaryText}>
+                  {t('totalUnlocks')}: {Object.values(gameStats.achievementCounts || {}).reduce((sum, count) => sum + (count || 0), 0)}
+                </Text>
+              </View>
+              
+              {/* Achievement Progress Bar */}
+              <View style={styles.achievementProgressContainer}>
+                <View style={styles.achievementProgressBar}>
+                  <View 
+                    style={[
+                      styles.achievementProgressFill, 
+                      { width: `${(gameStats.achievements.length / 4) * 100}%` }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.achievementProgressText}>
+                  {Math.round((gameStats.achievements.length / 4) * 100)}% Complete
+                </Text>
+              </View>
+              
+              <View style={styles.achievementsGrid}>
+                {gameStats.achievements.map((achievement, index) => (
+                  <View key={index} style={styles.achievementBadge}>
+                    <Text style={styles.achievementIcon}>
+                      {achievement === 'Speed Demon' ? '⚡' : 
+                       achievement === 'Mastermind' ? '🎯' : 
+                       achievement === 'Persistent' ? '💪' : 
+                       achievement === 'Perfect Game' ? '🏆' : '⭐'}
+                    </Text>
+                    <Text style={styles.achievementText}>{achievement}</Text>
+                    <Text style={styles.achievementCount}>
+                      {(gameStats.achievementCounts && gameStats.achievementCounts[achievement]) || 0}x
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+          
+          {/* Share Stats Button */}
+          <TouchableOpacity style={styles.shareStatsButton} onPress={shareGameStats}>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.primaryDark]}
+              style={styles.shareStatsButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Ionicons name="share-social" size={20} color="white" />
+              <Text style={styles.shareStatsButtonText}>
+                {language === 'hi' ? 'स्टैट्स शेयर करें' : 'Share Stats'}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -733,7 +1087,12 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
               {gameWon && (
                 <View style={styles.scoreSection}>
                   <Text style={styles.scoreText}>
-                    Score: {calculateScore(attempts)}
+                    Score: {calculateScore(attempts, 60 - timeLeft)}
+                  </Text>
+                  <Text style={styles.scoreBreakdown}>
+                    Base: {attempts <= 1 ? 100 : attempts <= 3 ? 80 : attempts <= 5 ? 60 : attempts <= 7 ? 40 : 20}
+                    {60 - timeLeft <= 30 ? ' + Time: 50' : 60 - timeLeft <= 45 ? ' + Time: 30' : 60 - timeLeft <= 55 ? ' + Time: 15' : ''}
+                    {attempts <= 2 ? ' + Perfect: ' + (attempts === 1 ? '30' : '20') : ''}
                   </Text>
                 </View>
               )}
@@ -749,6 +1108,16 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
                 <Ionicons name="refresh" size={24} color="white" />
                 <Text style={styles.modalResetButtonText}>Play Again</Text>
               </TouchableOpacity>
+              
+              {/* Share Button - Only show when game is won */}
+              {gameWon && (
+                <TouchableOpacity style={styles.modalShareButton} onPress={shareGameResult}>
+                  <Ionicons name="share-social" size={24} color="white" />
+                  <Text style={styles.modalShareButtonText}>
+                    {language === 'hi' ? 'शेयर करें' : 'Share'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </LinearGradient>
           </View>
         </View>
@@ -1924,6 +2293,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
+  scoreBreakdown: {
+    fontSize: 16,
+    color: 'white',
+    textAlign: 'center',
+  },
   secretCodeModalTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -2147,6 +2521,160 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     lineHeight: 20,
+  },
+  statsSection: {
+    backgroundColor: 'white',
+    margin: 20,
+    padding: 24,
+    borderRadius: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  statsSectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  statsCardsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 16,
+    marginBottom: 16,
+  },
+  statsCard: {
+    alignItems: 'center',
+  },
+  statsCardValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  statsCardLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  bestRecordsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 16,
+    marginBottom: 16,
+  },
+  bestRecordItem: {
+    alignItems: 'center',
+  },
+  bestRecordLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  bestRecordValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  achievementsContainer: {
+    marginBottom: 16,
+  },
+  achievementsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.secondary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  achievementsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 8,
+  },
+  achievementBadge: {
+    alignItems: 'center',
+  },
+  achievementIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  achievementText: {
+    fontSize: 14,
+    color: COLORS.text,
+    textAlign: 'center',
+  },
+  achievementCount: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  achievementSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  achievementSummaryText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  achievementProgressContainer: {
+    marginBottom: 16,
+  },
+  achievementProgressBar: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#e9ecef',
+    overflow: 'hidden',
+  },
+  achievementProgressFill: {
+    height: '100%',
+    backgroundColor: '#2ed573',
+  },
+  achievementProgressText: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    textAlign: 'center',
+  },
+  modalShareButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    borderRadius: 30,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+    marginTop: 16,
+  },
+  modalShareButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  shareStatsButton: {
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  shareStatsButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  shareStatsButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
 

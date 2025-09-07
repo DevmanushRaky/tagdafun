@@ -67,6 +67,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isPaused, setIsPaused] = useState(false);
   const [timerActive, setTimerActive] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
   const [gameStats, setGameStats] = useState<GameStats>({
     gamesPlayed: 0,
     gamesWon: 0,
@@ -88,7 +89,6 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       setTimeLeft(60); // 1 minute for the entire first row (all 4 pegs)
       setTimerActive(true);
       setIsPaused(false);
-      console.log('⏰ Game started! 1 minute timer for first row begins...');
     }
   }, [gameStarted]);
 
@@ -344,7 +344,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   };
 
   const selectColor = (colorOption: typeof COLORS_OPTIONS[0]) => {
-    if (isPaused) return; // Don't allow color selection when paused
+    if (isPaused || gameOver || reviewMode) return; // Don't allow selection when paused, finished or reviewing
     
     // Find the first empty peg position (not necessarily the currentPegIndex)
     const emptyPosition = currentGuess.findIndex(peg => peg === undefined);
@@ -371,7 +371,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   };
 
   const removePeg = (position: number) => {
-    if (isPaused) return; // Don't allow peg removal when paused
+    if (isPaused || gameOver || reviewMode) return; // Don't allow peg removal when paused, finished or reviewing
     
     const newGuess = [...currentGuess];
     newGuess[position] = undefined;
@@ -385,7 +385,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   };
 
   const submitGuess = () => {
-    if (isPaused) return; // Don't allow guess submission when paused
+    if (isPaused || reviewMode) return; // Don't allow guess submission when paused or reviewing
     
     if (currentGuess.filter(peg => peg !== undefined).length !== 4) {
       Alert.alert(
@@ -500,6 +500,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
     setTimeLeft(60);
     setIsPaused(false);
     setTimerActive(false);
+    setReviewMode(false);
   };
 
   const closeGameOverModal = () => {
@@ -543,6 +544,13 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const togglePause = () => {
     setIsPaused(!isPaused);
     console.log(isPaused ? '▶️ Game resumed' : '⏸️ Game paused');
+  };
+
+  const viewGameHistory = () => {
+    setShowGameOverModal(false);
+    setTimerActive(false);
+    setIsPaused(false);
+    setReviewMode(true);
   };
 
   const renderPeg = (peg: Peg | undefined, position: number, rowIndex: number, isCurrentGuess: boolean = false) => {
@@ -655,7 +663,6 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   };
 
   // Initial Screen - Before game starts
-  console.log('Rendering initial screen, gameStarted:', gameStarted);
   if (!gameStarted) {
     return (
       <ScrollView 
@@ -884,10 +891,11 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
         <TouchableOpacity 
           style={[
             styles.pauseButton,
-            isPaused && styles.pauseButtonActive
+            isPaused && styles.pauseButtonActive,
+            reviewMode && { opacity: 0.4 }
           ]} 
           onPress={togglePause}
-          disabled={gameOver}
+          disabled={gameOver || reviewMode}
         >
           <Ionicons 
             name={isPaused ? "play" : "pause"} 
@@ -896,7 +904,18 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
           />
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.exitButton} onPress={() => setShowExitAlert(true)}>
+        <TouchableOpacity style={styles.exitButton} onPress={() => {
+          if (reviewMode) {
+            // Exit review mode immediately
+            setReviewMode(false);
+            setGameStarted(false);
+            setGameOver(false);
+            setIsPaused(false);
+            setTimerActive(false);
+            return;
+          }
+          setShowExitAlert(true);
+        }}>
           <Ionicons name="exit" size={24} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
@@ -941,10 +960,10 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
           <TouchableOpacity
             style={[
               styles.sidebarOkButton,
-              (currentGuess.filter(peg => peg !== undefined).length !== 4 || isPaused) && styles.sidebarOkButtonDisabled,
+              (currentGuess.filter(peg => peg !== undefined).length !== 4 || isPaused || reviewMode) && styles.sidebarOkButtonDisabled,
             ]}
             onPress={submitGuess}
-            disabled={currentGuess.filter(peg => peg !== undefined).length !== 4 || isPaused}
+            disabled={currentGuess.filter(peg => peg !== undefined).length !== 4 || isPaused || reviewMode}
           >
             <LinearGradient
               colors={currentGuess.filter(peg => peg !== undefined).length === 4 ? [COLORS.primary, COLORS.primaryDark] : ['#ccc', '#999']}
@@ -1075,21 +1094,24 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.gameOverModal}>
             <LinearGradient
-              colors={gameWon ? ['#2ed573', '#1e90ff'] : ['#ff4757', '#ff3742']}
+              colors={gameWon ? ['#2ed573', '#1e90ff'] : [COLORS.surfaceDark, COLORS.surface]}
               style={styles.gameOverModalGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={styles.gameOverModalTitle}>
+              <Text style={[
+                styles.gameOverModalTitle,
+                { color: gameWon ? 'white' : COLORS.text }
+              ]}>
                 {gameWon ? '🎉 Congratulations!' : '😔 Game Over!'}
               </Text>
               
               {gameWon && (
                 <View style={styles.scoreSection}>
-                  <Text style={styles.scoreText}>
+                  <Text style={[styles.scoreText, { color: gameWon ? 'white' : COLORS.text }]}>
                     Score: {calculateScore(attempts, 60 - timeLeft)}
                   </Text>
-                  <Text style={styles.scoreBreakdown}>
+                  <Text style={[styles.scoreBreakdown, { color: gameWon ? 'white' : COLORS.text }]}>
                     Base: {attempts <= 1 ? 100 : attempts <= 3 ? 80 : attempts <= 5 ? 60 : attempts <= 7 ? 40 : 20}
                     {60 - timeLeft <= 30 ? ' + Time: 50' : 60 - timeLeft <= 45 ? ' + Time: 30' : 60 - timeLeft <= 55 ? ' + Time: 15' : ''}
                     {attempts <= 2 ? ' + Perfect: ' + (attempts === 1 ? '30' : '20') : ''}
@@ -1097,16 +1119,28 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
                 </View>
               )}
               
-              <Text style={styles.secretCodeModalTitle}>The Secret Code Was:</Text>
+              <Text style={[
+                styles.secretCodeModalTitle,
+                { color: gameWon ? 'white' : COLORS.text }
+              ]}>The Secret Code Was:</Text>
               <View style={styles.secretCodeModalRow}>
                 {secretCode.map((peg, index) => (
                   <View key={index} style={[styles.modalPeg, { backgroundColor: peg.color }]} />
                 ))}
               </View>
               
-              <TouchableOpacity style={styles.modalResetButton} onPress={closeGameOverModal}>
-                <Ionicons name="refresh" size={24} color="white" />
-                <Text style={styles.modalResetButtonText}>Play Again</Text>
+              <TouchableOpacity 
+                style={[
+                  styles.modalResetButton,
+                  !gameWon && { backgroundColor: COLORS.primary, borderColor: 'transparent' }
+                ]} 
+                onPress={closeGameOverModal}
+              >
+                <Ionicons name="refresh" size={24} color={gameWon ? 'white' : 'white'} />
+                <Text style={[
+                  styles.modalResetButtonText,
+                  { color: 'white' }
+                ]}>Play Again</Text>
               </TouchableOpacity>
               
               {/* Share Button - Only show when game is won */}
@@ -1118,6 +1152,14 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
                   </Text>
                 </TouchableOpacity>
               )}
+
+              {/* See Game (Review) Button - show for both win and loss */}
+              <TouchableOpacity style={styles.modalSeeGameButton} onPress={viewGameHistory}>
+                <Ionicons name="eye" size={24} color={COLORS.secondary} />
+                <Text style={styles.modalSeeGameButtonText}>
+                  {language === 'hi' ? 'गेम देखें' : 'See Game'}
+                </Text>
+              </TouchableOpacity>
             </LinearGradient>
           </View>
         </View>
@@ -2261,7 +2303,7 @@ const styles = StyleSheet.create({
   },
   gameOverModal: {
     backgroundColor: 'white',
-    borderRadius: 24,
+    borderRadius: 28,
     width: '100%',
     maxWidth: 400,
     maxHeight: '80%',
@@ -2274,6 +2316,7 @@ const styles = StyleSheet.create({
   gameOverModalGradient: {
     alignItems: 'center',
     padding: 32,
+    borderRadius: 28,
   },
   gameOverModalTitle: {
     fontSize: 28,
@@ -2344,7 +2387,7 @@ const styles = StyleSheet.create({
   },
   exitAlertModal: {
     backgroundColor: 'white',
-    borderRadius: 24,
+    borderRadius: 28,
     width: '100%',
     maxWidth: 400,
     maxHeight: '80%',
@@ -2357,6 +2400,7 @@ const styles = StyleSheet.create({
   exitAlertGradient: {
     alignItems: 'center',
     padding: 32,
+    borderRadius: 28,
   },
   exitAlertTitle: {
     fontSize: 24,
@@ -2654,6 +2698,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
+  },
+  modalSeeGameButton: {
+    backgroundColor: 'white',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(0,0,0,0.1)',
+    marginTop: 12,
+  },
+  modalSeeGameButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.secondary,
   },
   shareStatsButton: {
     borderRadius: 20,

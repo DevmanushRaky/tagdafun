@@ -834,54 +834,56 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
             </View>
           </View>
 
-          {/* Achievements */}
-          {gameStats.achievements.length > 0 && (
-            <View style={styles.achievementsContainer}>
-              <Text style={styles.achievementsTitle}>{t('achievements')}</Text>
-              
-              {/* Achievement Summary */}
-              <View style={styles.achievementSummary}>
-                <Text style={styles.achievementSummaryText}>
-                  {t('totalUnlocked')}: {gameStats.achievements.length}/4
-                </Text>
-                <Text style={styles.achievementSummaryText}>
-                  {t('totalUnlocks')}: {Object.values(gameStats.achievementCounts || {}).reduce((sum, count) => sum + (count || 0), 0)}
-                </Text>
-              </View>
-              
-              {/* Achievement Progress Bar */}
-              <View style={styles.achievementProgressContainer}>
-                <View style={styles.achievementProgressBar}>
-                  <View 
-                    style={[
-                      styles.achievementProgressFill, 
-                      { width: `${(gameStats.achievements.length / 4) * 100}%` }
-                    ]} 
-                  />
-                </View>
-                <Text style={styles.achievementProgressText}>
-                  {Math.round((gameStats.achievements.length / 4) * 100)}% Complete
-                </Text>
-              </View>
-              
-              <View style={styles.achievementsGrid}>
-                {gameStats.achievements.map((achievement, index) => (
-                  <View key={index} style={styles.achievementBadge}>
-                    <Text style={styles.achievementIcon}>
-                      {achievement === 'Speed Demon' ? '⚡' : 
-                       achievement === 'Mastermind' ? '🎯' : 
-                       achievement === 'Persistent' ? '💪' : 
-                       achievement === 'Perfect Game' ? '🏆' : '⭐'}
-                    </Text>
-                    <Text style={styles.achievementText}>{achievement}</Text>
-                    <Text style={styles.achievementCount}>
-                      {(gameStats.achievementCounts && gameStats.achievementCounts[achievement]) || 0}x
-                    </Text>
-                  </View>
-                ))}
-              </View>
+          {/* Achievements (show all, lock unachieved) */}
+          <View style={styles.achievementsContainer}>
+            <Text style={styles.achievementsTitle}>{t('achievements')}</Text>
+
+            {/* Achievement Summary */}
+            <View style={styles.achievementSummary}>
+              <Text style={styles.achievementSummaryText}>
+                {t('totalUnlocked')}: {gameStats.achievements.length}/4
+              </Text>
+              <Text style={styles.achievementSummaryText}>
+                {t('totalUnlocks')}: {Object.values(gameStats.achievementCounts || {}).reduce((sum, count) => sum + (count || 0), 0)}
+              </Text>
             </View>
-          )}
+
+            {/* Achievement Progress Bar */}
+            <View style={styles.achievementProgressContainer}>
+              <View style={styles.achievementProgressBar}>
+                <View
+                  style={[
+                    styles.achievementProgressFill,
+                    { width: `${(gameStats.achievements.length / 4) * 100}%` },
+                  ]}
+                />
+              </View>
+              <Text style={styles.achievementProgressText}>
+                {Math.round((gameStats.achievements.length / 4) * 100)}% Complete
+              </Text>
+            </View>
+
+            {/* All achievements with lock state (2 x 2 grid) */}
+            {[
+              ['Speed Demon', 'Mastermind'],
+              ['Persistent', 'Perfect Game'],
+            ].map((row, rowIndex) => (
+              <View key={`ach-row-${rowIndex}`} style={styles.achievementRow}>
+                {row.map((key) => {
+                  const unlocked = gameStats.achievements.includes(key);
+                  const count = (gameStats.achievementCounts && gameStats.achievementCounts[key]) || 0;
+                  const icon = key === 'Speed Demon' ? '⚡' : key === 'Mastermind' ? '🎯' : key === 'Persistent' ? '💪' : '🏆';
+                  return (
+                    <View key={key} style={[styles.achievementBadge, !unlocked && styles.achievementBadgeLocked]}>
+                      <Text style={[styles.achievementIcon, !unlocked && styles.achievementIconLocked]}>{icon}</Text>
+                      <Text style={[styles.achievementText, !unlocked && styles.achievementTextLocked]}>{key}</Text>
+                      <Text style={[styles.achievementCount, !unlocked && styles.achievementTextLocked]}>{count}x</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
           
           {/* Share Stats Button */}
           <TouchableOpacity style={styles.shareStatsButton} onPress={shareGameStats}>
@@ -2828,21 +2830,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   achievementsGrid: {
+    display: 'none',
+  },
+  achievementRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     gap: 8,
+    marginBottom: 8,
   },
   achievementBadge: {
     alignItems: 'center',
+  },
+  achievementBadgeLocked: {
+    opacity: 0.35,
   },
   achievementIcon: {
     fontSize: 24,
     marginBottom: 4,
   },
+  achievementIconLocked: {
+    color: '#6c757d',
+  },
   achievementText: {
     fontSize: 14,
     color: COLORS.text,
     textAlign: 'center',
+  },
+  achievementTextLocked: {
+    color: '#6c757d',
   },
   achievementCount: {
     fontSize: 12,

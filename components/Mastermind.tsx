@@ -84,6 +84,11 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
     achievementCounts: {},
   });
 
+  // Achievement info tooltip state
+  const [showAchievementInfo, setShowAchievementInfo] = useState(false);
+  const [achievementInfoTitle, setAchievementInfoTitle] = useState('');
+  const [achievementInfoText, setAchievementInfoText] = useState('');
+
   // Animated gradient for review title
   const reviewGradientAnim = useRef(new Animated.Value(0)).current;
   const titleOpacity = useRef(new Animated.Value(0)).current;
@@ -314,13 +319,13 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const checkAchievements = (attempts: number, timeUsed: number, score: number): string[] => {
     const newAchievements: string[] = [];
     
-    // Speed Demon - Win in under 2 minutes (120 seconds)
-    if (timeUsed >= 60 && timeUsed <= 120) {
-      newAchievements.push('Speed Demon');
+    // Super Demon - Win on first attempt
+    if (attempts === 1) {
+      newAchievements.push('Super Demon');
     }
     
-    // Mastermind - Win in 1-2 attempts
-    if (attempts <= 2) {
+    // Mastermind - Win in 2-3 attempts
+    if (attempts >= 2 && attempts <= 3) {
       newAchievements.push('Mastermind');
     }
     
@@ -366,6 +371,42 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
     if (newUnlocked.length > 0) {
       console.log('🏆 New achievements unlocked:', newUnlocked);
     }
+  };
+
+  const getAchievementInfo = (key: string) => {
+    if (language === 'hi') {
+      switch (key) {
+        case 'Super Demon':
+          return { title: '⚡ सुपर डेमन', text: 'पहले प्रयास में गेम जीतें।' };
+        case 'Mastermind':
+          return { title: '🎯 मास्टरमाइंड', text: '2-3 प्रयासों में गेम जीतें।' };
+        case 'Persistent':
+          return { title: '💪 पर्सिस्टेंट', text: '6 या अधिक प्रयासों के बाद गेम जीतें।' };
+        case 'Perfect Game':
+          return { title: '🏆 परफेक्ट गेम', text: '180+ स्कोर प्राप्त करें।' };
+        default:
+          return { title: 'उपलब्धि', text: 'इस उपलब्धि को अनलॉक करने के लिए खेलते रहें।' };
+      }
+    }
+    switch (key) {
+      case 'Super Demon':
+        return { title: '⚡ Super Demon', text: 'Win the game on your first attempt.' };
+      case 'Mastermind':
+        return { title: '🎯 Mastermind', text: 'Win the game in 2-3 attempts.' };
+      case 'Persistent':
+        return { title: '💪 Persistent', text: 'Win the game after 6 or more attempts.' };
+      case 'Perfect Game':
+        return { title: '🏆 Perfect Game', text: 'Achieve a score of 180+ points.' };
+      default:
+        return { title: 'Achievement', text: 'Keep playing to unlock this achievement.' };
+    }
+  };
+
+  const openAchievementInfo = (key: string) => {
+    const info = getAchievementInfo(key);
+    setAchievementInfoTitle(info.title);
+    setAchievementInfoText(info.text);
+    setShowAchievementInfo(true);
   };
 
   // Timer countdown effect
@@ -865,25 +906,50 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
 
             {/* All achievements with lock state (2 x 2 grid) */}
             {[
-              ['Speed Demon', 'Mastermind'],
+              ['Super Demon', 'Mastermind'],
               ['Persistent', 'Perfect Game'],
             ].map((row, rowIndex) => (
               <View key={`ach-row-${rowIndex}`} style={styles.achievementRow}>
                 {row.map((key) => {
                   const unlocked = gameStats.achievements.includes(key);
                   const count = (gameStats.achievementCounts && gameStats.achievementCounts[key]) || 0;
-                  const icon = key === 'Speed Demon' ? '⚡' : key === 'Mastermind' ? '🎯' : key === 'Persistent' ? '💪' : '🏆';
+                  const icon = key === 'Super Demon' ? '⚡' : key === 'Mastermind' ? '🎯' : key === 'Persistent' ? '💪' : '🏆';
                   return (
-                    <View key={key} style={[styles.achievementBadge, !unlocked && styles.achievementBadgeLocked]}>
-                      <Text style={[styles.achievementIcon, !unlocked && styles.achievementIconLocked]}>{icon}</Text>
-                      <Text style={[styles.achievementText, !unlocked && styles.achievementTextLocked]}>{key}</Text>
-                      <Text style={[styles.achievementCount, !unlocked && styles.achievementTextLocked]}>{count}x</Text>
-                    </View>
+                    <TouchableOpacity
+                      key={key}
+                      activeOpacity={0.8}
+                      delayLongPress={300}
+                      onLongPress={() => openAchievementInfo(key)}
+                    >
+                      <View style={[styles.achievementBadge, !unlocked && styles.achievementBadgeLocked]}>
+                        <Text style={[styles.achievementIcon, !unlocked && styles.achievementIconLocked]}>{icon}</Text>
+                        <Text style={[styles.achievementText, !unlocked && styles.achievementTextLocked]}>{key}</Text>
+                        <Text style={[styles.achievementCount, !unlocked && styles.achievementTextLocked]}>{count}x</Text>
+                      </View>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
             ))}
           </View>
+
+          {/* Achievement info tooltip modal */}
+          <Modal
+            visible={showAchievementInfo}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowAchievementInfo(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.achievementInfoCard}>
+                <Text style={styles.achievementInfoTitle}>{achievementInfoTitle}</Text>
+                <Text style={styles.achievementInfoText}>{achievementInfoText}</Text>
+                <TouchableOpacity style={styles.achievementInfoClose} onPress={() => setShowAchievementInfo(false)}>
+                  <Text style={styles.achievementInfoCloseText}>{language === 'hi' ? 'ठीक है' : 'OK'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
           
           {/* Share Stats Button */}
           <TouchableOpacity style={styles.shareStatsButton} onPress={shareGameStats}>
@@ -2378,6 +2444,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  achievementInfoCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    width: '85%',
+    maxWidth: 360,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+  },
+  achievementInfoTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.primary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  achievementInfoText: {
+    fontSize: 14,
+    color: COLORS.text,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  achievementInfoClose: {
+    alignSelf: 'center',
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  achievementInfoCloseText: {
+    color: 'white',
+    fontWeight: '700',
   },
   helpModal: {
     backgroundColor: 'white',

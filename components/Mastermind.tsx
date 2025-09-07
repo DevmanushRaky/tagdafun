@@ -81,17 +81,37 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
 
   // Animated gradient for review title
   const reviewGradientAnim = useRef(new Animated.Value(0)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleTranslateY = useRef(new Animated.Value(8)).current;
+  const titlePulse = useRef(new Animated.Value(0)).current;
+  const bannerIconScale = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
     if (reviewMode) {
       reviewGradientAnim.setValue(0);
-      Animated.loop(
-        Animated.timing(reviewGradientAnim, {
-          toValue: 1,
-          duration: 3500,
-          useNativeDriver: true,
-        })
-      ).start();
+      titleOpacity.setValue(0);
+      titleTranslateY.setValue(8);
+      titlePulse.setValue(0);
+      bannerIconScale.setValue(0.9);
+
+      Animated.parallel([
+        Animated.loop(
+          Animated.timing(reviewGradientAnim, {
+            toValue: 1,
+            duration: 3500,
+            useNativeDriver: true,
+          })
+        ),
+        Animated.timing(titleOpacity, { toValue: 1, duration: 260, useNativeDriver: true }),
+        Animated.timing(titleTranslateY, { toValue: 0, duration: 260, useNativeDriver: true }),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(titlePulse, { toValue: 1, duration: 1100, useNativeDriver: true }),
+            Animated.timing(titlePulse, { toValue: 0, duration: 1100, useNativeDriver: true }),
+          ])
+        ),
+        Animated.spring(bannerIconScale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
+      ]).start();
     }
   }, [reviewMode]);
 
@@ -1109,10 +1129,13 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
                 styles.reviewTitleText,
                 {
                   color: gameWon ? COLORS.success : COLORS.error,
-                  opacity: reviewGradientAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }),
-                  transform: [{
-                    scale: reviewGradientAnim.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1] })
-                  }]
+                  opacity: titleOpacity,
+                  transform: [
+                    { translateY: titleTranslateY },
+                    {
+                      scale: titlePulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.03] })
+                    }
+                  ]
                 }
               ]}
             >
@@ -1126,11 +1149,13 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
             styles.reviewStatusBanner,
             gameWon ? styles.reviewStatusWin : styles.reviewStatusLose
           ]}>
-            <Ionicons
-              name={gameWon ? 'trophy' : 'close-circle'}
-              size={18}
-              color={gameWon ? '#155724' : '#721c24'}
-            />
+            <Animated.View style={{ transform: [{ scale: bannerIconScale }] }}>
+              <Ionicons
+                name={gameWon ? 'trophy' : 'close-circle'}
+                size={18}
+                color={gameWon ? '#155724' : '#721c24'}
+              />
+            </Animated.View>
             <Text style={styles.reviewStatusText}>
               {language === 'hi' ? 'खेल समाप्त' : 'Finished'}
             </Text>

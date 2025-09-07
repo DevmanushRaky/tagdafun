@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useGameGuard } from '../contexts/GameGuardContext';
 
 
 interface Peg {
@@ -51,6 +52,7 @@ const STORAGE_KEY = 'tagdafun.mastermind.stats';
 
 const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const { language } = useLanguage();
+  const { setMastermindActive, setRequestMastermindExit, pendingNavigation, setPendingNavigation } = useGameGuard();
   const [gameStarted, setGameStarted] = useState(false);
   const [secretCode, setSecretCode] = useState<Peg[]>([]);
   const [currentGuess, setCurrentGuess] = useState<(Peg | undefined)[]>([]);
@@ -117,6 +119,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
 
   useEffect(() => {
     if (gameStarted) {
+      setMastermindActive(true);
       generateSecretCode();
       // Initialize first row with empty pegs
       setCurrentGuess([undefined, undefined, undefined, undefined]);
@@ -126,6 +129,9 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       setTimerActive(true);
       setIsPaused(false);
     }
+    return () => {
+      setMastermindActive(false);
+    };
   }, [gameStarted]);
 
   // Load stats when component mounts
@@ -148,6 +154,19 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       console.log('Error loading stats:', error);
     }
   };
+
+  // Register exit request handler with guard
+  useEffect(() => {
+    const handler = () => {
+      if (gameStarted && !gameOver) {
+        setShowExitAlert(true);
+      }
+    };
+    setRequestMastermindExit(() => handler);
+    return () => {
+      setRequestMastermindExit(undefined);
+    };
+  }, [gameStarted, gameOver]);
 
   const saveGameStats = async (newStats: GameStats) => {
     try {
@@ -523,6 +542,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
 
   const resetGame = () => {
     setGameStarted(false);
+    setMastermindActive(false);
     setSecretCode([]);
     setCurrentGuess([]);
     setGuesses([]);
@@ -1282,6 +1302,11 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
                   onPress={() => {
                     setShowExitAlert(false);
                     resetGame();
+                    if (pendingNavigation) {
+                      // perform deferred tab navigation
+                      pendingNavigation();
+                      setPendingNavigation(undefined);
+                    }
                   }}
                 >
                   <Text style={styles.exitAlertExitText}>

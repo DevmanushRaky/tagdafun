@@ -39,6 +39,8 @@ interface GameStats {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+type Difficulty = 'easy' | 'hard';
+
 const COLORS_OPTIONS = [
   { color: '#FF4757', value: 1, name: 'Red', nameHi: 'लाल', gradient: [COLORS.primary, COLORS.primaryDark] },
   { color: '#3742FA', value: 2, name: 'Blue', nameHi: 'नीला', gradient: [COLORS.secondary, COLORS.secondaryLight] },
@@ -54,6 +56,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const { language } = useLanguage();
   const { setMastermindActive, setRequestMastermindExit, pendingNavigation, setPendingNavigation } = useGameGuard();
   const [gameStarted, setGameStarted] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [secretCode, setSecretCode] = useState<Peg[]>([]);
   const [currentGuess, setCurrentGuess] = useState<(Peg | undefined)[]>([]);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -388,14 +391,23 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   }, [timerActive, isPaused, timeLeft, gameOver]);
 
   const generateSecretCode = () => {
-    const newCode: Peg[] = [];
-    for (let i = 0; i < 4; i++) {
-      const randomIndex = Math.floor(Math.random() * COLORS_OPTIONS.length);
-      newCode.push({
-        id: i,
-        color: COLORS_OPTIONS[randomIndex].color,
-        value: COLORS_OPTIONS[randomIndex].value,
-      });
+    let newCode: Peg[] = [];
+
+    if (difficulty === 'easy') {
+      // 4 unique colors, no duplicates
+      const shuffled = [...COLORS_OPTIONS].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, 4);
+      newCode = selected.map((opt, i) => ({ id: i, color: opt.color, value: opt.value }));
+    } else {
+      // hard: exactly one pair + two other distinct colors (total 3 unique colors)
+      const shuffled = [...COLORS_OPTIONS].sort(() => Math.random() - 0.5);
+      const pairColor = shuffled[0];
+      // pick two other distinct colors different from pair
+      const others = shuffled.slice(1).filter(c => c.value !== pairColor.value).slice(0, 2);
+      const pool = [pairColor, pairColor, ...others];
+      // shuffle positions
+      const arranged = pool.sort(() => Math.random() - 0.5);
+      newCode = arranged.map((opt, i) => ({ id: i, color: opt.color, value: opt.value }));
     }
     setSecretCode(newCode);
     
@@ -763,6 +775,26 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
               <Ionicons name="play-circle" size={32} color="white" />
               <Text style={styles.enhancedStartButtonText}>{t('startGame')}</Text>
             </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        {/* Difficulty Toggle - compact below Start */}
+        <View style={styles.difficultyContainer}>
+          <TouchableOpacity
+            style={[styles.difficultyTab, difficulty === 'easy' ? styles.difficultyActive : styles.difficultyInactive]}
+            onPress={() => setDifficulty('easy')}
+          >
+            <Text style={[styles.difficultyText, difficulty === 'easy' ? styles.difficultyTextActive : styles.difficultyTextInactive]}>
+              {language === 'hi' ? 'आसान' : 'Easy'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.difficultyTab, difficulty === 'hard' ? styles.difficultyActive : styles.difficultyInactive]}
+            onPress={() => setDifficulty('hard')}
+          >
+            <Text style={[styles.difficultyText, difficulty === 'hard' ? styles.difficultyTextActive : styles.difficultyTextInactive]}>
+              {language === 'hi' ? 'कठिन' : 'Hard'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -1395,6 +1427,43 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
+  difficultyContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    alignSelf: 'center',
+    marginTop: 4,
+    padding: 4,
+    borderRadius: 12,
+    gap: 4,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 1,
+    width: 200,
+  },
+  difficultyTab: {
+    flex: 1,
+    borderRadius: 8,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  difficultyActive: {
+    backgroundColor: COLORS.primary,
+  },
+  difficultyInactive: {
+    backgroundColor: COLORS.surface,
+  },
+  difficultyText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  difficultyTextActive: {
+    color: 'white',
+  },
+  difficultyTextInactive: {
+    color: COLORS.primary,
+  },
   combinedInstructionsContent: {
     marginBottom: 12,
   },
@@ -1732,13 +1801,13 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   startButtonContainer: {
-    padding: 20,
-    paddingTop: 40,
-    paddingBottom: 24,
+    padding: 12,
+    paddingTop: 20,
+    paddingBottom: 12,
     alignItems: 'center',
     margin: 16,
-    marginTop: 20,
-    marginBottom: 16,
+    marginTop: 12,
+    marginBottom: 8,
   },
   enhancedStartButton: {
     borderRadius: 30,
@@ -1753,8 +1822,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 40,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 25,
     gap: 12,
   },

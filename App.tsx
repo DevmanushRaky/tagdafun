@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, Image, TouchableOpacity, Modal, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import NamesScreen from './screens/NamesScreen';
 import CoinScreen from './screens/CoinScreen';
 import TruthDareScreen from './screens/TruthDareScreen';
 import MastermindScreen from './screens/MastermindScreen';
+import PrivacyScreen from './screens/PrivacyScreen';
 
 // Import types
 import { RootTabParamList } from './types';
@@ -28,6 +29,8 @@ const TabNavigatorWithLanguage = () => {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const { isMastermindActive, requestMastermindExit, setPendingNavigation } = useGameGuard();
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   
   // Language Switcher Component for Header - defined inside the provider context
   const HeaderLanguageSwitcher = () => {
@@ -52,6 +55,21 @@ const TabNavigatorWithLanguage = () => {
           <Text style={[headerStyles.languageText, language === 'hi' && headerStyles.activeLanguageText]}>
             हि
           </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Menu Component for Header
+  const HeaderMenu = () => {
+    return (
+      <View style={headerStyles.menuContainer}>
+        <TouchableOpacity
+          style={headerStyles.menuButton}
+          onPress={() => setShowMenu(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="ellipsis-vertical" size={20} color="white" />
         </TouchableOpacity>
       </View>
     );
@@ -108,7 +126,12 @@ const TabNavigatorWithLanguage = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-          headerRight: () => <HeaderLanguageSwitcher />,
+          headerRight: () => (
+            <View style={headerStyles.headerRightContainer}>
+              <HeaderLanguageSwitcher />
+              <HeaderMenu />
+            </View>
+          ),
         })}
       >
         <Tab.Screen name="Number" component={NumberScreen} />
@@ -117,6 +140,57 @@ const TabNavigatorWithLanguage = () => {
         <Tab.Screen name="Coin" component={CoinScreen}  />
         <Tab.Screen name="TruthDare" component={TruthDareScreen}  />
       </Tab.Navigator>
+
+      {/* Menu Modal */}
+      <Modal
+        visible={showMenu}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowMenu(false)}
+      >
+        <TouchableOpacity
+          style={headerStyles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => setShowMenu(false)}
+        >
+          <View style={headerStyles.menuContent}>
+            <TouchableOpacity
+              style={headerStyles.menuItem}
+              onPress={() => {
+                setShowMenu(false);
+                setShowPrivacyModal(true);
+              }}
+            >
+              <Ionicons name="shield-checkmark" size={20} color="#FF6B00" />
+              <Text style={headerStyles.menuItemText}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Privacy Policy Modal */}
+      <Modal
+        visible={showPrivacyModal}
+        animationType="slide"
+        onRequestClose={() => setShowPrivacyModal(false)}
+      >
+        <View style={{ flex: 1 }}>
+          <View style={headerStyles.privacyHeader}>
+            <TouchableOpacity
+              style={headerStyles.closeButton}
+              onPress={() => setShowPrivacyModal(false)}
+            >
+              <Ionicons name="close" size={24} color="white" />
+            </TouchableOpacity>
+            <Text style={headerStyles.privacyHeaderTitle}>Privacy Policy</Text>
+            <View style={{ width: 24 }} />
+          </View>
+          <PrivacyScreen 
+            navigation={{} as any}
+            route={{} as any}
+          />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -336,14 +410,19 @@ const styles = StyleSheet.create({
   },
 });
 
-// Header styles for language switcher
+// Header styles for language switcher and menu
 const headerStyles = StyleSheet.create({
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
   languageContainer: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
     padding: 4,
-    marginRight: 16,
+    marginRight: 12,
   },
   languageButton: {
     paddingHorizontal: 12,
@@ -369,6 +448,67 @@ const headerStyles = StyleSheet.create({
   activeLanguageText: {
     color: '#FF6B00',
     fontWeight: 'bold',
+  },
+  menuContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  menuButton: {
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    paddingTop: 60,
+    paddingRight: 20,
+  },
+  menuContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingVertical: 8,
+    minWidth: 180,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+  privacyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FF6B00',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: 50,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  privacyHeaderTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
 

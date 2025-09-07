@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Modal, Dimensions, Share, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Modal, Dimensions, Share, Platform, Animated } from 'react-native';
 import { COLORS, TYPOGRAPHY } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -78,6 +78,22 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
     achievements: [],
     achievementCounts: {},
   });
+
+  // Animated gradient for review title
+  const reviewGradientAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (reviewMode) {
+      reviewGradientAnim.setValue(0);
+      Animated.loop(
+        Animated.timing(reviewGradientAnim, {
+          toValue: 1,
+          duration: 3500,
+          useNativeDriver: true,
+        })
+      ).start();
+    }
+  }, [reviewMode]);
 
   useEffect(() => {
     if (gameStarted) {
@@ -1083,6 +1099,44 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
         {/* Right Sidebar - Feedback Slots */}
         {/* This section is removed as feedback is now integrated into the game board */}
       </View>
+
+      {/* Review mode completion status banner placed below the entire game area */}
+      {reviewMode && (
+        <View style={styles.reviewStatusContainer}>
+          <View style={styles.reviewTitleWrapper}>
+            <Animated.Text
+              style={[
+                styles.reviewTitleText,
+                {
+                  color: gameWon ? COLORS.success : COLORS.error,
+                  opacity: reviewGradientAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }),
+                  transform: [{
+                    scale: reviewGradientAnim.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1] })
+                  }]
+                }
+              ]}
+            >
+              {language === 'hi'
+                ? (gameWon ? 'आप जीते' : 'आप हारे')
+                : (gameWon ? 'YOU WON' : 'YOU LOST')}
+            </Animated.Text>
+          </View>
+
+          <View style={[ 
+            styles.reviewStatusBanner,
+            gameWon ? styles.reviewStatusWin : styles.reviewStatusLose
+          ]}>
+            <Ionicons
+              name={gameWon ? 'trophy' : 'close-circle'}
+              size={18}
+              color={gameWon ? '#155724' : '#721c24'}
+            />
+            <Text style={styles.reviewStatusText}>
+              {language === 'hi' ? 'खेल समाप्त' : 'Finished'}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Game Over Modal */}
       <Modal
@@ -2291,7 +2345,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sidebarOkButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
   },
@@ -2715,6 +2769,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.secondary,
+  },
+  reviewStatusContainer: {
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+  },
+  reviewTitleWrapper: {
+    alignItems: 'center',
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  reviewMaskedTitle: {
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reviewTitleText: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: 'black',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  reviewStatusBanner: {
+    marginTop: 8,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+  },
+  reviewStatusWin: {
+    backgroundColor: '#d4edda',
+    borderColor: '#c3e6cb',
+  },
+  reviewStatusLose: {
+    backgroundColor: '#f8d7da',
+    borderColor: '#f5c6cb',
+  },
+  reviewStatusText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text,
   },
   shareStatsButton: {
     borderRadius: 20,

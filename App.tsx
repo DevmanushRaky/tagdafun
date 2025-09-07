@@ -450,8 +450,6 @@ const headerStyles = StyleSheet.create({
     fontWeight: 'bold',
   },
   menuContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
     padding: 8,
   },
   menuButton: {

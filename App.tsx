@@ -19,6 +19,7 @@ import { RootTabParamList } from './types';
 
 // Import language context
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { GameGuardProvider, useGameGuard } from './contexts/GameGuardContext';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const { width, height } = Dimensions.get('window');
@@ -27,6 +28,7 @@ const { width, height } = Dimensions.get('window');
 const TabNavigatorWithLanguage = () => {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
+  const { isMastermindActive, requestMastermindExit, setPendingNavigation } = useGameGuard();
   
   // Language Switcher Component for Header - defined inside the provider context
   const HeaderLanguageSwitcher = () => {
@@ -59,6 +61,17 @@ const TabNavigatorWithLanguage = () => {
   return (
     <View style={{ flex: 1 }}>
       <Tab.Navigator
+        screenListeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            if (isMastermindActive) {
+              e.preventDefault();
+              setPendingNavigation(() => () => navigation.navigate(route.name as never));
+              if (requestMastermindExit) {
+                requestMastermindExit();
+              }
+            }
+          },
+        })}
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
             let iconName: keyof typeof Ionicons.glyphMap;
@@ -264,10 +277,12 @@ export default function App(): React.JSX.Element {
   return (
     <LanguageProvider>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <StatusBar style="light" />
-          <TabNavigatorWithLanguage />
-        </NavigationContainer>
+        <GameGuardProvider>
+          <NavigationContainer>
+            <StatusBar style="light" />
+            <TabNavigatorWithLanguage />
+          </NavigationContainer>
+        </GameGuardProvider>
       </SafeAreaProvider>
     </LanguageProvider>
   );

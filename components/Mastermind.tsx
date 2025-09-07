@@ -88,6 +88,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const [showAchievementInfo, setShowAchievementInfo] = useState(false);
   const [achievementInfoTitle, setAchievementInfoTitle] = useState('');
   const [achievementInfoText, setAchievementInfoText] = useState('');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Animated gradient for review title
   const reviewGradientAnim = useRef(new Animated.Value(0)).current;
@@ -315,6 +316,8 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       );
     }
   };
+  
+  const confirmResetStats = () => setShowResetConfirm(true);
 
   const checkAchievements = (attempts: number, timeUsed: number, score: number): string[] => {
     const newAchievements: string[] = [];
@@ -786,7 +789,6 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       bestAttempts: { en: 'Best Attempts', hi: 'अच्छी प्रयास' },
       achievements: { en: 'Achievements', hi: 'अर्हान्वाद' },
       totalUnlocked: { en: 'Total Unlocked', hi: 'कुल अनलॉक किए गए' },
-      totalUnlocks: { en: 'Total Unlocks', hi: 'कुल अनलॉक किए गए' },
       share: { en: 'Share', hi: 'शेयर करें' },
       shareStats: { en: 'Share Stats', hi: 'स्टैट्स शेयर करें' },
     };
@@ -884,9 +886,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
               <Text style={styles.achievementSummaryText}>
                 {t('totalUnlocked')}: {gameStats.achievements.length}/4
               </Text>
-              <Text style={styles.achievementSummaryText}>
-                {t('totalUnlocks')}: {Object.values(gameStats.achievementCounts || {}).reduce((sum, count) => sum + (count || 0), 0)}
-              </Text>
+             
             </View>
 
             {/* Achievement Progress Bar */}
@@ -951,20 +951,93 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
             </View>
           </Modal>
           
-          {/* Share Stats Button */}
-          <TouchableOpacity style={styles.shareStatsButton} onPress={shareGameStats}>
-            <LinearGradient
-              colors={[COLORS.primary, COLORS.primaryDark]}
-              style={styles.shareStatsButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Ionicons name="share-social" size={20} color="white" />
-              <Text style={styles.shareStatsButtonText}>
-                {language === 'hi' ? 'स्टैट्स शेयर करें' : 'Share Stats'}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* Share / Reset Buttons */}
+          <View style={styles.statsActionsRow}>
+            <TouchableOpacity style={[styles.actionButton]} onPress={shareGameStats}>
+              <LinearGradient
+                colors={[COLORS.primary, COLORS.primaryDark]}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="share-social" size={18} color="white" />
+                <Text style={styles.actionButtonText}>{language === 'hi' ? 'शेयर' : 'Share'}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionButton, styles.resetButton]} onPress={confirmResetStats}>
+              <View style={styles.resetButtonInner}>
+                <Ionicons name="trash" size={18} color="#ff4757" />
+                <Text style={styles.resetButtonText}>{language === 'hi' ? 'रीसेट' : 'Reset'}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Styled Reset Confirm Modal */}
+          <Modal
+            visible={showResetConfirm}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowResetConfirm(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.exitAlertModal}>
+                <LinearGradient
+                  colors={[COLORS.primary, COLORS.primaryDark]}
+                  style={styles.exitAlertGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Text style={styles.exitAlertTitle}>
+                    {language === 'hi' ? 'स्टैट्स रीसेट करें' : 'Reset Stats'}
+                  </Text>
+                  <Text style={styles.exitAlertMessage}>
+                    {language === 'hi'
+                      ? 'क्या आप वाकई सभी गेम स्टैट्स को साफ करना चाहते हैं? यह वापस नहीं लिया जा सकता।'
+                      : 'Are you sure you want to clear all game stats? This cannot be undone.'}
+                  </Text>
+                  <View style={styles.exitAlertButtons}>
+                    <TouchableOpacity
+                      style={styles.exitAlertCancelButton}
+                      onPress={() => setShowResetConfirm(false)}
+                    >
+                      <Text style={styles.exitAlertCancelText}>
+                        {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.exitAlertExitButton}
+                      onPress={async () => {
+                        try {
+                          await AsyncStorage.removeItem(STORAGE_KEY);
+                          setGameStats({
+                            gamesPlayed: 0,
+                            gamesWon: 0,
+                            bestScore: 0,
+                            bestTime: 0,
+                            bestAttempts: 0,
+                            totalPlayTime: 0,
+                            achievements: [],
+                            achievementCounts: {},
+                          });
+                          setShowResetConfirm(false);
+                        } catch (e) {
+                          setShowResetConfirm(false);
+                          Alert.alert(
+                            language === 'hi' ? 'त्रुटि' : 'Error',
+                            language === 'hi' ? 'स्टैट्स रीसेट नहीं हो पाए।' : 'Failed to reset stats.'
+                          );
+                        }
+                      }}
+                    >
+                      <Text style={styles.exitAlertExitText}>
+                        {language === 'hi' ? 'रीसेट' : 'Reset'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </LinearGradient>
+              </View>
+            </View>
+          </Modal>
         </View>
 
         {/* Combined Instructions & Colors Section */}
@@ -2421,7 +2494,7 @@ const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 24,
   },
-  resetButton: {
+  modalResetButtonLegacy: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     flexDirection: 'row',
     alignItems: 'center',
@@ -2432,7 +2505,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.3)',
   },
-  resetButtonText: {
+  modalResetButtonTextLegacy: {
     fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
@@ -3095,6 +3168,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
+  },
+  statsActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 12,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  actionButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 16,
+  },
+  actionButtonText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  resetButton: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#f1f2f6',
+  },
+  resetButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+  },
+  resetButtonText: {
+    color: '#ff4757',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
 

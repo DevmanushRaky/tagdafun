@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ViewShot from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { useGameGuard } from '../contexts/GameGuardContext';
 
 
@@ -89,6 +91,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
   const [achievementInfoTitle, setAchievementInfoTitle] = useState('');
   const [achievementInfoText, setAchievementInfoText] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const statsShotRef = useRef<any>(null);
 
   // Animated gradient for review title
   const reviewGradientAnim = useRef(new Animated.Value(0)).current;
@@ -265,10 +268,33 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
 
   const shareGameStats = async () => {
     try {
+      // Try to capture the stats section image first
+      let capturedUri: string | undefined;
+      if (statsShotRef.current && 'capture' in statsShotRef.current) {
+        try {
+          // @ts-ignore - capture exists at runtime
+          // Give a micro delay to ensure layout is stable before capture
+          await new Promise(res => setTimeout(res, 50));
+          capturedUri = await statsShotRef.current.capture({ format: 'png', quality: 0.95, result: 'tmpfile' });
+        } catch (e) {
+          console.log('Stats capture failed, falling back to text only.', e);
+        }
+      }
+
       const date = new Date().toLocaleDateString();
       const time = new Date().toLocaleTimeString();
       
       let shareMessage = '';
+      const allAchievements = ['Super Demon', 'Mastermind', 'Persistent', 'Perfect Game'];
+      const achievementsLinesEn = allAchievements
+        .map(key => `${key}: ${(gameStats.achievementCounts && gameStats.achievementCounts[key]) || 0}x`)
+        .join('\n');
+      const achievementsLinesHi = allAchievements
+        .map(key => {
+          const label = key === 'Super Demon' ? 'सुपर डेमन' : key === 'Mastermind' ? 'मास्टरमाइंड' : key === 'Persistent' ? 'पर्सिस्टेंट' : 'परफेक्ट गेम';
+          return `${label}: ${(gameStats.achievementCounts && gameStats.achievementCounts[key]) || 0}x`;
+        })
+        .join('\n');
       
       if (language === 'hi') {
         shareMessage = `🎯 मास्टरमाइंड गेम स्टैट्स 📊\n\n` +
@@ -278,7 +304,8 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
           `💯 सर्वश्रेष्ठ स्कोर: ${gameStats.bestScore}\n` +
           `⏰ सर्वश्रेष्ठ समय: ${gameStats.bestTime > 0 ? `${Math.floor(gameStats.bestTime / 60)}:${(gameStats.bestTime % 60).toString().padStart(2, '0')}` : '-'}\n` +
           `🎲 सर्वश्रेष्ठ प्रयास: ${gameStats.bestAttempts > 0 ? gameStats.bestAttempts : '-'}\n` +
-          `🏅 उपलब्धियां: ${gameStats.achievements.length}/4\n\n` +
+          `🏅 उपलब्धियां: ${gameStats.achievements.length}/4\n` +
+          `—\n${achievementsLinesHi}\n—\n\n` +
           `📅 तारीख: ${date}\n` +
           `🕐 समय: ${time}\n\n` +
           `🎮 TagDaFun ऐप से खेलें!\n` +
@@ -292,7 +319,8 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
           `💯 Best Score: ${gameStats.bestScore}\n` +
           `⏰ Best Time: ${gameStats.bestTime > 0 ? `${Math.floor(gameStats.bestTime / 60)}:${(gameStats.bestTime % 60).toString().padStart(2, '0')}` : '-'}\n` +
           `🎲 Best Attempts: ${gameStats.bestAttempts > 0 ? gameStats.bestAttempts : '-'}\n` +
-          `🏅 Achievements: ${gameStats.achievements.length}/4\n\n` +
+          `🏅 Achievements: ${gameStats.achievements.length}/4\n` +
+          `—\n${achievementsLinesEn}\n—\n\n` +
           `📅 Date: ${date}\n` +
           `🕐 Time: ${time}\n\n` +
           `🎮 Play on TagDaFun App!\n` +
@@ -300,13 +328,20 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
           `#TagDaFun #Mastermind #GameStats #PuzzleGame`;
       }
       
-      const shareOptions = {
-        message: shareMessage,
-        title: language === 'hi' ? 'मास्टरमाइंड गेम स्टैट्स' : 'Mastermind Game Statistics',
-        url: 'https://play.google.com/store/apps/details?id=com.tagdafun.app',
-      };
-      
-      await Share.share(shareOptions);
+      if (capturedUri && (await Sharing.isAvailableAsync())) {
+        await Sharing.shareAsync(capturedUri, {
+          dialogTitle: language === 'hi' ? 'मास्टरमाइंड गेम स्टैट्स' : 'Mastermind Game Statistics',
+          mimeType: 'image/png',
+          UTI: 'public.png',
+        });
+      } else {
+        const shareOptions: any = {
+          message: shareMessage,
+          title: language === 'hi' ? 'मास्टरमाइंड गेम स्टैट्स' : 'Mastermind Game Statistics',
+          url: 'https://play.google.com/store/apps/details?id=com.tagdafun.app',
+        };
+        await Share.share(shareOptions);
+      }
       console.log('📤 Game stats shared successfully!');
     } catch (error) {
       console.log('Error sharing game stats:', error);
@@ -841,7 +876,8 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Game Statistics Section */}
+        {/* Game Statistics Section (wrapped in ViewShot for sharing) */}
+        <ViewShot ref={statsShotRef} options={{ format: 'png', quality: 0.95 }}>
         <View style={styles.statsSection}>
           <Text style={styles.statsSectionTitle}>{t('gameStats')}</Text>
           
@@ -1039,6 +1075,7 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
             </View>
           </Modal>
         </View>
+        </ViewShot>
 
         {/* Combined Instructions & Colors Section */}
         <View style={styles.combinedInstructionsColorsSection}>

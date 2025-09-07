@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Modal, Dimensions, Share, Platform, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Modal, Dimensions, Share, Platform, Animated, BackHandler } from 'react-native';
 import { COLORS, TYPOGRAPHY } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -167,6 +167,30 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       setRequestMastermindExit(undefined);
     };
   }, [gameStarted, gameOver]);
+
+  // Android hardware back handling
+  useEffect(() => {
+    const onBackPress = () => {
+      if (reviewMode) {
+        // Exit review mode back to start screen
+        setReviewMode(false);
+        setGameStarted(false);
+        setGameOver(false);
+        setIsPaused(false);
+        setTimerActive(false);
+        return true; // handled
+      }
+      if (gameStarted && !gameOver) {
+        // In-game: show exit confirmation instead of navigating tabs
+        setShowExitAlert(true);
+        return true; // handled
+      }
+      return false; // allow default behavior
+    };
+
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [gameStarted, gameOver, reviewMode]);
 
   const saveGameStats = async (newStats: GameStats) => {
     try {
@@ -417,8 +441,6 @@ const Mastermind: React.FC<MastermindProps> = ({ onShowResult }) => {
       // Update current peg index to the next empty position
       const nextEmptyPosition = newGuess.findIndex(peg => peg === undefined);
       setCurrentPegIndex(nextEmptyPosition !== -1 ? nextEmptyPosition : 4);
-      
-      console.log('⏰ Color selected and placed at position', emptyPosition, 'Time left:', timeLeft);
     }
     
     // Clear selected color after placing

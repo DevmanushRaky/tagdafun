@@ -51,4 +51,13 @@ export const GAMES: GameConfig[] = [
     gradient: ['#F953C6', '#B91D73'],
     coinsPerPlay: GAME_CONFIG.spin.costPerSpin,
   },
+  {
+    id: 'memory',
+    title: 'Memory Cards',
+    description: `Match all pairs to win +${GAME_CONFIG.memory.coinsPerWin} coins. Free to play!`,
+    icon: 'albums-outline',
+    color: '#00B4D8',
+    gradient: ['#48CAE4', '#0077B6'],
+    coinsPerPlay: GAME_CONFIG.memory.costToPlay,
+  },
 ];

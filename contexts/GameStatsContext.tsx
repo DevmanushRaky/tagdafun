@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GAME_CONFIG, LEVELS, ACHIEVEMENT_XP } from '../constants/gameConfig';
 
-export type GameType = 'coin' | 'spin';
+export type GameType = 'coin' | 'spin' | 'memory';
 
 export interface Achievement {
   id: string;
@@ -75,7 +75,7 @@ const defaultStats = (): PlayerStats => ({
   totalXP: 0,
   totalCoins: 0,
   level: 1,
-  gamesPlayed: { coin: 0, spin: 0 },
+  gamesPlayed: { coin: 0, spin: 0, memory: 0 },
   totalGamesPlayed: 0,
   currentStreak: 0,
   bestStreak: 0,
@@ -169,7 +169,7 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
           setStats({
             ...def,
             ...saved,
-            gamesPlayed: { ...def.gamesPlayed, ...(saved.gamesPlayed ?? {}) },
+            gamesPlayed: { ...def.gamesPlayed, ...(saved.gamesPlayed ?? {}) } as Record<GameType, number>,
           });
         } catch {}
       }
@@ -195,9 +195,10 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
     s.totalGamesPlayed += 1;
     if (extra) Object.assign(s, extra);
 
-    const xpMap: Record<GameType, number> = { coin: GAME_CONFIG.coin.xpPerPlay, spin: GAME_CONFIG.spin.xpPerPlay };
+    const xpMap: Record<GameType, number> = { coin: GAME_CONFIG.coin.xpPerPlay, spin: GAME_CONFIG.spin.xpPerPlay, memory: GAME_CONFIG.memory.xpPerWin };
     s.totalXP += xpMap[gameType];
     if (gameType === 'coin') s.totalCoins += GAME_CONFIG.coin.coinsPerPlay;
+    if (gameType === 'memory') s.totalCoins += GAME_CONFIG.memory.coinsPerWin;
     s.level = calculateLevel(s.totalXP);
 
     const unlocked = checkAchievements(s);

@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
+import { GAME_CONFIG } from '../constants/gameConfig';
 import { logGame } from '../utils/gameHistory';
 
 const COIN_SIZE = 140;
@@ -131,7 +132,7 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
               color={lastResult.win ? '#2ED573' : '#E74C3C'}
             />
             <Text style={[styles.resultBadgeText, { color: lastResult.win ? '#2ED573' : '#E74C3C' }]}>
-              {lastResult.outcome.toUpperCase()} — {lastResult.win ? 'You Won! +5 coins' : 'You Lost!'}
+              {lastResult.outcome.toUpperCase()} — {lastResult.win ? `You Won! +${GAME_CONFIG.coin.coinsPerPlay} coins` : 'You Lost!'}
             </Text>
           </View>
         ) : (
@@ -192,7 +193,7 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
       {/* Earn info */}
       <View style={styles.earnRow}>
         <Ionicons name="wallet" size={14} color="#F9A825" />
-        <Text style={styles.earnText}>Win or lose — earn <Text style={styles.earnBold}>+5 coins</Text> per flip</Text>
+        <Text style={styles.earnText}>Win or lose — earn <Text style={styles.earnBold}>+{GAME_CONFIG.coin.coinsPerPlay} coins</Text> per flip</Text>
       </View>
 
       {/* Flip button */}

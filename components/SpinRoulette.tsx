@@ -7,11 +7,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
+import { GAME_CONFIG } from '../constants/gameConfig';
 import { logGame } from '../utils/gameHistory';
 
 const { width } = Dimensions.get('window');
 const WHEEL_SIZE = Math.min(width - 64, 300);
-const COST = 5;
+const COST = GAME_CONFIG.spin.costPerSpin;
 
 // Segments: label shown, coins you WIN (gross)
 const SEGMENTS = [

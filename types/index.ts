@@ -1,4 +1,6 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { GAME_CONFIG } from '../constants/gameConfig';
+
 
 export type RootTabParamList = {
   Home: undefined;
@@ -38,15 +40,15 @@ export const GAMES: GameConfig[] = [
     icon: 'cash-outline',
     color: '#F9A825',
     gradient: ['#FFD54F', '#F9A825'],
-    coinsPerPlay: 5,
+    coinsPerPlay: GAME_CONFIG.coin.coinsPerPlay,
   },
   {
     id: 'spin',
     title: 'Spin Roulette',
-    description: 'Spin the wheel & win big! Costs 5 coins per spin.',
+    description: `Spin the wheel & win big! Costs ${GAME_CONFIG.spin.costPerSpin} coins per spin.`,
     icon: 'refresh-circle-outline',
     color: '#E91E8C',
     gradient: ['#F953C6', '#B91D73'],
-    coinsPerPlay: 5,
+    coinsPerPlay: GAME_CONFIG.spin.costPerSpin,
   },
 ];

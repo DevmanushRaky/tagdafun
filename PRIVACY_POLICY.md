@@ -1,269 +1,169 @@
-# Privacy Policy for Tagda Fun
+# Privacy Policy — Tagda Fun
 
-**Last updated:** August 2025
-
-## Introduction
-
-Welcome to Tagda Fun! This Privacy Policy explains how we handle your information when you use our mobile application.
-
-## About Tagda Fun
-
-Tagda Fun is a comprehensive mobile application featuring multiple games and utilities including random number generation, name selection, coin toss, truth & dare, and the Mastermind puzzle game. Our app is designed to be fun, engaging, and privacy-focused, with local data storage and optional social sharing capabilities.
-
-## Information We Collect
-
-### ✅ What We DO Collect/Store (Device-only, non-personal):
-
-**Game Statistics (Stored Locally):**
-- **Coin Toss stats** (wins/losses) are stored locally on your device
-- **Mastermind game statistics** including:
-  - Games played and won
-  - Best scores and completion times
-  - Best attempt counts
-  - Total play time
-  - Achievement unlocks and counts
-  - Win rates and performance metrics
-
-**Session Data (Memory-only, not stored):**
-- Names and numbers you enter for random selection
-- Current game state and progress
-- Temporary game data during active sessions
-
-### ❌ What We DON'T Collect:
-- Personal identification information (name, email, phone number)
-- Device information or unique identifiers
-- Location data
-- Usage analytics or behavior tracking
-- Any data that could identify you personally
-- Names you enter for random selection (not stored permanently)
-- Numbers you generate or ranges you set (not stored permanently)
-
-## How Our App Works
-
-### Offline Functionality
-- Tagda Fun works completely offline for all core features
-- No internet connection is required for gameplay
-- All game logic, number generation, and name selection happens locally on your device
-
-### Data Processing & Storage
-- **Number Generation**: Uses local device processing with `Math.random()`
-- **Name Selection**: Processes names you enter locally, no server involvement
-- **Game Statistics**: Stored locally using AsyncStorage on your device
-- **No Cloud Storage**: Nothing is saved or synchronized to external servers
-- **Local Processing**: All operations happen on your device
-
-### Game Features & Data Handling
-
-#### Number Generator
-- Creates random numbers within your specified range
-- No data is stored or transmitted
-- Each generation is a fresh random choice
-
-#### Name Picker
-- Names you enter are processed locally on your device
-- Names are not stored permanently, only in memory during the session
-- Each name selection is a fresh random choice from your input
-
-#### Truth & Dare
-- Requires entering player names (alphabets only)
-- All processing is local to your device
-- No player names are stored or transmitted
-- Names exist only in memory during the session
-
-#### Coin Toss
-- Lets you pick Heads or Tails with 3D coin animation
-- Win/Loss counters are saved locally on your device
-- You can reset these counters at any time
-- Nothing is synced or uploaded
-
-#### Mastermind Game
-- **Game Statistics**: Comprehensive stats are stored locally including:
-  - Total games played and won
-  - Best scores, times, and attempt counts
-  - Achievement unlocks and progress tracking
-  - Win rates and performance metrics
-- **Local Storage**: All data remains on your device using AsyncStorage
-- **No Personal Data**: Statistics are purely game-related and non-identifying
-- **Reset Capability**: You can reset all statistics from within the app
-
-### Social Media Sharing
-
-#### What Gets Shared
-When you choose to share game results or statistics:
-- **Game Results**: Score, time, attempts, date, and time of completion
-- **Game Statistics**: Aggregated performance data, achievements, win rates
-- **App Promotion**: Link to download Tagda Fun from Google Play Store
-- **No Personal Information**: Only game performance data is shared
-
-#### How Sharing Works
-- **Optional Feature**: Sharing is completely voluntary
-- **Native Sharing**: Uses your device's built-in sharing capabilities
-- **No Direct Integration**: We don't directly post to social media platforms
-- **User Control**: You choose what, when, and where to share
-- **No Tracking**: We don't track what you share or where you share it
-
-#### Platforms Supported
-- WhatsApp, Facebook, Twitter, Instagram, and other social apps
-- Email, SMS, and messaging platforms
-- Any app that supports text/image sharing
-
-## Third-Party Services
-
-### Expo Framework
-Our app is built using Expo, which may collect basic analytics about app crashes and performance. This data is:
-- Anonymous and aggregated
-- Used only for improving app stability
-- Not linked to individual users
-
-### Google Play Store
-When you download our app from Google Play Store:
-- Google may collect standard app store analytics
-- This is governed by Google's Privacy Policy
-- We have no control over Google's data collection practices
-
-### Social Media Platforms
-When you share content through social media:
-- Your sharing is governed by the respective platform's privacy policy
-- We have no control over how these platforms handle your data
-- We don't receive any information about your sharing activity
-
-## Data Security
-
-We don't collect or store any personal data. The only stored data are:
-
-**Game Statistics (Local Storage):**
-- Coin Toss win/loss counters
-- Mastermind game performance data
-- Achievement progress and counts
-- All data remains on your device only (no cloud sync)
-- Can be reset at any time from within the app
-- Are not associated with any personal identity
-
-**Session Data (Memory Only):**
-- Names and numbers you enter are processed locally and never transmitted
-- Game state exists only during active sessions
-
-## Children's Privacy
-
-Tagda Fun is suitable for all ages and:
-- Does not knowingly collect personal information from children under 13
-- Does not require any personal information to function
-- Is safe for family use
-- Game statistics are non-personal and educational
-- Names entered for selection are processed locally only
-
-## Your Rights
-
-Since we don't collect personal data, you have:
-- **No data to access** - We don't have any of your personal information
-- **No data to correct** - We don't store any information about you
-- **No data to delete** - There's nothing to delete
-- **No data to port** - We don't have any data to transfer
-
-**For Game Statistics:**
-- **Reset Capability**: You can reset all game statistics from within the app
-- **Local Control**: All data is stored on your device and under your control
-- **No External Access**: We cannot access your game statistics
-
-## Changes to This Privacy Policy
-
-We may update this Privacy Policy from time to time. When we do:
-- We'll update the "Last updated" date
-- Changes will be reflected in the app store listing
-- No notification is required since we don't collect contact information
-
-## Contact Information
-
-If you have questions about this Privacy Policy:
-
-**Developer:** Tagda Fun Development Team  
-**Email:** rakesucluci@gmail.com 
+**Effective Date:** August 19, 2025  
+**Last Updated:** August 19, 2025  
+**Developer:** DevmanushRaky 
 **App:** Tagda Fun  
 **Platform:** Google Play Store  
 
-## Legal Basis for Processing
+---
 
-Since we don't process any personal data, no legal basis for processing is required under GDPR or similar privacy regulations.
+## 1. Overview
 
-## International Data Transfers
+Tagda Fun is a casual mobile gaming app featuring Coin Toss, Spin Roulette, and Memory Cards with a gamification system (XP, levels, achievements, leaderboard). This policy explains what data the app stores, how it is handled, and your rights as a user.
 
-Since no data is collected or stored externally, there are no international data transfers to consider.
-
-## Data Retention
-
-We don't retain personal data. The only retained data are:
-
-**Game Statistics (Local Device):**
-- Coin Toss win/loss counters
-- Mastermind game performance data
-- Achievement progress and counts
-- These persist on your device until you reset them or uninstall the app
-- No automatic deletion or expiration
-
-**Session Data:**
-- Names and numbers exist only in memory during active sessions
-- Are automatically cleared when you close the app or start a new session
-
-## Automated Decision Making
-
-Our app doesn't use automated decision-making processes that could affect users, as we don't collect or process any personal information.
-
-## Complaints
-
-If you have concerns about our privacy practices:
-1. Contact us directly using the information above
-2. You can also contact your local data protection authority
-3. Since we don't collect personal data, complaints are unlikely to be relevant
-
-## App Permissions
-
-Tagda Fun requests minimal permissions:
-- **Internet Access**: Only for app updates from Google Play Store
-- **Storage Access**: For saving game statistics locally on your device
-- **No other permissions required**
-
-## Technical Information
-
-### App Architecture
-- Built with React Native and Expo
-- Runs entirely on your device
-- No backend servers or databases
-- Local data storage using AsyncStorage
-
-### Data Flow
-```
-User Input → Local Processing → Random Generation/Selection → Display
-Game Play → Local Statistics Storage → Optional Social Sharing
-```
-
-No personal data leaves your device at any point in this process.
-
-### Features
-- **Number Generator**: Creates random numbers within your specified range
-- **Name Picker**: Randomly selects from names you provide
-- **Truth & Dare**: Multiplayer spinner to pick a player, then choose truth or dare
-- **Coin Toss**: Flip a 3D coin with local win/loss counters
-- **Mastermind Game**: Puzzle game with comprehensive local statistics tracking
-- **Social Sharing**: Optional sharing of game results and statistics
-- **Local Processing**: All operations happen on your device
-- **Local Storage**: Game statistics stored locally using AsyncStorage
+**Short version:** Tagda Fun stores only game progress locally on your device. No personal information is collected, no data is sent to any server, and no account is required to play.
 
 ---
 
-## Summary
+## 2. What Data We Store
 
-**Tagda Fun is a privacy-first application that:**
-- ✅ Generates random numbers locally on your device
-- ✅ Randomly selects names from your input locally
-- ✅ Provides engaging games with local statistics tracking
-- ✅ Works completely offline for all core features
-- ✅ Collects zero personal information
-- ✅ Stores only non-personal game statistics locally
-- ✅ Offers optional social sharing without data collection
-- ✅ Respects your privacy by design
+All data is stored **only on your device** using AsyncStorage (local storage). Nothing is transmitted to any external server.
 
-**Your privacy is our priority - we simply can't violate it because we don't collect any personal information to begin with!**
+### 2.1 Game Statistics (Stored Locally)
+
+| Data | Purpose | Stored Where |
+|------|---------|-------------|
+| Coins earned per game | Track wallet balance | Device only |
+| XP and level progress | Show your level in the app | Device only |
+| Games played count (per game type) | Show stats on profile screen | Device only |
+| Coin toss wins / flips | Profile stats | Device only |
+| Spin roulette plays | Profile stats | Device only |
+| Memory card games played | Profile stats | Device only |
+| Current streak and best streak | Achievement tracking | Device only |
+| Achievement unlock status | Profile screen | Device only |
+| Daily challenge progress | Home screen challenge | Device only |
+| Weekly coin total | Leaderboard screen | Device only |
+
+### 2.2 Game History Log (Stored Locally)
+
+The app saves a log of recent game plays (up to 100 entries) on your device, including:
+- Game type (Coin Toss, Spin Roulette, Memory Cards)
+- Timestamp of each play
+- Coins earned or spent per play
+- Coin toss outcome (heads/tails)
+- Spin wheel value
+
+This log is used to display your game history in the Coins screen. It never leaves your device.
 
 ---
 
-*This Privacy Policy is effective as of the date listed above and applies to all users of Tagda Fun.* 
+## 3. What We Do NOT Collect
+
+- ❌ Name, email address, phone number, or any personal identifier
+- ❌ Device ID, advertising ID, or any unique hardware identifier
+- ❌ Location or GPS data
+- ❌ Camera or microphone data
+- ❌ Contacts or call logs
+- ❌ Usage analytics or behavioral tracking
+- ❌ Crash reports sent to any server
+- ❌ Any data linked to your identity
+
+---
+
+## 4. Internet Access
+
+Tagda Fun requests internet permission **only** for Google Play Store app updates. The app itself:
+- Does not make any network requests during gameplay
+- Does not connect to any backend server
+- Does not sync data to any cloud service
+- Works fully offline for all game features
+
+---
+
+## 5. Third-Party Services
+
+### 5.1 Expo Framework
+Tagda Fun is built using the Expo SDK. Expo may collect anonymized, aggregated crash and performance data to improve framework stability. This data is:
+- Not linked to individual users
+- Not accessible to us as the developer
+- Governed by [Expo's Privacy Policy](https://expo.dev/privacy)
+
+### 5.2 Google Play Store
+When you download the app via Google Play Store, Google collects standard app store data (install counts, ratings, reviews). This is governed by [Google's Privacy Policy](https://policies.google.com/privacy) and is outside our control.
+
+### 5.3 AdMob (Planned — Not Active Yet)
+Ads are not currently active in this version of the app. When ads are added in a future update, this policy will be updated to reflect AdMob data practices and you will be notified via an app update.
+
+---
+
+## 6. Children's Privacy
+
+Tagda Fun does not knowingly collect personal data from anyone, including children under 13. The app:
+- Requires no account or sign-up
+- Collects no personal information
+- Is safe for all ages
+
+If you believe your child has provided personal information through this app, please contact us and we will address the concern promptly.
+
+---
+
+## 7. Data Security
+
+Since all data is stored locally on your device:
+- Your game data is protected by your device's own security (screen lock, encryption)
+- We as the developer have no access to your device or stored data
+- There is no server-side database that could be breached
+
+---
+
+## 8. Your Rights and Controls
+
+You have full control over all data stored by this app:
+
+| Action | How to do it |
+|--------|-------------|
+| View your data | Open the app — all data is visible in the Profile and Coins screens |
+| Reset game stats | Uninstall and reinstall the app |
+| Delete game history | Data is automatically removed on uninstall |
+| Stop data storage | Uninstall the app |
+
+Since we collect no personal data, there is nothing for us to provide, correct, or delete on our end.
+
+---
+
+## 9. App Permissions
+
+| Permission | Why It Is Used |
+|------------|---------------|
+| `INTERNET` | Required by Google Play for app updates only |
+
+No other permissions are requested. The app does not access your camera, microphone, contacts, location, or storage beyond its own local data.
+
+---
+
+## 10. Data Retention
+
+- **Game statistics** persist on your device until you uninstall the app or reset them
+- **Game history** is capped at 100 entries — oldest entries are automatically removed when the limit is reached
+- **We retain no data** on any server at any time
+
+---
+
+## 11. Changes to This Policy
+
+If we make material changes to this privacy policy (for example, when adding ads or a backend), we will:
+- Update the "Last Updated" date above
+- Release an updated version through Google Play Store
+- Note the changes in the app release notes
+
+Continued use of the app after an update constitutes acceptance of the revised policy.
+
+---
+
+## 12. Contact
+
+For any questions or concerns about this privacy policy:
+
+**Developer:** DevmanushRaky  
+**App Store Page:** [Tagda Fun on Google Play](https://play.google.com/store/apps/details?id=com.tagdafun.app)
+
+---
+
+## 13. Legal
+
+Since Tagda Fun does not process personal data, no legal basis under GDPR, CCPA, or similar regulations is required. There are no international data transfers, no automated decision-making, and no profiling of any kind.
+
+---
+
+*This privacy policy applies to Tagda Fun version 1.2.0 and above, published on Google Play Store.*

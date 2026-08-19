@@ -12,6 +12,7 @@ import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING, GRADIENTS } from '
 import { GAMES, GameConfig } from '../types';
 import CoinToss from '../components/CoinToss';
 import SpinRoulette from '../components/SpinRoulette';
+import MemoryCards from '../components/MemoryCards';
 
 const { width } = Dimensions.get('window');
 const DAILY_KEY = '@tagdafun_daily_v1';
@@ -271,6 +272,13 @@ const HomeScreen: React.FC = () => {
             {activeGame === 'spin' && (
               <SpinRoulette
                 onResult={() => {
+                  handleGamePlayed();
+                }}
+              />
+            )}
+            {activeGame === 'memory' && (
+              <MemoryCards
+                onWin={() => {
                   handleGamePlayed();
                 }}
               />

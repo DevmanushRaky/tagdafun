@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const HISTORY_KEY = '@tagdafun_history_v1';
 const MAX_ENTRIES = 100;
 
-export type GameLogType = 'coin' | 'spin';
+export type GameLogType = 'coin' | 'spin' | 'memory';
 
 export interface GameLog {
   id: string;
@@ -30,7 +30,10 @@ export async function logGame(entry: Omit<GameLog, 'id'>): Promise<void> {
 
 export async function getHistory(): Promise<GameLog[]> {
   const raw = await AsyncStorage.getItem(HISTORY_KEY);
-  return raw ? JSON.parse(raw) : [];
+  if (!raw) return [];
+  const all: GameLog[] = JSON.parse(raw);
+  // Filter out any corrupt entries with missing or invalid timestamps
+  return all.filter(e => e && typeof e.timestamp === 'number' && !isNaN(e.timestamp) && e.timestamp > 0);
 }
 
 export async function clearHistory(): Promise<void> {

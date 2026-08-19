@@ -37,9 +37,22 @@ const CoinsScreen: React.FC = () => {
     .filter(h => h.gameType === 'spin')
     .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
 
+  const memoryActualEarned = history
+    .filter(h => h.gameType === 'memory')
+    .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
+  const memoryPlays = history.filter(h => h.gameType === 'memory').length;
+
   const gameBreakdown = GAMES.map(g => {
-    const plays = stats.gamesPlayed[g.id as keyof typeof stats.gamesPlayed] ?? 0;
-    const earned = g.id === 'spin' ? spinActualEarned : plays * g.coinsPerPlay;
+    const plays = g.id === 'spin'
+      ? stats.gamesPlayed.spin ?? 0
+      : g.id === 'memory'
+        ? memoryPlays
+        : stats.gamesPlayed.coin ?? 0;
+    const earned = g.id === 'spin'
+      ? spinActualEarned
+      : g.id === 'memory'
+        ? memoryActualEarned
+        : plays * g.coinsPerPlay;
     return { ...g, plays, earned };
   });
 
@@ -109,7 +122,9 @@ const CoinsScreen: React.FC = () => {
               <Text style={styles.breakdownPlays}>
                 {g.id === 'spin'
                   ? `${g.plays} spins · wheel varies`
-                  : `${g.plays} plays × ${g.coinsPerPlay} coins each`}
+                  : g.id === 'memory'
+                    ? `${g.plays} games · +10 coins per win`
+                    : `${g.plays} plays × ${g.coinsPerPlay} coins each`}
               </Text>
               <View style={styles.progressBar}>
                 <View style={[styles.progressFill, {
@@ -162,49 +177,54 @@ const CoinsScreen: React.FC = () => {
 
 // ── Log Row ──────────────────────────────────────────────────────────────────
 const LogRow: React.FC<{ log: GameLog }> = ({ log }) => {
-  const isCoin = log.gameType === 'coin';
-  const coinWon = log.coinWon;
-  const headsOrTails = log.outcome
-    ? log.outcome.charAt(0).toUpperCase() + log.outcome.slice(1)
-    : '';
-  const wheelVal = log.wheelValue ?? 0;
+  const isCoin   = log.gameType === 'coin';
+  const isSpin   = log.gameType === 'spin';
+  const isMemory = log.gameType === 'memory';
+
+  const coinWon     = log.coinWon;
+  const headsOrTails = log.outcome ? log.outcome.charAt(0).toUpperCase() + log.outcome.slice(1) : '';
+  const wheelVal    = log.wheelValue ?? 0;
+
+  const iconName  = isCoin ? 'cash-outline' : isSpin ? 'refresh-circle-outline' : 'albums-outline';
+  const iconColor = isCoin ? '#F9A825'      : isSpin ? '#E91E8C'                : '#00B4D8';
+  const iconBg    = isCoin ? 'rgba(249,168,37,0.15)' : isSpin ? 'rgba(233,30,140,0.15)' : 'rgba(0,180,216,0.15)';
+  const title     = isCoin ? 'Coin Toss' : isSpin ? 'Spin Roulette' : 'Memory Cards';
 
   const displayRight = isCoin
-    ? { label: '+5', color: '#2ED573', sub: 'earned' }
-    : wheelVal > 0
-      ? { label: `+${wheelVal}`, color: '#2ED573', sub: `−${log.costCoins} cost` }
-      : { label: '0', color: '#F9A825', sub: `−${log.costCoins} cost` };
+    ? { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'earned' }
+    : isSpin
+      ? wheelVal > 0
+        ? { label: `+${wheelVal}`, color: '#2ED573', sub: `−${log.costCoins} cost` }
+        : { label: '0', color: '#F9A825', sub: `−${log.costCoins} cost` }
+      : { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'won' };
 
   return (
     <View style={styles.logRow}>
-      <View style={[styles.logIcon, {
-        backgroundColor: isCoin ? 'rgba(249,168,37,0.15)' : 'rgba(233,30,140,0.15)',
-      }]}>
-        <Ionicons
-          name={isCoin ? 'cash-outline' : 'refresh-circle-outline'}
-          size={22}
-          color={isCoin ? '#F9A825' : '#E91E8C'}
-        />
+      <View style={[styles.logIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={iconName as any} size={22} color={iconColor} />
       </View>
       <View style={styles.logInfo}>
-        <Text style={styles.logTitle}>{isCoin ? 'Coin Toss' : 'Spin Roulette'}</Text>
+        <Text style={styles.logTitle}>{title}</Text>
         <View style={styles.logDetailRow}>
-          {isCoin ? (
+          {isCoin && (
             <View style={[styles.outcomePill, {
               backgroundColor: coinWon ? 'rgba(46,213,115,0.15)' : 'rgba(231,76,60,0.15)',
             }]}>
-              <Ionicons
-                name={coinWon ? 'checkmark-circle' : 'close-circle'}
-                size={12}
-                color={coinWon ? '#2ED573' : '#e74c3c'}
-              />
+              <Ionicons name={coinWon ? 'checkmark-circle' : 'close-circle'} size={12} color={coinWon ? '#2ED573' : '#e74c3c'} />
               <Text style={[styles.outcomePillText, { color: coinWon ? '#2ED573' : '#e74c3c' }]}>
                 {headsOrTails} · {coinWon ? 'Won' : 'Lost'}
               </Text>
             </View>
-          ) : (
+          )}
+          {isSpin && (
             <View style={styles.outcomePill}>
               <Text style={styles.outcomePillText}>Wheel: {wheelVal}</Text>
+            </View>
+          )}
+          {isMemory && (
+            <View style={[styles.outcomePill, { backgroundColor: 'rgba(46,213,115,0.12)' }]}>
+              <Ionicons name="checkmark-circle" size={12} color="#2ED573" />
+              <Text style={[styles.outcomePillText, { color: '#2ED573' }]}>All pairs matched</Text>
             </View>
           )}
           <Text style={styles.logTime}>{formatTime(log.timestamp)}</Text>

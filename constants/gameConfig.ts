@@ -11,6 +11,11 @@ export const GAME_CONFIG = {
     xpPerPlay: 15,
     segments: [0, 1, 2, 3, 5, 5, 10, 15, 20, 25, 50, 100] as number[],
   },
+  memory: {
+    coinsPerWin: 10,      // coins awarded on completing the board
+    xpPerWin: 15,
+    costToPlay: 0,        // free to play
+  },
   dailyChallenge: {
     targetFlips: 5,       // flips needed to complete daily challenge
     coinsReward: 25,

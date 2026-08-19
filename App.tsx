@@ -102,7 +102,7 @@ export default function App() {
         </Animated.View>
         <Animated.View style={{ opacity: textOpacity, transform: [{ scale: textScale }], alignItems: 'center', marginBottom: 60 }}>
           <Text style={styles.splashTitle}>TAGDA FUN</Text>
-          <Text style={styles.splashTagline}>Play. Earn. Win!</Text>
+          <Text style={styles.splashTagline}>Play. Challenge. Enjoy !</Text>
         </Animated.View>
         <Animated.View style={{ opacity: loaderOpacity, alignItems: 'center' }}>
           <Animated.View style={[styles.loader, {

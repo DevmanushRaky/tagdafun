@@ -21,6 +21,16 @@ const HOW_TO_UNLOCK: Record<string, string> = {
   level_10:     'Earn enough XP to reach Level 10',
 };
 
+const DetailRow: React.FC<{ icon: string; color: string; label: string; value: string }> = ({ icon, color, label, value }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: 13, gap: 12 }}>
+    <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: color + '18', justifyContent: 'center', alignItems: 'center' }}>
+      <Ionicons name={icon as any} size={17} color={color} />
+    </View>
+    <Text style={{ flex: 1, fontSize: 13, color: COLORS.textSecondary }}>{label}</Text>
+    <Text style={{ fontSize: 15, fontWeight: '700', color: COLORS.text }}>{value}</Text>
+  </View>
+);
+
 const TIER_COLOR = { bronze: '#CD7F32', silver: '#A8A8A8', gold: '#FFD700' };
 const TIER_ICON: Record<string, any> = {
   gold: 'trophy',
@@ -87,6 +97,17 @@ const ProfileScreen: React.FC = () => {
           <Text style={styles.statNum}>{stats.totalXP}</Text>
           <Text style={styles.statLabel}>XP</Text>
         </View>
+      </View>
+
+      {/* ── Detailed Stats ── */}
+      <View style={styles.detailCard}>
+        <DetailRow icon="checkmark-circle-outline" color="#2ED573" label="Coin Toss Wins" value={String(stats.coinWins ?? 0)} />
+        <View style={styles.detailDivider} />
+        <DetailRow icon="cash-outline" color="#F9A825" label="Coin Toss Plays" value={String(stats.gamesPlayed?.coin ?? 0)} />
+        <View style={styles.detailDivider} />
+        <DetailRow icon="refresh-circle-outline" color="#E91E8C" label="Spin Roulette Plays" value={String(stats.gamesPlayed?.spin ?? 0)} />
+        <View style={styles.detailDivider} />
+        <DetailRow icon="trophy-outline" color="#A55EEA" label="Current Level" value={`${levelInfo.level} · ${levelInfo.title}`} />
       </View>
 
       {/* ── Achievements ── */}
@@ -207,6 +228,9 @@ const styles = StyleSheet.create({
   achievementHow: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, marginBottom: 2, lineHeight: 16 },
   xpRewardRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   achievementXP: { ...TYPOGRAPHY.small, fontWeight: '700' },
+
+  detailCard: { marginHorizontal: SPACING.md, marginBottom: SPACING.lg, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.lg, overflow: 'hidden', ...SHADOWS.card },
+  detailDivider: { height: 1, backgroundColor: COLORS.border, marginHorizontal: SPACING.md },
 });
 
 export default ProfileScreen;

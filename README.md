@@ -179,6 +179,113 @@ tagdafun/
 
 ---
 
+## 💰 Coin Economy & Revenue Model
+
+### Game Coin Rewards
+
+| Game | Cost to Play | On Play (Always) | On Win | On Loss |
+|------|-------------|-----------------|--------|---------|
+| Coin Toss | Free | +5 coins | +5 coins | +5 coins |
+| Spin Roulette | −5 coins | — | +Wheel value (0–100) | 0 coins added |
+| Daily Challenge | Free | — | +25 coins (on claim) | — |
+| Watch Ad (coming) | Free | +15 coins | — | — |
+
+> **Spin Roulette net examples:**
+> - Land on 50 → Balance: −5 cost +50 won = **+45 net**
+> - Land on 2 → Balance: −5 cost +2 won = **−3 net**
+> - Land on 0 → Balance: −5 cost +0 won = **−5 net**
+
+---
+
+### Coin to Rupee Conversion
+
+| Coins | Rupee Value |
+|-------|------------|
+| 100 coins | ₹1 |
+| 500 coins | ₹5 |
+| 1,000 coins | ₹10 |
+| 2,000 coins | ₹20 |
+| 5,000 coins | ₹50 |
+| 10,000 coins | ₹100 |
+
+**Rate: 100 coins = ₹1**
+
+---
+
+### Redemption Rules
+
+| Rule | Value |
+|------|-------|
+| Minimum redemption | ₹20 (2,000 coins) |
+| Maximum per request | ₹500 (50,000 coins) |
+| Options | Mobile recharge / Google Play gift card |
+| Processing time | 24–48 hours (manual review) |
+| Approval | Admin reviews and approves each request |
+
+---
+
+### Ad Revenue Model
+
+| Ad Type | Coins Given to User | Estimated Revenue per Ad (India CPM) |
+|---------|-------------------|--------------------------------------|
+| Rewarded Video | +15 coins | ₹0.50 – ₹1.50 |
+| Interstitial | +0 coins | ₹0.20 – ₹0.80 |
+| Banner | +0 coins | ₹0.01 – ₹0.05 per impression |
+
+**Best performing: Rewarded Video** — user voluntarily watches, highest CPM.
+
+---
+
+### Revenue vs Payout Calculation
+
+**Example: 1,000 daily active users**
+
+```
+Ad Revenue (per day):
+  1,000 users × 3 rewarded ads/day = 3,000 ad views
+  3,000 × ₹1 avg                  = ₹3,000/day
+
+Coin Payout (per day):
+  Assume 5% users redeem daily
+  50 users × ₹20 avg redemption   = ₹1,000/day
+
+Net Revenue per day               = ₹3,000 − ₹1,000 = ₹2,000
+Net Revenue per month             = ~₹60,000/month
+```
+
+**Example: 10,000 daily active users**
+
+```
+Ad Revenue:   10,000 × 3 ads × ₹1   = ₹30,000/day
+Payout:       500 users × ₹20        = ₹10,000/day
+Net per day                          = ₹20,000/day
+Net per month                        = ~₹6,00,000/month
+```
+
+> ⚠️ CPM varies by ad network (Google AdMob recommended).
+> India CPM range: ₹15–₹60 per 1,000 impressions.
+> Adjust redemption rate and minimum limits to stay profitable.
+
+---
+
+### Revenue Flow
+
+```
+User plays game
+      ↓
+User earns coins
+      ↓
+User watches rewarded ad → +15 coins (YOU earn ₹0.50–₹1.50)
+      ↓
+User redeems coins for recharge/gift card (YOU pay ₹20 min)
+      ↓
+Admin reviews → Approves → Recharge sent
+      ↓
+Net profit = Ad revenue − Redemption payout
+```
+
+---
+
 ## 📄 License
 
 MIT © [DevmanushRaky](https://github.com/DevmanushRaky)

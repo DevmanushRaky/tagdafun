@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GAME_CONFIG, LEVELS, ACHIEVEMENT_XP } from '../constants/gameConfig';
 
 export type GameType = 'coin' | 'spin';
 
@@ -52,23 +53,22 @@ interface GameStatsContextValue {
 
 const STORAGE_KEY = '@tagdafun_stats_v3';
 
-const XP_PER_LEVEL = [0, 100, 250, 500, 850, 1300, 1900, 2700, 3700, 5000, 6600];
-
-const LEVEL_TITLES = ['Newbie', 'Starter', 'Explorer', 'Player', 'Fun Seeker', 'Challenger', 'Pro Player', 'Champion', 'Legend', 'Mastermind', 'Grandmaster'];
+const XP_PER_LEVEL = LEVELS.map(l => l.xp);
+const LEVEL_TITLES = LEVELS.map(l => l.title);
 const LEVEL_COLORS = ['#ADB5BD', '#CD7F32', '#CD7F32', '#C0C0C0', '#C0C0C0', '#FFD700', '#FFD700', '#FF6B00', '#FF6B00', '#A55EEA', '#A55EEA'];
 
 export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
-  { id: 'first_game', title: 'First Step!', description: 'Play your first game', icon: '🎮', xpReward: 50, tier: 'bronze', unlocked: false },
-  { id: 'first_coin', title: 'Coin Flipper', description: 'Flip your first coin', icon: '🪙', xpReward: 30, tier: 'bronze', unlocked: false },
-  { id: 'games_10', title: 'Getting Warmed Up', description: 'Play 10 games total', icon: '🔥', xpReward: 75, tier: 'bronze', unlocked: false, target: 10 },
-  { id: 'games_50', title: 'Addicted!', description: 'Play 50 games total', icon: '⚡', xpReward: 200, tier: 'silver', unlocked: false, target: 50 },
-  { id: 'games_100', title: 'Centurion', description: 'Play 100 games total', icon: '💯', xpReward: 500, tier: 'gold', unlocked: false, target: 100 },
-  { id: 'coin_win_5', title: 'Lucky Flipper', description: 'Win 5 coin tosses', icon: '🍀', xpReward: 80, tier: 'bronze', unlocked: false, target: 5 },
-  { id: 'coin_win_20', title: 'Golden Touch', description: 'Win 20 coin tosses', icon: '✨', xpReward: 250, tier: 'silver', unlocked: false, target: 20 },
-  { id: 'streak_3', title: 'On a Roll!', description: '3-day play streak', icon: '🔥', xpReward: 100, tier: 'bronze', unlocked: false, target: 3 },
-  { id: 'streak_7', title: 'Week Warrior', description: '7-day play streak', icon: '⚔️', xpReward: 350, tier: 'silver', unlocked: false, target: 7 },
-  { id: 'level_5', title: 'Rising Star', description: 'Reach Level 5', icon: '⭐', xpReward: 200, tier: 'silver', unlocked: false },
-  { id: 'level_10', title: 'Legend Status', description: 'Reach Level 10', icon: '👑', xpReward: 500, tier: 'gold', unlocked: false },
+  { id: 'first_game',  title: 'First Step!',       description: 'Play your first game',    icon: '🎮', xpReward: ACHIEVEMENT_XP.first_game,  tier: 'bronze', unlocked: false },
+  { id: 'first_coin',  title: 'Coin Flipper',       description: 'Flip your first coin',    icon: '🪙', xpReward: ACHIEVEMENT_XP.first_coin,  tier: 'bronze', unlocked: false },
+  { id: 'games_10',    title: 'Getting Warmed Up',  description: 'Play 10 games total',     icon: '🔥', xpReward: ACHIEVEMENT_XP.games_10,    tier: 'bronze', unlocked: false, target: 10 },
+  { id: 'games_50',    title: 'Addicted!',          description: 'Play 50 games total',     icon: '⚡', xpReward: ACHIEVEMENT_XP.games_50,    tier: 'silver', unlocked: false, target: 50 },
+  { id: 'games_100',   title: 'Centurion',          description: 'Play 100 games total',    icon: '💯', xpReward: ACHIEVEMENT_XP.games_100,   tier: 'gold',   unlocked: false, target: 100 },
+  { id: 'coin_win_5',  title: 'Lucky Flipper',      description: 'Win 5 coin tosses',       icon: '🍀', xpReward: ACHIEVEMENT_XP.coin_win_5,  tier: 'bronze', unlocked: false, target: 5 },
+  { id: 'coin_win_20', title: 'Golden Touch',       description: 'Win 20 coin tosses',      icon: '✨', xpReward: ACHIEVEMENT_XP.coin_win_20, tier: 'silver', unlocked: false, target: 20 },
+  { id: 'streak_3',    title: 'On a Roll!',         description: '3-day play streak',       icon: '🔥', xpReward: ACHIEVEMENT_XP.streak_3,    tier: 'bronze', unlocked: false, target: 3 },
+  { id: 'streak_7',    title: 'Week Warrior',       description: '7-day play streak',       icon: '⚔️', xpReward: ACHIEVEMENT_XP.streak_7,    tier: 'silver', unlocked: false, target: 7 },
+  { id: 'level_5',     title: 'Rising Star',        description: 'Reach Level 5',           icon: '⭐', xpReward: ACHIEVEMENT_XP.level_5,     tier: 'silver', unlocked: false },
+  { id: 'level_10',    title: 'Legend Status',      description: 'Reach Level 10',          icon: '👑', xpReward: ACHIEVEMENT_XP.level_10,    tier: 'gold',   unlocked: false },
 ];
 
 const defaultStats = (): PlayerStats => ({
@@ -195,11 +195,9 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
     s.totalGamesPlayed += 1;
     if (extra) Object.assign(s, extra);
 
-    const xpMap: Record<GameType, number> = { coin: 10, spin: 15 };
+    const xpMap: Record<GameType, number> = { coin: GAME_CONFIG.coin.xpPerPlay, spin: GAME_CONFIG.spin.xpPerPlay };
     s.totalXP += xpMap[gameType];
-    // Coin delta is passed via extra.totalCoins for spin (net win/loss)
-    // For coin toss, always add fixed 5 coins
-    if (gameType === 'coin') s.totalCoins += 5;
+    if (gameType === 'coin') s.totalCoins += GAME_CONFIG.coin.coinsPerPlay;
     s.level = calculateLevel(s.totalXP);
 
     const unlocked = checkAchievements(s);

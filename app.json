@@ -20,8 +20,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/tagdafun-main-logo.png",
-        "backgroundColor": "#FF6B00"
+        "foregroundImage": "./assets/tagdafun-adaptive-icon.png",
+        "backgroundColor": "#F87E20"
       },
       "package": "com.tagdafun.app",
       "versionCode": 5,

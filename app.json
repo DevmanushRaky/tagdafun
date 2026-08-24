@@ -25,13 +25,8 @@
       },
       "package": "com.tagdafun.app",
       "versionCode": 5,
-      "targetSdkVersion": 36,
       "permissions": [],
-      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.tagdafun.app",
-      "config": {
-        "googleMobileAdsAppId": null,
-        "usesAdvertisingId": false
-      }
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.tagdafun.app"
     },
     "web": {
       "favicon": "./assets/tagdafun-main-logo.png"

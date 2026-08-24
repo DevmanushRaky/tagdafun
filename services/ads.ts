@@ -8,6 +8,7 @@ export const ADS = {
   appKey: extra.levelPlayAppKey as string,
   bannerAdUnitId: extra.levelPlayBannerAdUnitId as string,
   rewardedAdUnitId: extra.levelPlayRewardedAdUnitId as string,
+  nativeAdUnitId: extra.levelPlayNativeAdUnitId as string,
   rewardedCoinsAmount: 50,
 };
 

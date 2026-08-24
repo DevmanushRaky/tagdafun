@@ -10,6 +10,7 @@ import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
 import { GAMES } from '../types';
 import { getHistory, GameLog, formatTime, formatDate } from '../utils/gameHistory';
+import RewardedAdButton from '../components/ads/RewardedAdButton';
 
 interface DayGroup { label: string; entries: GameLog[]; }
 
@@ -94,6 +95,8 @@ const CoinsScreen: React.FC = () => {
         </View>
       </View>
 
+      <RewardedAdButton onRewarded={load} />
+
       {/* Coming Soon Banner */}
       <View style={styles.comingSoonBanner}>
         <Ionicons name="gift-outline" size={20} color="#A55EEA" />
@@ -145,7 +148,7 @@ const CoinsScreen: React.FC = () => {
       <View style={styles.section}>
         <View style={styles.sectionTitleRow}>
           <Ionicons name="receipt" size={18} color={COLORS.text} />
-          <Text style={styles.sectionTitle}>Game History</Text>
+          <Text style={styles.sectionTitle}>History</Text>
           {history.length > 0 && (
             <View style={styles.countBadge}>
               <Text style={styles.countBadgeText}>{history.length}</Text>
@@ -180,23 +183,26 @@ const LogRow: React.FC<{ log: GameLog }> = ({ log }) => {
   const isCoin   = log.gameType === 'coin';
   const isSpin   = log.gameType === 'spin';
   const isMemory = log.gameType === 'memory';
+  const isAd     = log.gameType === 'ad';
 
   const coinWon     = log.coinWon;
   const headsOrTails = log.outcome ? log.outcome.charAt(0).toUpperCase() + log.outcome.slice(1) : '';
   const wheelVal    = log.wheelValue ?? 0;
 
-  const iconName  = isCoin ? 'cash-outline' : isSpin ? 'refresh-circle-outline' : 'albums-outline';
-  const iconColor = isCoin ? '#F9A825'      : isSpin ? '#E91E8C'                : '#00B4D8';
-  const iconBg    = isCoin ? 'rgba(249,168,37,0.15)' : isSpin ? 'rgba(233,30,140,0.15)' : 'rgba(0,180,216,0.15)';
-  const title     = isCoin ? 'Coin Toss' : isSpin ? 'Spin Roulette' : 'Memory Cards';
+  const iconName  = isAd ? 'play-circle' : isCoin ? 'cash-outline' : isSpin ? 'refresh-circle-outline' : 'albums-outline';
+  const iconColor = isAd ? '#A55EEA'     : isCoin ? '#F9A825'      : isSpin ? '#E91E8C'                : '#00B4D8';
+  const iconBg    = isAd ? 'rgba(165,94,234,0.15)' : isCoin ? 'rgba(249,168,37,0.15)' : isSpin ? 'rgba(233,30,140,0.15)' : 'rgba(0,180,216,0.15)';
+  const title     = isAd ? 'Rewarded Ad' : isCoin ? 'Coin Toss' : isSpin ? 'Spin Roulette' : 'Memory Cards';
 
-  const displayRight = isCoin
-    ? { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'earned' }
-    : isSpin
-      ? wheelVal > 0
-        ? { label: `+${wheelVal}`, color: '#2ED573', sub: `−${log.costCoins} cost` }
-        : { label: '0', color: '#F9A825', sub: `−${log.costCoins} cost` }
-      : { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'won' };
+  const displayRight = isAd
+    ? { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'ad reward' }
+    : isCoin
+      ? { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'earned' }
+      : isSpin
+        ? wheelVal > 0
+          ? { label: `+${wheelVal}`, color: '#2ED573', sub: `−${log.costCoins} cost` }
+          : { label: '0', color: '#F9A825', sub: `−${log.costCoins} cost` }
+        : { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'won' };
 
   return (
     <View style={styles.logRow}>

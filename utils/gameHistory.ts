@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const HISTORY_KEY = '@tagdafun_history_v1';
 const MAX_ENTRIES = 100;
 
-export type GameLogType = 'coin' | 'spin' | 'memory';
+export type GameLogType = 'coin' | 'spin' | 'memory' | 'ad';
 
 export interface GameLog {
   id: string;
@@ -15,6 +15,8 @@ export interface GameLog {
   coinWon?: boolean;
   // spin
   wheelValue?: number;
+  // rewarded ad
+  adNetwork?: string;
   // common
   costCoins: number;   // coins spent to play
   earnedCoins: number; // coins won from result

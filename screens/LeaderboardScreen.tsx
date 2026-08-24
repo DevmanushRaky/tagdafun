@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
+import NativeAdCard from '../components/ads/NativeAdCard';
 
 const WEEKLY_KEY = '@tagdafun_weekly_v1';
 const IST_OFFSET = 5.5 * 60 * 60 * 1000; // UTC+5:30 in ms
@@ -174,6 +175,8 @@ const LeaderboardScreen: React.FC = () => {
           <Text style={styles.statLabel}>Games This Week</Text>
         </View>
       </View>
+
+      <NativeAdCard />
     </ScrollView>
   );
 };

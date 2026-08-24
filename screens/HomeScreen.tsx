@@ -14,6 +14,8 @@ import CoinToss from '../components/CoinToss';
 import SpinRoulette from '../components/SpinRoulette';
 import MemoryCards from '../components/MemoryCards';
 import AdBanner from '../components/ads/AdBanner';
+import NativeAdCard from '../components/ads/NativeAdCard';
+import PostGameRewardModal from '../components/ads/PostGameRewardModal';
 
 const { width } = Dimensions.get('window');
 const DAILY_KEY = '@tagdafun_daily_v1';
@@ -54,6 +56,7 @@ const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { stats, levelInfo, recordGame } = useGameStats();
   const [activeGame, setActiveGame] = useState<string | null>(null);
+  const [showRewardPrompt, setShowRewardPrompt] = useState(false);
   const [daily, setDaily] = useState<DailyChallenge>(getTodayChallenge());
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -100,10 +103,12 @@ const HomeScreen: React.FC = () => {
 
   // Update daily challenge when game is played
   const handleGamePlayed = () => {
-    if (daily.claimed || daily.current >= daily.target) return;
-    const updated = { ...daily, current: Math.min(daily.current + 1, daily.target) };
-    setDaily(updated);
-    AsyncStorage.setItem(DAILY_KEY, JSON.stringify(updated));
+    if (!daily.claimed && daily.current < daily.target) {
+      const updated = { ...daily, current: Math.min(daily.current + 1, daily.target) };
+      setDaily(updated);
+      AsyncStorage.setItem(DAILY_KEY, JSON.stringify(updated));
+    }
+    setShowRewardPrompt(true);
   };
 
   const claimDaily = async () => {
@@ -232,6 +237,8 @@ const HomeScreen: React.FC = () => {
           </View>
         </LinearGradient>
 
+        <AdBanner />
+
         {/* ═══════════════════════════════════════
             GAMES SECTION
         ════════════════════════════════════════ */}
@@ -244,7 +251,7 @@ const HomeScreen: React.FC = () => {
           </View>
         </View>
 
-        <AdBanner />
+        <NativeAdCard />
       </ScrollView>
 
       {/* ── Game Modal ── */}
@@ -287,8 +294,14 @@ const HomeScreen: React.FC = () => {
               />
             )}
           </ScrollView>
+
+          <View style={{ paddingBottom: insets.bottom }}>
+            <NativeAdCard />
+          </View>
         </View>
       </Modal>
+
+      <PostGameRewardModal visible={showRewardPrompt} onClose={() => setShowRewardPrompt(false)} />
     </View>
   );
 };

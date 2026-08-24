@@ -7,7 +7,7 @@ Dashboard: https://platform.ironsrc.com
 
 - **Package name (npm):** `unity-levelplay-mediation` (v9.1.0)
 - **App name in dashboard:** TagdaFun
-- **Platform:** Android
+- **Platform:** Android 
 - **Bundle ID:** `com.tagdafun.app`
 - **App Key:** `27c2ca195`
 
@@ -20,12 +20,13 @@ Dashboard: https://platform.ironsrc.com
 
 | Ad unit name  | Ad Unit ID          | Format   | Purpose                                                                 |
 |---------------|----------------------|----------|--------------------------------------------------------------------------|
-| banner ads    | `suwmraw3whvjtbco`   | Banner   | Persistent small ad shown on screen (refresh rate: 10 sec)              |
-| rawarded ads  | `jqvx5o80z4v2i70t`   | Rewarded | User watches a video ad voluntarily and earns bonus coins in-app        |
+| banner ads    | `suwmraw3whvjtbco`   | Banner   | Shown at the very top of the Home screen (refresh rate: 10 sec)         |
+| rawarded ads  | `jqvx5o80z4v2i70t`   | Rewarded | Manual "Watch Ad" button (Coins screen) + automatic prompt after every game finishes — user earns bonus coins |
+| native ads    | `d1das3rlcdyyqouj`   | Native   | Blended card on the Home screen, shown after the Games section          |
 
 **Interstitial ads were not created** — decided against a full-screen ad unit for now to avoid hurting user experience; can be added later if needed.
 
-**Native ads were not created** — app has no feed/content list where a native ad would blend in, so not applicable.
+**Native ads note:** the `unity-levelplay-mediation` React Native SDK does not take the ad unit ID directly in code — `LevelPlayNativeAd.builder()` uses a `placement` (left as the SDK default/empty), and the SDK automatically serves from whichever Native ad unit is configured for the app in the dashboard. The `d1das3rlcdyyqouj` ID above is kept here for reference/audit only.
 
 ## Reward Configuration
 

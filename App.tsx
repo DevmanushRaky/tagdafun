@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from './screens/HomeScreen';
 import CoinsScreen from './screens/CoinsScreen';
@@ -18,45 +18,49 @@ import { COLORS } from './constants/theme';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-const MainTabs = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      headerShown: false,
-      tabBarIcon: ({ focused, color, size }) => {
-        let icon: keyof typeof Ionicons.glyphMap = 'help-circle-outline';
-        if (route.name === 'Home') icon = focused ? 'home' : 'home-outline';
-        else if (route.name === 'Coins') icon = focused ? 'wallet' : 'wallet-outline';
-        else if (route.name === 'Leaderboard') icon = focused ? 'trophy' : 'trophy-outline';
-        else if (route.name === 'Profile') icon = focused ? 'person' : 'person-outline';
-        return <Ionicons name={icon} size={size} color={color} />;
-      },
-      tabBarActiveTintColor: COLORS.primary,
-      tabBarInactiveTintColor: '#999',
-      tabBarStyle: {
-        backgroundColor: 'white',
-        borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
-        height: 60,
-        paddingBottom: 8,
-        paddingTop: 4,
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-      },
-      tabBarLabelStyle: {
-        fontSize: 11,
-        fontWeight: '600',
-      },
-    })}
-  >
-    <Tab.Screen name="Home" component={HomeScreen} />
-    <Tab.Screen name="Coins" component={CoinsScreen} />
-    <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />
-    <Tab.Screen name="Profile" component={ProfileScreen} />
-  </Tab.Navigator>
-);
+const MainTabs = () => {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let icon: keyof typeof Ionicons.glyphMap = 'help-circle-outline';
+          if (route.name === 'Home') icon = focused ? 'home' : 'home-outline';
+          else if (route.name === 'Coins') icon = focused ? 'wallet' : 'wallet-outline';
+          else if (route.name === 'Leaderboard') icon = focused ? 'trophy' : 'trophy-outline';
+          else if (route.name === 'Profile') icon = focused ? 'person' : 'person-outline';
+          return <Ionicons name={icon} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: '#999',
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopWidth: 1,
+          borderTopColor: '#F0F0F0',
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
+          paddingTop: 4,
+          elevation: 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Coins" component={CoinsScreen} />
+      <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);

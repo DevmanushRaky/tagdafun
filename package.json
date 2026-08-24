@@ -20,10 +20,12 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
+    "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^6.5.16",
     "@react-navigation/native": "^6.1.16",
     "@types/react": "~19.1.10",
+    "babel-preset-expo": "~54.0.10",
     "expo": "^54",
     "expo-constants": "~18.0.14",
     "expo-font": "~14.0.12",

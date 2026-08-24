@@ -49,6 +49,7 @@ interface GameStatsContextValue {
   recordGame: (gameType: GameType, extra?: Partial<PlayerStats>) => Promise<Achievement[]>;
   newlyUnlocked: Achievement[];
   clearNewlyUnlocked: () => void;
+  addBonusCoins: (amount: number) => Promise<void>;
 }
 
 const STORAGE_KEY = '@tagdafun_stats_v3';
@@ -213,8 +214,14 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const clearNewlyUnlocked = useCallback(() => setNewlyUnlocked([]), []);
 
+  const addBonusCoins = useCallback(async (amount: number): Promise<void> => {
+    const s = { ...stats, totalCoins: stats.totalCoins + amount };
+    await saveStats(s);
+    setStats(s);
+  }, [stats, saveStats]);
+
   return (
-    <GameStatsContext.Provider value={{ stats, levelInfo, achievements: buildAchievements(), recordGame, newlyUnlocked, clearNewlyUnlocked }}>
+    <GameStatsContext.Provider value={{ stats, levelInfo, achievements: buildAchievements(), recordGame, newlyUnlocked, clearNewlyUnlocked, addBonusCoins }}>
       {children}
     </GameStatsContext.Provider>
   );

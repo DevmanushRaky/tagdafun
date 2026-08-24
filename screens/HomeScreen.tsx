@@ -13,6 +13,7 @@ import { GAMES, GameConfig } from '../types';
 import CoinToss from '../components/CoinToss';
 import SpinRoulette from '../components/SpinRoulette';
 import MemoryCards from '../components/MemoryCards';
+import AdBanner from '../components/ads/AdBanner';
 
 const { width } = Dimensions.get('window');
 const DAILY_KEY = '@tagdafun_daily_v1';
@@ -242,6 +243,8 @@ const HomeScreen: React.FC = () => {
             ))}
           </View>
         </View>
+
+        <AdBanner />
       </ScrollView>
 
       {/* ── Game Modal ── */}

@@ -32,12 +32,17 @@
       "favicon": "./assets/tagdafun-main-logo.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-dev-client",
+      "./plugins/withLevelPlay.js"
     ],
     "extra": {
       "eas": {
         "projectId": "0d2a7e00-7de0-4a52-aa51-43a90adfb50b"
-      }
+      },
+      "levelPlayAppKey": "27c2ca195",
+      "levelPlayBannerAdUnitId": "suwmraw3whvjtbco",
+      "levelPlayRewardedAdUnitId": "jqvx5o80z4v2i70t"
     },
     "owner": "devmanushraky",
     "newArchEnabled": true

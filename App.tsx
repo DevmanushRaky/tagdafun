@@ -15,6 +15,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { GameStatsProvider } from './contexts/GameStatsContext';
 import { RootTabParamList } from './types';
 import { COLORS } from './constants/theme';
+import { initAds } from './services/ads';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -70,6 +71,10 @@ export default function App() {
   const loaderRotation = useRef(new Animated.Value(0)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
   const textScale = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    initAds();
+  }, []);
 
   useEffect(() => {
     Animated.parallel([

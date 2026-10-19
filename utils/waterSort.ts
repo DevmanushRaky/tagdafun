@@ -19,19 +19,17 @@ export const WATER_COLORS: WaterColor[] = [
   { name: 'Teal',   hex: '#00B4D8', symbol: '◉' },
   { name: 'Lime',   hex: '#9BDB3B', symbol: '▼' },
   { name: 'Brown',  hex: '#8D5A2B', symbol: '✦' },
-  { name: 'Indigo', hex: '#4457D6', symbol: '❖' },
-  { name: 'Magenta', hex: '#D81B79', symbol: '✿' },
 ];
 
 export const BOTTLE_CAPACITY = 4;
 export const START_COLORS = 3;
-export const MAX_COLORS = 12;
+export const MAX_COLORS = 10;
 export const EMPTY_BOTTLES = 2;
 
 /** Bottles of color indices, each ordered bottom -> top. */
 export type Bottles = number[][];
 
-/** +1 color per level up to 8 (level 6), then +1 every 3 levels up to MAX_COLORS (level 18). */
+/** +1 color per level up to 8 (level 6), then +1 every 3 levels up to MAX_COLORS (level 12). */
 export const colorsForLevel = (level: number): number => {
   const lv = Math.max(1, level);
   if (lv <= 6) return START_COLORS + lv - 1;

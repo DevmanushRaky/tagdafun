@@ -540,8 +540,8 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
 
   // ── Layout ──
   const count = bottles.length;
-  const rows = count <= 5 ? 1 : count <= 10 ? 2 : 3;
-  // Crowded boards (11+ bottles) are drawn at normal size and scaled down to fit.
+  const rows = count <= 5 ? 1 : count <= 12 ? 2 : 3;
+  // Crowded boards (13+ bottles, only after +Bottle) are drawn at normal size and scaled down to fit.
   const scale = rows === 3 ? 0.88 : 1;
   const layoutW = boardW / scale;
   const perRow = Math.ceil(count / rows);

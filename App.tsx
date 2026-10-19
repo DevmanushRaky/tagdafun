@@ -17,6 +17,9 @@ import { RootTabParamList } from './types';
 import { COLORS } from './constants/theme';
 import { initAds } from './services/ads';
 
+// Matches the logo image's own background so no rectangle edge shows.
+const SPLASH_BG = '#FA7E20';
+
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const MainTabs = () => {
@@ -106,18 +109,16 @@ export default function App() {
     return (
       <View style={styles.splash}>
         <StatusBar style="light" />
-        <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }], marginBottom: 40 }}>
+        <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
           <Image source={require('./assets/tagdafun-main-logo.png')} style={styles.logo} resizeMode="contain" />
         </Animated.View>
-        <Animated.View style={{ opacity: textOpacity, transform: [{ scale: textScale }], alignItems: 'center', marginBottom: 60 }}>
-          <Text style={styles.splashTitle}>TAGDA FUN</Text>
-          <Text style={styles.splashTagline}>Play. Challenge. Enjoy !</Text>
-        </Animated.View>
-        <Animated.View style={{ opacity: loaderOpacity, alignItems: 'center' }}>
+        <Animated.Text style={[styles.splashTagline, { opacity: textOpacity, transform: [{ scale: textScale }] }]}>
+          PLAY  ·  CHALLENGE  ·  ENJOY
+        </Animated.Text>
+        <Animated.View style={[styles.loaderWrap, { opacity: loaderOpacity }]}>
           <Animated.View style={[styles.loader, {
             transform: [{ rotate: loaderRotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }]
           }]} />
-          <Text style={styles.loadingText}>Loading...</Text>
         </Animated.View>
       </View>
     );
@@ -138,10 +139,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  splash: { flex: 1, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
-  logo: { width: 120, height: 120 },
-  splashTitle: { fontSize: 34, fontWeight: 'bold', color: 'white', letterSpacing: 3, marginBottom: 8 },
-  splashTagline: { fontSize: 16, color: 'rgba(255,255,255,0.9)' },
-  loader: { width: 40, height: 40, borderWidth: 3, borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: 20, marginBottom: 16 },
-  loadingText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
+  splash: { flex: 1, backgroundColor: SPLASH_BG, justifyContent: 'center', alignItems: 'center' },
+  logo: { width: 280, height: 280 },
+  splashTagline: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.92)', letterSpacing: 2.5, marginTop: 4 },
+  loaderWrap: { position: 'absolute', bottom: 80 },
+  loader: { width: 30, height: 30, borderWidth: 3, borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: 15 },
 });

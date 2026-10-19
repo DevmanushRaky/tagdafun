@@ -6,11 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/tagdafun-main-logo.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/tagdafun-main-logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FF6B00"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -34,7 +29,17 @@
     "plugins": [
       "expo-font",
       "expo-dev-client",
-      "./plugins/withLevelPlay.js"
+      "./plugins/withLevelPlay.js",
+      "expo-sharing",
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/tagdafun-main-logo.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FA7E20"
+        }
+      ]
     ],
     "extra": {
       "eas": {
@@ -45,7 +50,6 @@
       "levelPlayRewardedAdUnitId": "jqvx5o80z4v2i70t",
       "levelPlayNativeAdUnitId": "d1das3rlcdyyqouj"
     },
-    "owner": "devmanushraky",
-    "newArchEnabled": true
+    "owner": "devmanushraky"
   }
-} 
+}

@@ -13,6 +13,7 @@ import { GAMES, GameConfig } from '../types';
 import CoinToss from '../components/CoinToss';
 import SpinRoulette from '../components/SpinRoulette';
 import MemoryCards from '../components/MemoryCards';
+import WaterSorting from '../components/WaterSorting';
 import AdBanner from '../components/ads/AdBanner';
 import NativeAdCard from '../components/ads/NativeAdCard';
 import PostGameRewardModal from '../components/ads/PostGameRewardModal';
@@ -293,6 +294,13 @@ const HomeScreen: React.FC = () => {
                 }}
               />
             )}
+            {activeGame === 'water' && (
+              <WaterSorting
+                onWin={() => {
+                  handleGamePlayed();
+                }}
+              />
+            )}
           </ScrollView>
 
           <View style={{ paddingBottom: insets.bottom }}>
@@ -332,13 +340,13 @@ const GameCard: React.FC<{ game: GameConfig; onPress: () => void }> = ({ game, o
             <View style={styles.cardRewardChip}>
               <Ionicons name="wallet" size={11} color="#FFD700" />
               <Text style={styles.cardRewardText}>
-                {game.id === 'spin' ? 'Varies' : `+${game.coinsPerPlay}`}
+                {game.id === 'spin' || game.id === 'water' ? 'Varies' : `+${game.coinsPerPlay}`}
               </Text>
             </View>
             <View style={styles.cardRewardChip}>
               <Ionicons name="star" size={11} color="#A55EEA" />
               <Text style={styles.cardRewardText}>
-                {game.id === 'spin' ? '+15 XP' : '+10 XP'}
+                {(game.id === 'spin' || game.id === 'water') ? '+15 XP' : '+10 XP'}
               </Text>
             </View>
           </View>

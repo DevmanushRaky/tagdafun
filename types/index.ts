@@ -60,4 +60,13 @@ export const GAMES: GameConfig[] = [
     gradient: ['#48CAE4', '#0077B6'],
     coinsPerPlay: GAME_CONFIG.memory.costToPlay,
   },
+  {
+    id: 'water',
+    title: 'Water Sorting',
+    description: `Sort every color to win up to ${GAME_CONFIG.water.maxWinCoins} coins!`,
+    icon: 'water-outline',
+    color: '#2ED573',
+    gradient: ['#2ED573', '#17B85A'],
+    coinsPerPlay: GAME_CONFIG.water.costToPlay,
+  },
 ];

@@ -16,6 +16,15 @@ export const GAME_CONFIG = {
     xpPerWin: 15,
     costToPlay: 0,        // free to play
   },
+  water: {
+    costToPlay: 0,        // free to play
+    baseWinCoins: 100,    // base reward for completing a level
+    overParPenalty: 2,    // coins lost per move above par
+    minWinCoins: 10,      // reward floor when over par
+    underParBonus: 5,     // bonus coins per move under par
+    maxWinCoins: 150,     // reward cap when under par
+    xpPerWin: 15,
+  },
   dailyChallenge: {
     targetFlips: 5,       // flips needed to complete daily challenge
     coinsReward: 25,

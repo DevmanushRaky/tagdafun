@@ -107,6 +107,8 @@ const ProfileScreen: React.FC = () => {
         <View style={styles.detailDivider} />
         <DetailRow icon="refresh-circle-outline" color="#E91E8C" label="Spin Roulette Plays" value={String(stats.gamesPlayed?.spin ?? 0)} />
         <View style={styles.detailDivider} />
+        <DetailRow icon="water-outline" color="#2ED573" label="Water Sort Wins" value={String(stats.gamesPlayed?.water ?? 0)} />
+        <View style={styles.detailDivider} />
         <DetailRow icon="trophy-outline" color="#A55EEA" label="Current Level" value={`${levelInfo.level} · ${levelInfo.title}`} />
       </View>
 

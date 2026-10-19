@@ -43,17 +43,25 @@ const CoinsScreen: React.FC = () => {
     .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
   const memoryPlays = history.filter(h => h.gameType === 'memory').length;
 
+  const waterActualEarned = history
+    .filter(h => h.gameType === 'water')
+    .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
+
   const gameBreakdown = GAMES.map(g => {
     const plays = g.id === 'spin'
       ? stats.gamesPlayed.spin ?? 0
       : g.id === 'memory'
         ? memoryPlays
-        : stats.gamesPlayed.coin ?? 0;
+        : g.id === 'water'
+          ? stats.gamesPlayed.water ?? 0
+          : stats.gamesPlayed.coin ?? 0;
     const earned = g.id === 'spin'
       ? spinActualEarned
       : g.id === 'memory'
         ? memoryActualEarned
-        : plays * g.coinsPerPlay;
+        : g.id === 'water'
+          ? waterActualEarned
+          : plays * g.coinsPerPlay;
     return { ...g, plays, earned };
   });
 
@@ -127,7 +135,9 @@ const CoinsScreen: React.FC = () => {
                   ? `${g.plays} spins · wheel varies`
                   : g.id === 'memory'
                     ? `${g.plays} games · +10 coins per win`
-                    : `${g.plays} plays × ${g.coinsPerPlay} coins each`}
+                    : g.id === 'water'
+                      ? `${g.plays} levels · up to 150 coins`
+                      : `${g.plays} plays × ${g.coinsPerPlay} coins each`}
               </Text>
               <View style={styles.progressBar}>
                 <View style={[styles.progressFill, {
@@ -184,15 +194,16 @@ const LogRow: React.FC<{ log: GameLog }> = ({ log }) => {
   const isSpin   = log.gameType === 'spin';
   const isMemory = log.gameType === 'memory';
   const isAd     = log.gameType === 'ad';
+  const isWater  = log.gameType === 'water';
 
   const coinWon     = log.coinWon;
   const headsOrTails = log.outcome ? log.outcome.charAt(0).toUpperCase() + log.outcome.slice(1) : '';
   const wheelVal    = log.wheelValue ?? 0;
 
-  const iconName  = isAd ? 'play-circle' : isCoin ? 'cash-outline' : isSpin ? 'refresh-circle-outline' : 'albums-outline';
-  const iconColor = isAd ? '#A55EEA'     : isCoin ? '#F9A825'      : isSpin ? '#E91E8C'                : '#00B4D8';
-  const iconBg    = isAd ? 'rgba(165,94,234,0.15)' : isCoin ? 'rgba(249,168,37,0.15)' : isSpin ? 'rgba(233,30,140,0.15)' : 'rgba(0,180,216,0.15)';
-  const title     = isAd ? 'Rewarded Ad' : isCoin ? 'Coin Toss' : isSpin ? 'Spin Roulette' : 'Memory Cards';
+  const iconName  = isAd ? 'play-circle' : isCoin ? 'cash-outline' : isSpin ? 'refresh-circle-outline' : isWater ? 'water-outline' : 'albums-outline';
+  const iconColor = isAd ? '#A55EEA'     : isCoin ? '#F9A825'      : isSpin ? '#E91E8C'                : isWater ? '#2ED573' : '#00B4D8';
+  const iconBg    = isAd ? 'rgba(165,94,234,0.15)' : isCoin ? 'rgba(249,168,37,0.15)' : isSpin ? 'rgba(233,30,140,0.15)' : isWater ? 'rgba(46,213,115,0.15)' : 'rgba(0,180,216,0.15)';
+  const title     = isAd ? 'Rewarded Ad' : isCoin ? 'Coin Toss' : isSpin ? 'Spin Roulette' : isWater ? 'Water Sorting' : 'Memory Cards';
 
   const displayRight = isAd
     ? { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'ad reward' }
@@ -231,6 +242,14 @@ const LogRow: React.FC<{ log: GameLog }> = ({ log }) => {
             <View style={[styles.outcomePill, { backgroundColor: 'rgba(46,213,115,0.12)' }]}>
               <Ionicons name="checkmark-circle" size={12} color="#2ED573" />
               <Text style={[styles.outcomePillText, { color: '#2ED573' }]}>All pairs matched</Text>
+            </View>
+          )}
+          {isWater && (
+            <View style={[styles.outcomePill, { backgroundColor: 'rgba(46,213,115,0.12)' }]}>
+              <Ionicons name="checkmark-circle" size={12} color="#2ED573" />
+              <Text style={[styles.outcomePillText, { color: '#2ED573' }]}>
+                Level {log.waterLevel ?? '?'} · {log.moves ?? '?'} moves
+              </Text>
             </View>
           )}
           <Text style={styles.logTime}>{formatTime(log.timestamp)}</Text>

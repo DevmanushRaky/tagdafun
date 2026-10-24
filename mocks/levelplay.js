@@ -8,8 +8,15 @@ class LevelPlayRewardedAd {
   }
   loadAd() {
     this.listener?.onAdLoadFailed?.({ errorMessage: 'Ads unavailable in Expo Go' });
+    return Promise.resolve();
   }
   showAd() {
+    return Promise.resolve();
+  }
+  isAdReady() {
+    return Promise.resolve(false);
+  }
+  remove() {
     return Promise.resolve();
   }
   destroyAd() {}

@@ -254,6 +254,18 @@ tagdafun/
 
 ---
 
+## Credits
+
+All sounds and music are **CC0 (public domain)**: free for commercial use, no attribution required. Sources, authors and what was changed are listed in [`assets/sounds/CREDITS.md`](assets/sounds/CREDITS.md):
+
+- Coin sounds: Enci23 and Vinrax (OpenGameArt), Kenney
+- Memory Cards music: "Happy Lullaby" by cynicmusic (OpenGameArt). The author asks to be told when the track is used
+- Water Sorting sounds and music: ezwa (pdsounds), Kenney, Juhani Junkala
+
+Keep `CREDITS.md` up to date whenever a sound is added or swapped, and only add CC0 files.
+
+---
+
 ## License
 
 MIT © [DevmanushRaky](https://github.com/DevmanushRaky/tagdafun)

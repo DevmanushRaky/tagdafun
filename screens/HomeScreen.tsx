@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING, GRADIENTS } from '../constants/theme';
+import { GAME_CONFIG } from '../constants/gameConfig';
 import { GAMES, GameConfig } from '../types';
 import CoinToss from '../components/CoinToss';
 import SpinRoulette from '../components/SpinRoulette';
@@ -55,12 +56,11 @@ const AnimatedNumber: React.FC<{ value: number; style: any }> = ({ value, style 
 
 const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { stats, levelInfo, recordGame } = useGameStats();
+  const { stats, recordGame } = useGameStats();
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [showRewardPrompt, setShowRewardPrompt] = useState(false);
   const [daily, setDaily] = useState<DailyChallenge>(getTodayChallenge());
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
 
   // Load daily challenge
   useEffect(() => {
@@ -82,7 +82,7 @@ const HomeScreen: React.FC = () => {
     });
   }, []);
 
-  // Pulse animation for play button
+  // Pulse animation for the claim button
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -90,17 +90,9 @@ const HomeScreen: React.FC = () => {
         Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
       ])
     ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 1500, useNativeDriver: false }),
-      ])
-    ).start();
   }, []);
 
   const activeGameConfig = GAMES.find(g => g.id === activeGame);
-  const xpPercent = Math.round(levelInfo.progress * 100);
 
   // Update daily challenge when game is played
   const handleGamePlayed = () => {
@@ -126,125 +118,79 @@ const HomeScreen: React.FC = () => {
 
   const dailyProgress = daily.target > 0 ? daily.current / daily.target : 0;
 
+  const canClaim = daily.current >= daily.target && !daily.claimed;
+
   return (
     <View style={styles.root}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ═══════════════════════════════════════
-            HERO SECTION
-        ════════════════════════════════════════ */}
+        {/* ── Hero ── */}
         <LinearGradient
-          colors={['#1a1a2e', '#16213e', '#0f3460']}
-          style={[styles.hero, { paddingTop: insets.top + 16 }]}
+          colors={['#001A33', '#002A52', '#0B3F70']}
+          style={[styles.hero, { paddingTop: insets.top + 14 }]}
         >
-          {/* Decorative circles */}
-          <View style={styles.decCircle1} />
-          <View style={styles.decCircle2} />
+          <View style={styles.glowOrange} />
+          <View style={styles.glowBlue} />
 
-          {/* Top row: greeting + coins */}
           <View style={styles.heroTopRow}>
             <View>
-              <Text style={styles.heroGreet}>Welcome back!</Text>
+              <Text style={styles.heroGreet}>Welcome back</Text>
               <Text style={styles.heroName}>Tagda Player</Text>
             </View>
             <View style={styles.coinPill}>
-              <Ionicons name="wallet" size={16} color="#FFD700" />
+              <Ionicons name="wallet" size={16} color="#FFC83D" />
               <AnimatedNumber value={stats.totalCoins} style={styles.coinPillText} />
             </View>
           </View>
-
-          {/* Player card */}
-          <View style={styles.playerCard}>
-            {/* Avatar with level ring */}
-            <View style={styles.avatarSection}>
-              <View style={styles.avatarRingOuter}>
-                <View style={[styles.avatarRingInner, { borderColor: levelInfo.color }]}>
-                  <View style={styles.avatarCircle}>
-                    <Ionicons name="person" size={32} color="white" />
-                  </View>
-                </View>
-              </View>
-              <View style={[styles.levelTag, { backgroundColor: levelInfo.color }]}>
-                <Text style={styles.levelTagText}>LV {levelInfo.level}</Text>
-              </View>
-            </View>
-
-            {/* Player info */}
-            <View style={styles.playerInfo}>
-              <Text style={styles.playerTitle}>{levelInfo.title}</Text>
-
-              {/* XP bar */}
-              <View style={styles.xpRow}>
-                <Text style={styles.xpLabel}>XP</Text>
-                <View style={styles.xpBarBg}>
-                  <Animated.View style={[styles.xpBarFill, { width: `${xpPercent}%`, backgroundColor: levelInfo.color }]} />
-                </View>
-                <Text style={styles.xpPercent}>{xpPercent}%</Text>
-              </View>
-
-              {/* Stats row */}
-              <View style={styles.miniStats}>
-                <View style={styles.miniStat}>
-                  <Ionicons name="flame" size={14} color="#FF6348" />
-                  <Text style={styles.miniStatText}>{stats.currentStreak} streak</Text>
-                </View>
-                <View style={styles.miniStatDot} />
-                <View style={styles.miniStat}>
-                  <Ionicons name="game-controller" size={14} color="#A55EEA" />
-                  <Text style={styles.miniStatText}>{stats.totalGamesPlayed} played</Text>
-                </View>
-                <View style={styles.miniStatDot} />
-                <View style={styles.miniStat}>
-                  <Ionicons name="star" size={14} color="#FFD700" />
-                  <Text style={styles.miniStatText}>{stats.totalXP} XP</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Daily Challenge */}
-          <View style={styles.dailyCard}>
-            <LinearGradient colors={['#e94560', '#c0392b']} style={styles.dailyLeft}>
-              <Ionicons name="flash" size={20} color="white" />
-              <Text style={styles.dailyTag}>DAILY</Text>
-            </LinearGradient>
-            <View style={styles.dailyContent}>
-              <Text style={styles.dailyTitle}>Flip coin {daily.target} times</Text>
-              <View style={styles.dailyProgressRow}>
-                <View style={styles.dailyBar}>
-                  <View style={[styles.dailyBarFill, { width: `${dailyProgress * 100}%` }]} />
-                </View>
-                <Text style={styles.dailyCount}>{daily.current}/{daily.target}</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={[styles.dailyRewardBtn, daily.claimed && styles.dailyRewardClaimed]}
-              onPress={claimDaily}
-              disabled={daily.current < daily.target || daily.claimed}
-            >
-              {daily.claimed ? (
-                <Ionicons name="checkmark-circle" size={20} color="#2ED573" />
-              ) : (
-                <>
-                  <Ionicons name="wallet" size={13} color={daily.current >= daily.target ? '#FFD700' : 'rgba(255,255,255,0.4)'} />
-                  <Text style={[styles.dailyRewardText, daily.current < daily.target && { opacity: 0.4 }]}>
-                    +{daily.reward}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
         </LinearGradient>
 
-        <AdBanner />
+        {/* ── Daily challenge (overlaps hero) ── */}
+        <View style={styles.dailyCard}>
+          <View style={styles.dailyIcon}>
+            <Ionicons name="flash" size={22} color="white" />
+          </View>
+          <View style={styles.dailyContent}>
+            <Text style={styles.dailyLabel}>DAILY CHALLENGE</Text>
+            <Text style={styles.dailyTitle}>Flip the coin {daily.target} times</Text>
+            <View style={styles.dailyProgressRow}>
+              <View style={styles.dailyBar}>
+                <View style={[styles.dailyBarFill, { width: `${dailyProgress * 100}%` }]} />
+              </View>
+              <Text style={styles.dailyCount}>{daily.current}/{daily.target}</Text>
+            </View>
+          </View>
+          {daily.claimed ? (
+            <View style={styles.claimedPill}>
+              <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
+              <Text style={styles.claimedText}>Done</Text>
+            </View>
+          ) : (
+            <Animated.View style={canClaim ? { transform: [{ scale: pulseAnim }] } : undefined}>
+              <TouchableOpacity
+                style={[styles.claimBtn, !canClaim && styles.claimBtnOff]}
+                onPress={claimDaily}
+                disabled={!canClaim}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.claimText, !canClaim && styles.claimTextOff]}>+{daily.reward}</Text>
+                <Ionicons name="wallet" size={13} color={canClaim ? 'white' : COLORS.textLight} />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+        </View>
 
-        {/* ═══════════════════════════════════════
-            GAMES SECTION
-        ════════════════════════════════════════ */}
+        <View style={styles.bannerWrap}>
+          <AdBanner />
+        </View>
+
+        {/* ── Games ── */}
         <View style={styles.gamesSection}>
-          <Text style={styles.gamesSectionTitle}>Games</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.gamesSectionTitle}>Play now</Text>
+            <Text style={styles.sectionCount}>{GAMES.length} games</Text>
+          </View>
           <View style={styles.grid}>
             {GAMES.map(game => (
               <GameCard key={game.id} game={game} onPress={() => setActiveGame(game.id)} />
@@ -315,45 +261,45 @@ const HomeScreen: React.FC = () => {
 };
 
 // ── Game Card ──────────────────────────────────────────────────────────────
+const CARD_META: Record<string, { cost: string; reward: string }> = {
+  coin: { cost: 'Free', reward: `+${GAME_CONFIG.coin.coinsPerPlay} coins` },
+  spin: { cost: `${GAME_CONFIG.spin.costPerSpin} coins`, reward: `Win up to ${Math.max(...GAME_CONFIG.spin.segments)}` },
+  memory: { cost: 'Free', reward: `+${GAME_CONFIG.memory.coinsPerWin} coins` },
+  water: { cost: 'Free', reward: `Up to ${GAME_CONFIG.water.maxWinCoins} coins` },
+};
+
 const GameCard: React.FC<{ game: GameConfig; onPress: () => void }> = ({ game, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const meta = CARD_META[game.id] ?? { cost: 'Free', reward: `+${game.coinsPerPlay} coins` };
 
   const onPressIn = () => Animated.spring(scaleAnim, { toValue: 0.96, useNativeDriver: true }).start();
   const onPressOut = () => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
 
   return (
     <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, styles.cardWrapper]}>
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        activeOpacity={1}
-      >
+      <TouchableOpacity onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut} activeOpacity={1}>
         <LinearGradient colors={game.gradient as any} style={styles.cardGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-          {/* Game icon */}
-          <Ionicons name={game.icon as any} size={34} color="white" style={{ marginBottom: 8 }} />
-          <Text style={styles.cardTitle}>{game.title}</Text>
-          <Text style={styles.cardDesc}>{game.description}</Text>
+          <Ionicons name={game.icon as any} size={110} color="rgba(255,255,255,0.14)" style={styles.cardWatermark} />
 
-          {/* Rewards row */}
-          <View style={styles.cardRewardsRow}>
-            <View style={styles.cardRewardChip}>
-              <Ionicons name="wallet" size={11} color="#FFD700" />
-              <Text style={styles.cardRewardText}>
-                {game.id === 'spin' || game.id === 'water' ? 'Varies' : `+${game.coinsPerPlay}`}
-              </Text>
+          <View style={styles.cardTopRow}>
+            <View style={styles.cardIconTile}>
+              <Ionicons name={game.icon as any} size={24} color="white" />
             </View>
-            <View style={styles.cardRewardChip}>
-              <Ionicons name="star" size={11} color="#A55EEA" />
-              <Text style={styles.cardRewardText}>
-                {(game.id === 'spin' || game.id === 'water') ? '+15 XP' : '+10 XP'}
-              </Text>
+            <View style={styles.costChip}>
+              <Text style={styles.costChipText}>{meta.cost}</Text>
             </View>
           </View>
 
-          <View style={styles.cardPlayRow}>
-            <Text style={styles.cardPlayText}>Tap to play</Text>
-            <Ionicons name="play-circle" size={18} color="rgba(255,255,255,0.9)" />
+          <Text style={styles.cardTitle}>{game.title}</Text>
+
+          <View style={styles.cardBottomRow}>
+            <View style={styles.rewardWrap}>
+              <Ionicons name="wallet" size={12} color="#FFE27A" />
+              <Text style={styles.rewardText} numberOfLines={1}>{meta.reward}</Text>
+            </View>
+            <View style={styles.playBtn}>
+              <Ionicons name="play" size={14} color={game.color} style={{ marginLeft: 2 }} />
+            </View>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -364,81 +310,63 @@ const GameCard: React.FC<{ game: GameConfig; onPress: () => void }> = ({ game, o
 const CARD_W = (width - SPACING.md * 2 - SPACING.sm) / 2;
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f5f5f5' },
+  root: { flex: 1, backgroundColor: COLORS.background },
 
   // ── Hero ──
-  hero: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.lg, overflow: 'hidden' },
+  hero: { paddingHorizontal: SPACING.md, paddingBottom: 56, overflow: 'hidden', borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
+  glowOrange: { position: 'absolute', width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(255,107,0,0.16)', top: -90, right: -70 },
+  glowBlue: { position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(30,144,255,0.12)', bottom: -60, left: -50 },
 
-  // Decorative bg circles
-  decCircle1: { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(255,255,255,0.03)', top: -60, right: -60 },
-  decCircle2: { position: 'absolute', width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(255,255,255,0.04)', bottom: 20, left: -40 },
+  heroTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  heroGreet: { fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: '500' },
+  heroName: { fontSize: 24, fontWeight: '800', color: 'white', marginTop: 1, letterSpacing: 0.3 },
+  coinPill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(255,200,61,0.14)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(255,200,61,0.35)' },
+  coinPillText: { fontSize: 18, fontWeight: '800', color: '#FFC83D' },
 
-  heroTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: SPACING.md },
-  heroGreet: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '500' },
-  heroName: { fontSize: 22, fontWeight: 'bold', color: 'white', marginTop: 2 },
-  coinPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,215,0,0.15)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(255,215,0,0.3)' },
-  coinPillText: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
 
-  // Player card
-  playerCard: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: BORDER_RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.md, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-
-  avatarSection: { alignItems: 'center', marginRight: SPACING.md },
-  avatarRingOuter: { padding: 3, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)' },
-  avatarRingInner: { padding: 3, borderRadius: 37, borderWidth: 2.5 },
-  avatarCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  levelTag: { marginTop: 6, borderRadius: BORDER_RADIUS.full, paddingHorizontal: 8, paddingVertical: 2 },
-  levelTagText: { fontSize: 10, fontWeight: 'bold', color: 'white' },
-
-  playerInfo: { flex: 1, justifyContent: 'center' },
-  playerTitle: { fontSize: 15, fontWeight: '700', color: 'white', marginBottom: 8 },
-  xpRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  xpLabel: { fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600', width: 18 },
-  xpBarBg: { flex: 1, height: 6, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 3 },
-  xpBarFill: { height: 6, borderRadius: 3, minWidth: 4 },
-  xpPercent: { fontSize: 10, color: 'rgba(255,255,255,0.6)', width: 28, textAlign: 'right' },
-  miniStats: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
-  miniStat: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  miniStatText: { fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
-  miniStatDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: 'rgba(255,255,255,0.3)' },
-
-  // Daily challenge
-  dailyCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: BORDER_RADIUS.md, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(233,69,96,0.4)' },
-  dailyLeft: { paddingHorizontal: 10, paddingVertical: 14, alignItems: 'center', gap: 3 },
-  dailyTag: { fontSize: 9, fontWeight: 'bold', color: 'white', letterSpacing: 1 },
-  dailyContent: { flex: 1, paddingHorizontal: SPACING.sm, paddingVertical: SPACING.sm },
-  dailyTitle: { fontSize: 13, fontWeight: '600', color: 'white', marginBottom: 6 },
+  // ── Daily challenge ──
+  dailyCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, marginHorizontal: SPACING.md, marginTop: -34, borderRadius: BORDER_RADIUS.lg, padding: 14, borderWidth: 1, borderColor: COLORS.border, ...SHADOWS.medium },
+  dailyIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
+  dailyContent: { flex: 1 },
+  dailyLabel: { fontSize: 10, fontWeight: '800', color: COLORS.primary, letterSpacing: 1 },
+  dailyTitle: { fontSize: 14, fontWeight: '700', color: COLORS.text, marginTop: 2, marginBottom: 8 },
   dailyProgressRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dailyBar: { flex: 1, height: 5, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 3 },
-  dailyBarFill: { height: 5, backgroundColor: '#e94560', borderRadius: 3, minWidth: 4 },
-  dailyCount: { fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
-  dailyRewardBtn: { paddingHorizontal: 12, paddingVertical: 14, alignItems: 'center', gap: 2 },
-  dailyRewardClaimed: { opacity: 0.7 },
-  dailyRewardText: { fontSize: 12, fontWeight: 'bold', color: '#FFD700' },
+  dailyBar: { flex: 1, height: 6, backgroundColor: COLORS.surfaceDark, borderRadius: 3, overflow: 'hidden' },
+  dailyBarFill: { height: 6, backgroundColor: COLORS.primary, borderRadius: 3, minWidth: 4 },
+  dailyCount: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '700' },
+  claimBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingHorizontal: 14, paddingVertical: 10 },
+  claimBtnOff: { backgroundColor: COLORS.surfaceDark },
+  claimText: { fontSize: 14, fontWeight: '800', color: 'white' },
+  claimTextOff: { color: COLORS.textLight },
+  claimedPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6 },
+  claimedText: { fontSize: 13, fontWeight: '700', color: COLORS.success },
+
+  bannerWrap: { marginTop: SPACING.sm },
 
   // ── Games ──
-  gamesSection: { padding: SPACING.md, paddingTop: SPACING.lg },
-  gamesSectionTitle: { ...TYPOGRAPHY.h3, color: COLORS.text, marginBottom: SPACING.md },
+  gamesSection: { paddingHorizontal: SPACING.md, paddingTop: SPACING.md },
+  sectionHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: SPACING.md },
+  gamesSectionTitle: { ...TYPOGRAPHY.h3, fontWeight: '800', color: COLORS.text },
+  sectionCount: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  cardWrapper: { width: CARD_W, borderRadius: BORDER_RADIUS.lg, overflow: 'hidden', ...SHADOWS.medium },
-  cardGradient: { padding: SPACING.md, minHeight: 175 },
-  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  cardCoinBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 7, paddingVertical: 3 },
-  cardCoinText: { ...TYPOGRAPHY.smallBold, color: 'white', fontSize: 11 },
-  cardTitle: { ...TYPOGRAPHY.bodyBold, color: 'white', marginBottom: 4 },
-  cardDesc: { ...TYPOGRAPHY.small, color: 'rgba(255,255,255,0.85)', lineHeight: 15, flex: 1 },
-  cardRewardsRow: { flexDirection: 'row', gap: 6, marginTop: 8, marginBottom: 2 },
-  cardRewardChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 7, paddingVertical: 3 },
-  cardRewardText: { fontSize: 10, fontWeight: '700', color: 'white' },
-  cardPlayRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
-  cardPlayText: { fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
+  cardWrapper: { width: CARD_W, borderRadius: BORDER_RADIUS.lg, overflow: 'hidden', ...SHADOWS.card },
+  cardGradient: { padding: 14, height: 168, justifyContent: 'space-between', overflow: 'hidden' },
+  cardWatermark: { position: 'absolute', right: -22, bottom: -22 },
+  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardIconTile: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', justifyContent: 'center', alignItems: 'center' },
+  costChip: { backgroundColor: 'rgba(0,0,0,0.22)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 9, paddingVertical: 4 },
+  costChipText: { fontSize: 11, fontWeight: '800', color: 'white' },
+  cardTitle: { fontSize: 18, fontWeight: '800', color: 'white', letterSpacing: 0.2 },
+  cardBottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+  rewardWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5 },
+  rewardText: { flex: 1, fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.95)' },
+  playBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
 
   // ── Game Modal ──
   gameModal: { flex: 1, backgroundColor: COLORS.background },
   gameHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: 14, gap: SPACING.sm },
   backBtn: { padding: 4 },
   gameHeaderTitle: { ...TYPOGRAPHY.h4, color: 'white', flex: 1 },
-  gameCoinBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 10, paddingVertical: 4 },
-  gameCoinText: { ...TYPOGRAPHY.smallBold, color: 'white' },
   gameContent: { padding: SPACING.md, paddingBottom: 60 },
 });
 

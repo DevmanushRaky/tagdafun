@@ -43,6 +43,10 @@ Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memo
 - Level-based, with hints; progress is saved between sessions
 - Reward depends on your moves vs. par: **100 coins** at par, up to **150** if under par, down to **10** if far over
 - Earn **+15 XP** per win
+- **Hint** and **+ Bottle** each cost a rewarded ad. The hint is checked first, so no ad is shown when there is no useful move. The extra bottle (one per level) stays through Undo and Restart, since it was paid for
+- Sounds: pour, a glass "ting" when a bottle is finished, a steel-drum jingle on a win, and a calm looping melody (toggle 🎵 in the header, saved). Music pauses during ads and dips under the win jingle
+- Animations: bottles drop in at the start of a level (and on Restart), splash droplets where the stream lands, sparks when a bottle is finished, and a hop wave across the board before the result card
+- **Vibration** only when a level is cleared
 
 ---
 
@@ -130,6 +134,7 @@ Unity LevelPlay, all set up in code. Ad unit IDs, SDK quirks and build notes are
 | Rewarded (+50 coins) | Coins screen "Watch Ad" button | Whenever the player taps it |
 | Rewarded (+50 coins) | "Watch ad / Skip" popup after a game | **Capped**, see below |
 | Rewarded (no coins) | Memory Cards "Hint" button | Player taps it; 2 per level |
+| Rewarded (no coins) | Water Sorting "Hint" and "+ Bottle" | Player taps it; Hint any time, + Bottle once per level |
 
 ### After-game popup cap
 
@@ -150,7 +155,7 @@ For Coin Toss the popup waits 1.5 s after the coin lands (`RESULT_HOLD_MS` in `c
 
 Rewarded ads for in-game help go through `services/rewardedAd.ts` (`showRewardedAd()` → `'rewarded' | 'closed' | 'unavailable'`).
 
-**Ideas for later (not built):** the same "watch ad for a hint" in Water Sorting when free hints run out, and an optional "2x coins" button on a win. With those in place the after-game popup could be removed completely.
+**Idea for later (not built):** an optional "2x coins" button on a win. With those in place the after-game popup could be removed completely.
 
 ---
 

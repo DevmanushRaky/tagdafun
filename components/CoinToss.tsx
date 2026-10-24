@@ -9,7 +9,8 @@ import Svg, {
 } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useAudioPlayer, type AudioPlayer } from 'expo-audio';
+import { useAudioPlayer } from 'expo-audio';
+import { playSound } from '../utils/sound';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
 import { GAME_CONFIG } from '../constants/gameConfig';
@@ -26,14 +27,6 @@ type Side = 'heads' | 'tails';
 
 const haptic = (style: Haptics.ImpactFeedbackStyle) => {
   Haptics.impactAsync(style).catch(() => {});
-};
-
-// Restart from the top so quick repeat flips still play the sound.
-const playSound = (player: AudioPlayer) => {
-  try {
-    player.seekTo(0).catch(() => {});
-    player.play();
-  } catch {}
 };
 
 // ── Coin face (SVG) ─────────────────────────────────────────────────────────

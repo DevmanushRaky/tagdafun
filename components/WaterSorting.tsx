@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Pressable, Animated, Easing, Dimensions, Modal,
+  View, Text, StyleSheet, TouchableOpacity, Pressable, Animated, Easing, Dimensions, Modal, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAudioPlayer } from 'expo-audio';
+import { playSound, useBackgroundMusic } from '../utils/sound';
+import { showRewardedAd } from '../services/rewardedAd';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
 import { GAME_CONFIG } from '../constants/gameConfig';
@@ -21,6 +24,16 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 const LEVEL_KEY = '@tagdafun_water_level_v1';
 const PROGRESS_KEY = '@tagdafun_water_progress_v1';
+const MUSIC_KEY = '@tagdafun_water_music_v1';
+
+const MUSIC_VOLUME = 0.32;
+const MUSIC_DUCKED = 0.08;      // under the win jingle and result card
+const POUR_VOLUME = 0.35;       // the pour recording is bright; keep it under the music
+const HINT_SHOW_MS = 3000;
+const DEAL_STAGGER_MS = 55;     // bottles drop in one after another at level start
+const CELEBRATE_STAGGER_MS = 60;
+const DOT_GAP = 5;
+const TRAVEL_MS = 380;          // lift + tilt before the liquid starts to flow
 
 const BOTTLE_H = 130;
 const NECK_H = 17;          // straight neck, no liquid
@@ -35,10 +48,6 @@ const BOARD_PAD_BOTTOM = 12;
 const TILT_DEG = 68;
 const TILT_RAD = (TILT_DEG * Math.PI) / 180;
 const STREAM_W = 6;
-
-const haptic = (style: Haptics.ImpactFeedbackStyle) => {
-  Haptics.impactAsync(style).catch(() => {});
-};
 
 interface SavedProgress {
   level: number;
@@ -131,8 +140,14 @@ interface BottleViewProps {
   tilt: Animated.Value;
   flow: Animated.Value;
   disabled: boolean;
+  enterDelay: number;
+  celebrate: boolean;
+  celebrateDelay: number;
   onPress: () => void;
 }
+
+// Little sparks that burst from the neck when a bottle is finished.
+const SPARKS = Array.from({ length: 8 }, (_, i) => ({ angle: -Math.PI / 2 + ((i - 3.5) / 3.5) * 1.3, dist: 26 + (i % 2) * 10 }));
 
 const LayerBlock: React.FC<{ colorIdx: number }> = ({ colorIdx }) => (
   <View style={[styles.layer, { backgroundColor: WATER_COLORS[colorIdx].hex, height: LAYER_H }]}>
@@ -142,14 +157,43 @@ const LayerBlock: React.FC<{ colorIdx: number }> = ({ colorIdx }) => (
 );
 
 const BottleView: React.FC<BottleViewProps> = ({
-  bottle, width, selected, hinted, shakeToken, role, fx, travel, tilt, flow, disabled, onPress,
+  bottle, width, selected, hinted, shakeToken, role, fx, travel, tilt, flow, disabled,
+  enterDelay, celebrate, celebrateDelay, onPress,
 }) => {
   const lift = useRef(new Animated.Value(0)).current;
   const shake = useRef(new Animated.Value(0)).current;
   const glow = useRef(new Animated.Value(0)).current;
   const cap = useRef(new Animated.Value(0)).current;
+  const enter = useRef(new Animated.Value(0)).current;
+  const hop = useRef(new Animated.Value(0)).current;
+  const spark = useRef(new Animated.Value(0)).current;
 
   const complete = role === null && isCompleteBottle(bottle);
+  const wasComplete = useRef(complete);
+
+  // Drop in when the level is dealt.
+  useEffect(() => {
+    Animated.spring(enter, { toValue: 1, delay: enterDelay, tension: 120, friction: 9, useNativeDriver: true }).start();
+  }, [enter]);
+
+  // Sparks only when a bottle becomes finished during play, not when a saved board loads.
+  useEffect(() => {
+    if (complete && !wasComplete.current) {
+      spark.setValue(0);
+      Animated.timing(spark, { toValue: 1, duration: 750, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    }
+    wasComplete.current = complete;
+  }, [complete, spark]);
+
+  // Victory wave across the board.
+  useEffect(() => {
+    if (!celebrate) return;
+    Animated.sequence([
+      Animated.delay(celebrateDelay),
+      Animated.timing(hop, { toValue: 1, duration: 170, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.spring(hop, { toValue: 0, tension: 160, friction: 6, useNativeDriver: true }),
+    ]).start();
+  }, [celebrate, celebrateDelay, hop]);
 
   useEffect(() => {
     Animated.spring(lift, { toValue: selected ? 1 : 0, tension: 180, friction: 11, useNativeDriver: true }).start();
@@ -216,7 +260,10 @@ const BottleView: React.FC<BottleViewProps> = ({
         style={{
           width,
           height: BOTTLE_H,
+          opacity: enter,
           transform: [
+            { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [-30, 0] }) },
+            { translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -18] }) },
             { translateY: lift.interpolate({ inputRange: [0, 1], outputRange: [0, -12] }) },
             { translateX: shake },
             ...pourTransform,
@@ -282,8 +329,71 @@ const BottleView: React.FC<BottleViewProps> = ({
             <GlassFront width={width} stroke="#FFC107" strokeWidth={6} plain />
           </Animated.View>
         )}
+
+        {complete && (
+          <View pointerEvents="none" style={[styles.sparkOrigin, { left: width / 2 }]}>
+            {SPARKS.map((sp, i) => (
+              <Animated.View
+                key={i}
+                style={[
+                  styles.spark,
+                  {
+                    backgroundColor: i % 2 ? '#FFD54F' : WATER_COLORS[bottle[0]].hex,
+                    opacity: spark.interpolate({ inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 1, 1, 0] }),
+                    transform: [
+                      { translateX: spark.interpolate({ inputRange: [0, 1], outputRange: [0, Math.cos(sp.angle) * sp.dist] }) },
+                      { translateY: spark.interpolate({ inputRange: [0, 1], outputRange: [0, Math.sin(sp.angle) * sp.dist] }) },
+                      { rotate: '45deg' },
+                      { scale: spark.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0.4, 1.2, 0.5] }) },
+                    ],
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        )}
       </Animated.View>
     </Pressable>
+  );
+};
+
+// ── Splash where the stream hits the surface ────────────────────────────────
+const DROPS = [
+  { dx: -12, h: 14, delay: 0 }, { dx: 10, h: 18, delay: 90 }, { dx: -6, h: 22, delay: 170 },
+  { dx: 14, h: 12, delay: 240 }, { dx: -15, h: 16, delay: 310 }, { dx: 5, h: 20, delay: 50 },
+];
+
+const Splash: React.FC<{ x: number; y: number; color: string; on: Animated.Value }> = ({ x, y, color, on }) => {
+  const drops = useRef(DROPS.map(() => new Animated.Value(0))).current;
+  useEffect(() => {
+    const loops = drops.map((d, i) => Animated.loop(Animated.sequence([
+      Animated.delay(DROPS[i].delay),
+      Animated.timing(d, { toValue: 1, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ])));
+    loops.forEach(l => l.start());
+    return () => loops.forEach(l => l.stop());
+  }, [drops]);
+
+  return (
+    <Animated.View pointerEvents="none" style={[styles.splash, { left: x, top: y, opacity: on }]}>
+      {drops.map((d, i) => (
+        <Animated.View
+          key={i}
+          style={[
+            styles.drop,
+            {
+              backgroundColor: color,
+              opacity: d.interpolate({ inputRange: [0, 0.1, 0.75, 1], outputRange: [0, 1, 0.9, 0] }),
+              transform: [
+                { translateX: d.interpolate({ inputRange: [0, 1], outputRange: [0, DROPS[i].dx] }) },
+                { translateY: d.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -DROPS[i].h, -DROPS[i].h * 0.25] }) },
+                { scale: d.interpolate({ inputRange: [0, 1], outputRange: [1, 0.45] }) },
+              ],
+            },
+          ]}
+        />
+      ))}
+    </Animated.View>
   );
 };
 
@@ -378,22 +488,42 @@ interface ControlProps {
   onPress: () => void;
   disabled?: boolean;
   accent?: boolean;
+  ad?: boolean;        // costs a rewarded ad
+  loading?: boolean;
 }
 
-const Control: React.FC<ControlProps> = ({ icon, label, onPress, disabled, accent }) => (
-  <TouchableOpacity
-    style={styles.control}
-    onPress={onPress}
-    disabled={disabled}
-    activeOpacity={0.6}
-    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-  >
-    <View style={[styles.controlCircle, accent && styles.controlCircleAccent, disabled && styles.controlCircleOff]}>
-      <Ionicons name={icon} size={20} color={disabled ? '#B0B8C1' : accent ? 'white' : COLORS.text} />
-    </View>
-    <Text style={[styles.controlLabel, disabled && styles.controlLabelOff]}>{label}</Text>
-  </TouchableOpacity>
-);
+// Press feedback is a gentle scale, not an opacity fade: fading a shadowed circle on iOS
+// briefly draws its shadow as a polygon instead of a round shape.
+const Control: React.FC<ControlProps> = ({ icon, label, onPress, disabled, accent, ad, loading }) => {
+  const press = useRef(new Animated.Value(1)).current;
+  const to = (v: number) => Animated.spring(press, { toValue: v, tension: 300, friction: 12, useNativeDriver: true }).start();
+
+  return (
+    <Pressable
+      style={styles.control}
+      onPress={onPress}
+      onPressIn={() => to(0.9)}
+      onPressOut={() => to(1)}
+      disabled={disabled}
+      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+    >
+      <Animated.View style={{ transform: [{ scale: press }] }}>
+        <View style={[styles.controlCircle, accent && styles.controlCircleAccent, disabled && styles.controlCircleOff]}>
+          {loading
+            ? <ActivityIndicator size="small" color={accent ? 'white' : COLORS.text} />
+            : <Ionicons name={icon} size={20} color={disabled ? '#B0B8C1' : accent ? 'white' : COLORS.text} />}
+        </View>
+        {ad && !disabled && (
+          <View style={styles.adTag}>
+            <Ionicons name="play" size={7} color="white" />
+            <Text style={styles.adTagText}>AD</Text>
+          </View>
+        )}
+      </Animated.View>
+      <Text style={[styles.controlLabel, disabled && styles.controlLabelOff]}>{label}</Text>
+    </Pressable>
+  );
+};
 
 // ── Game ─────────────────────────────────────────────────────────────────────
 interface WaterSortingProps {
@@ -417,8 +547,39 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
   const [shaking, setShaking] = useState({ idx: -1, token: 0 });
   const [pouring, setPouring] = useState<PourFx | null>(null);
   const [boardW, setBoardW] = useState(SCREEN_W - SPACING.lg * 2);
+  const [round, setRound] = useState(0);              // bumped on every deal so bottles drop in again
+  const [celebrate, setCelebrate] = useState(false);
+  const [adBusy, setAdBusy] = useState<'hint' | 'bottle' | null>(null);
+  const [toast, setToast] = useState('');
   const pouringRef = useRef(false);
   const mountedRef = useRef(true);
+  const dealCountRef = useRef(0);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  const pourSound = useAudioPlayer(require('../assets/sounds/water-pour.m4a'));
+  useEffect(() => { pourSound.volume = POUR_VOLUME; }, [pourSound]);
+  const doneSound = useAudioPlayer(require('../assets/sounds/water-bottle-done.m4a'));
+  const winSound = useAudioPlayer(require('../assets/sounds/water-win.m4a'));
+  const { musicOn, toggleMusic } = useBackgroundMusic(require('../assets/sounds/water-music.m4a'), MUSIC_KEY, {
+    active: ready && adBusy === null,
+    volume: won || celebrate ? MUSIC_DUCKED : MUSIC_VOLUME,
+  });
+
+  const later = (fn: () => void, ms: number) => {
+    timersRef.current.push(setTimeout(() => { if (mountedRef.current) fn(); }, ms));
+  };
+
+  const showToast = (text: string) => {
+    setToast(text);
+    toastAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(toastAnim, { toValue: 1, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.delay(1800),
+      Animated.timing(toastAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
+    ]).start();
+  };
 
   const travel = useRef(new Animated.Value(0)).current;
   const tilt = useRef(new Animated.Value(0)).current;
@@ -433,6 +594,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
     return () => {
       mountedRef.current = false;
       if (hintTimer.current) clearTimeout(hintTimer.current);
+      timersRef.current.forEach(clearTimeout);
     };
   }, []);
 
@@ -450,6 +612,9 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
     setAddedBottle(false);
     setHint(null);
     setPouring(null);
+    setCelebrate(false);
+    dealCountRef.current = gen.bottles.length;
+    setRound(r => r + 1);
     AsyncStorage.setItem(LEVEL_KEY, String(lv)).catch(() => {});
   }, []);
 
@@ -474,6 +639,8 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
             setPar(p.par);
             setMoves(p.moves);
             setAddedBottle(!!p.addedBottle);
+            dealCountRef.current = p.bottles.length;
+            setRound(r => r + 1);
             setReady(true);
             return;
           }
@@ -493,6 +660,13 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
     const p: SavedProgress = { level, bottles, initial, par, moves, addedBottle };
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(p)).catch(() => {});
   }, [ready, won, level, bottles, initial, par, moves, addedBottle]);
+
+  // Progress bar glides to the share of colours sorted.
+  const sortedCount = bottles.filter(isCompleteBottle).length;
+  const colorTotal = colorsForLevel(level);
+  useEffect(() => {
+    Animated.spring(progressAnim, { toValue: Math.min(1, sortedCount / colorTotal), tension: 60, friction: 10, useNativeDriver: true }).start();
+  }, [sortedCount, colorTotal, progressAnim]);
 
   // Bounce the moves counter whenever it changes.
   useEffect(() => {
@@ -519,9 +693,12 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
       underParBonus: cfg.underParBonus,
       maxWinCoins: cfg.maxWinCoins,
     });
+    // The only vibration in this game: clearing a level.
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    playSound(winSound);
     setEarned(reward);
-    setWon(true);
+    setCelebrate(true);
+    later(() => setWon(true), bottles.length * CELEBRATE_STAGGER_MS + 550);
     await recordGame('water', { totalCoins: stats.totalCoins + reward });
     await logGame({
       timestamp: Date.now(),
@@ -536,7 +713,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
     await AsyncStorage.setItem(LEVEL_KEY, String(level + 1)).catch(() => {});
     await AsyncStorage.removeItem(PROGRESS_KEY).catch(() => {});
     onWin();
-  }, [par, level, stats.totalCoins, recordGame, onWin]);
+  }, [par, level, stats.totalCoins, recordGame, onWin, bottles.length, winSound]);
 
   // ── Layout ──
   const count = bottles.length;
@@ -599,11 +776,10 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
   };
 
   const pressBottle = (idx: number) => {
-    if (!ready || won || pouringRef.current) return;
+    if (!ready || won || celebrate || adBusy !== null || pouringRef.current) return;
     setHint(null);
     if (selected === null) {
       if (bottles[idx].length === 0) return;
-      haptic(Haptics.ImpactFeedbackStyle.Light);
       setSelected(idx);
       return;
     }
@@ -613,7 +789,6 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
     }
     const pourCount = pourAmount(bottles, selected, idx);
     if (pourCount === 0) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
       setShaking(s => ({ idx, token: s.token + 1 }));
       return;
     }
@@ -635,10 +810,11 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
     stream.setValue(0);
 
     const flowMs = 220 + 110 * pourCount;
+    later(() => playSound(pourSound), TRAVEL_MS - 40);
     Animated.sequence([
       Animated.parallel([
         Animated.timing(travel, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(tilt, { toValue: 1, duration: 280, delay: 80, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(tilt, { toValue: 1, duration: TRAVEL_MS - 100, delay: 80, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]),
       Animated.parallel([
         Animated.timing(flow, { toValue: 1, duration: flowMs, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
@@ -663,44 +839,70 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
       setMoves(newMoves);
       setPouring(null);
       pouringRef.current = false;
-      haptic(Haptics.ImpactFeedbackStyle.Medium);
       if (isSolved(next)) handleWin(newMoves);
+      else if (next.filter(isCompleteBottle).length > snapshot.filter(isCompleteBottle).length) playSound(doneSound);
     });
   };
 
   const undo = () => {
-    if (pouringRef.current || won || undoStack.length === 0) return;
+    if (pouringRef.current || won || celebrate || adBusy !== null || undoStack.length === 0) return;
     const prev = undoStack[undoStack.length - 1];
     setUndoStack(prevStack => prevStack.slice(0, -1));
-    setBottles(cloneBottles(prev.bottles));
+    // The extra bottle was paid for with an ad, so it stays even when undoing past the moment it was added.
+    const restored = cloneBottles(prev.bottles);
+    while (restored.length < bottles.length) restored.push([]);
+    setBottles(restored);
     // Moves are not refunded: the counter shows every pour actually made.
-    if (prev.bottles.length < bottles.length) setAddedBottle(false);
     setSelected(null);
     setHint(null);
   };
 
   const restart = () => {
-    if (pouringRef.current || won) return;
-    setBottles(cloneBottles(initial));
+    if (pouringRef.current || won || celebrate || adBusy !== null) return;
+    // Keep an ad-bought bottle for this level.
+    const fresh = addedBottle ? [...cloneBottles(initial), []] : cloneBottles(initial);
+    dealCountRef.current = fresh.length;
+    setRound(r => r + 1);
+    setBottles(fresh);
     setMoves(0);
     setSelected(null);
     setUndoStack([]);
-    setAddedBottle(false);
     setHint(null);
   };
 
-  const addBottle = () => {
-    if (pouringRef.current || won || addedBottle) return;
-    setBottles(prev => [...prev, []]);
-    setAddedBottle(true);
+  /** Runs a rewarded ad; true if the player earned the reward. */
+  const earnWithAd = async (kind: 'hint' | 'bottle') => {
+    setAdBusy(kind);
     setSelected(null);
+    let result = await showRewardedAd();
+    if (!mountedRef.current) return false;
+    setAdBusy(null);
+    // Expo Go and dev builds usually have no ad fill; let it through so the feature can be tested.
+    if (result === 'unavailable' && __DEV__) result = 'rewarded';
+    if (result === 'closed') showToast('Watch the whole ad to get it');
+    if (result === 'unavailable') showToast('No ad available right now, try again soon');
+    return result === 'rewarded';
   };
 
-  const showHint = () => {
-    if (pouringRef.current || won) return;
-    setHint(suggestHint(bottles));
+  const addBottle = async () => {
+    if (pouringRef.current || won || celebrate || addedBottle || adBusy !== null) return;
+    if (!(await earnWithAd('bottle'))) return;
+    setBottles(prev => [...prev, []]);
+    setAddedBottle(true);
+  };
+
+  const showHint = async () => {
+    if (pouringRef.current || won || celebrate || adBusy !== null) return;
+    // Check first, so nobody watches an ad for a hint that doesn't exist.
+    const move = suggestHint(bottles);
+    if (!move) {
+      showToast(addedBottle ? 'No good move left, try Undo or Restart' : 'No good move left, try Undo or + Bottle');
+      return;
+    }
+    if (!(await earnWithAd('hint'))) return;
+    setHint(move);
     if (hintTimer.current) clearTimeout(hintTimer.current);
-    hintTimer.current = setTimeout(() => setHint(null), 2200);
+    hintTimer.current = setTimeout(() => setHint(null), HINT_SHOW_MS);
   };
 
   const nextLevel = () => startLevel(level + 1, null);
@@ -720,47 +922,75 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
   const progress = Math.min(1, done / totalColors);
   const underPar = par - moves;
   const stars = moves <= Math.ceil(par * 1.2) ? 3 : moves <= Math.ceil(par * 1.6) ? 2 : 1;
-  const movesColor = moves > Math.ceil(par * 1.5) ? '#E74C3C' : moves > par ? '#F0A500' : COLORS.text;
+  const movesColor = moves > Math.ceil(par * 1.5) ? '#FF6B6B' : moves > par ? '#FFC107' : 'white';
+  const sortedColors = new Set(bottles.filter(isCompleteBottle).map(b => b[0]));
+  // One row of dots, shrinking if needed: header padding, the count and the music button take ~110px.
+  const dotSize = Math.max(10, Math.min(16, Math.floor((boardW - 110 - DOT_GAP * (totalColors - 1)) / totalColors)));
 
   return (
     <View style={styles.root}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header: kept to two short rows so the bottles get the space, even at 10 colours */}
+      <LinearGradient colors={['#001A33', '#002A52', '#0B3F70']} style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.levelGroup}>
-            <View style={styles.levelBadge}>
-              <Ionicons name="water" size={14} color="white" />
-              <Text style={styles.levelBadgeText}>Level {level}</Text>
+            <View>
+              <Text style={styles.levelLabel}>LEVEL</Text>
+              <Text style={styles.levelNumber}>{level}</Text>
             </View>
-            <View style={[styles.diffChip, { backgroundColor: `${difficulty.color}22` }]}>
+            <View style={[styles.diffChip, { backgroundColor: `${difficulty.color}26`, borderColor: `${difficulty.color}66` }]}>
               <Text style={[styles.diffChipText, { color: difficulty.color }]}>{difficulty.name}</Text>
             </View>
           </View>
-          <View style={styles.headerStats}>
-            <View style={styles.headerStat}>
-              <Text style={styles.headerStatLabel}>MOVES</Text>
-              <Animated.Text style={[styles.headerStatValue, { color: movesColor, transform: [{ scale: movesPop }] }]}>
+
+          <View style={styles.statTiles}>
+            <View style={styles.statTile}>
+              <Text style={styles.statTileLabel}>MOVES</Text>
+              <Animated.Text style={[styles.statTileValue, { color: movesColor, transform: [{ scale: movesPop }] }]}>
                 {moves}
               </Animated.Text>
             </View>
-            <View style={styles.headerDivider} />
-            <View style={styles.headerStat}>
-              <Text style={styles.headerStatLabel}>BEST</Text>
-              <Text style={styles.headerStatValue}>{par}</Text>
+            <View style={styles.statTile}>
+              <Text style={styles.statTileLabel}>BEST</Text>
+              <Text style={styles.statTileValue}>{par}</Text>
+            </View>
+            <View style={styles.statTile}>
+              <Text style={styles.statTileLabel}>STARS</Text>
+              <View style={styles.statStars}>
+                {[1, 2, 3].map(n => (
+                  <Ionicons key={n} name="star" size={11} color={n <= stars ? '#FFC107' : 'rgba(255,255,255,0.2)'} />
+                ))}
+              </View>
             </View>
           </View>
         </View>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-        </View>
-        <View style={styles.headerBottom}>
-          <Text style={styles.progressText}>{done}/{totalColors} colors sorted</Text>
-          <View style={styles.rewardBadge}>
-            <Ionicons name="wallet" size={12} color="#F9A825" />
-            <Text style={styles.rewardBadgeText}>up to +{GAME_CONFIG.water.maxWinCoins}</Text>
+
+        <View style={styles.progressRow}>
+          <View style={styles.colorDots}>
+            {Array.from({ length: totalColors }, (_, c) => {
+              const sorted = sortedColors.has(c);
+              return (
+                <View
+                  key={c}
+                  style={[
+                    styles.colorDot,
+                    { width: dotSize, height: dotSize, borderRadius: dotSize / 2, borderColor: WATER_COLORS[c].hex },
+                    sorted && { backgroundColor: WATER_COLORS[c].hex },
+                  ]}
+                >
+                  {sorted && <Ionicons name="checkmark" size={dotSize - 6} color="white" />}
+                </View>
+              );
+            })}
           </View>
+          <Text style={styles.progressText}>{done}/{totalColors}</Text>
+          <TouchableOpacity onPress={toggleMusic} style={styles.musicBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+            <Ionicons name={musicOn ? 'musical-notes' : 'volume-mute'} size={14} color={musicOn ? 'white' : 'rgba(255,255,255,0.45)'} />
+          </TouchableOpacity>
         </View>
-      </View>
+        <View style={styles.progressTrack}>
+          <Animated.View style={[styles.progressFill, { transform: [{ scaleX: progressAnim }] }]} />
+        </View>
+      </LinearGradient>
 
       {/* Board */}
       <LinearGradient colors={['#E9F5FF', '#D2E9FA']} style={styles.panel}>
@@ -790,7 +1020,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
             const role = pouring?.from === idx ? 'source' : pouring?.to === idx ? 'target' : null;
             return (
               <View
-                key={idx}
+                key={`${round}-${idx}`}
                 style={{
                   position: 'absolute',
                   left: slots[idx].x,
@@ -809,7 +1039,10 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
                   travel={travel}
                   tilt={tilt}
                   flow={flow}
-                  disabled={!ready || won || pouring !== null}
+                  disabled={!ready || won || celebrate || adBusy !== null || pouring !== null}
+                  enterDelay={idx < dealCountRef.current ? idx * DEAL_STAGGER_MS : 0}
+                  celebrate={celebrate}
+                  celebrateDelay={idx * CELEBRATE_STAGGER_MS}
                   onPress={() => pressBottle(idx)}
                 />
               </View>
@@ -834,18 +1067,35 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
                   ],
                 },
               ]}
+            >
+              <View style={styles.streamShine} />
+            </Animated.View>
+          )}
+          {pouring !== null && (
+            <Splash
+              key={`sp-${pouring.from}-${pouring.to}-${moves}`}
+              x={pouring.streamX + STREAM_W / 2}
+              y={pouring.streamTop + pouring.streamH}
+              color={WATER_COLORS[pouring.color].hex}
+              on={stream}
             />
           )}
          </View>
         </View>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.toast, { opacity: toastAnim, transform: [{ translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }]}
+        >
+          <Text style={styles.toastText}>{toast}</Text>
+        </Animated.View>
       </LinearGradient>
 
       {/* Controls */}
       <View style={styles.controlsRow}>
         <Control icon="arrow-undo" label="Undo" onPress={undo} disabled={undoStack.length === 0} />
         <Control icon="refresh" label="Restart" onPress={restart} />
-        <Control icon="add" label="Bottle" onPress={addBottle} disabled={addedBottle} />
-        <Control icon="bulb" label="Hint" onPress={showHint} accent />
+        <Control icon="add" label={addedBottle ? 'Added' : 'Bottle'} onPress={addBottle} disabled={addedBottle} ad loading={adBusy === 'bottle'} />
+        <Control icon="bulb" label="Hint" onPress={showHint} accent ad loading={adBusy === 'hint'} />
       </View>
 
       {/* Win Modal */}
@@ -919,24 +1169,27 @@ const styles = StyleSheet.create({
   loadingText: { ...TYPOGRAPHY.caption, color: COLORS.textSecondary },
 
   // Header
-  header: { backgroundColor: COLORS.surface, borderRadius: 20, padding: 10, marginTop: SPACING.xs, marginBottom: SPACING.sm, ...SHADOWS.card },
+  header: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 10, marginTop: SPACING.xs, marginBottom: SPACING.sm, overflow: 'hidden', ...SHADOWS.medium },
   headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  levelGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  diffChip: { borderRadius: BORDER_RADIUS.full, paddingHorizontal: 10, paddingVertical: 5 },
-  diffChipText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.4 },
-  levelBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1E90FF', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 14, paddingVertical: 7 },
-  levelBadgeText: { fontSize: 14, fontWeight: '800', color: 'white', letterSpacing: 0.3 },
-  headerStats: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  headerStat: { alignItems: 'center', minWidth: 44 },
-  headerStatLabel: { fontSize: 10, fontWeight: '700', color: COLORS.textSecondary, letterSpacing: 1 },
-  headerStatValue: { fontSize: 20, fontWeight: '800', color: COLORS.text, marginTop: 1 },
-  headerDivider: { width: 1, height: 28, backgroundColor: 'rgba(0,0,0,0.08)' },
-  progressTrack: { height: 8, borderRadius: 4, backgroundColor: 'rgba(30,144,255,0.12)', marginTop: 8, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 4, backgroundColor: '#2ED573' },
-  headerBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
-  progressText: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, fontWeight: '600' },
-  rewardBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(249,168,37,0.15)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 10, paddingVertical: 3 },
-  rewardBadgeText: { fontSize: 12, fontWeight: '800', color: '#F9A825' },
+  levelGroup: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+  levelLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.6)', letterSpacing: 1.5 },
+  levelNumber: { fontSize: 22, fontWeight: '900', color: 'white', lineHeight: 25 },
+  diffChip: { borderRadius: BORDER_RADIUS.full, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
+  diffChipText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.3 },
+
+  statTiles: { flexDirection: 'row', gap: 6 },
+  statTile: { alignItems: 'center', minWidth: 50, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  statTileLabel: { fontSize: 8, fontWeight: '800', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8 },
+  statTileValue: { fontSize: 17, fontWeight: '900', color: 'white', lineHeight: 21 },
+  statStars: { flexDirection: 'row', height: 21, alignItems: 'center' },
+
+  progressRow: { flexDirection: 'row', alignItems: 'center', marginTop: 9 },
+  colorDots: { flexDirection: 'row', gap: DOT_GAP, flex: 1 },
+  colorDot: { borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  progressText: { fontSize: 12, fontWeight: '800', color: 'rgba(255,255,255,0.75)', marginHorizontal: 8 },
+  musicBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  progressTrack: { height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.14)', marginTop: 8, overflow: 'hidden' },
+  progressFill: { height: '100%', width: '100%', borderRadius: 3, backgroundColor: '#2ED573', transformOrigin: 'left' },
 
   // Board
   panel: { borderRadius: 26, paddingHorizontal: 12, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.9)', ...SHADOWS.card },
@@ -961,13 +1214,22 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.85)',
   },
-  stream: { position: 'absolute', width: STREAM_W, borderRadius: STREAM_W / 2, zIndex: 40 },
+  stream: { position: 'absolute', width: STREAM_W, borderRadius: STREAM_W / 2, zIndex: 40, overflow: 'hidden' },
+  streamShine: { position: 'absolute', left: 1, top: 0, bottom: 0, width: 1.5, backgroundColor: 'rgba(255,255,255,0.5)' },
+  splash: { position: 'absolute', width: 0, height: 0, zIndex: 41 },
+  drop: { position: 'absolute', left: -2.5, top: -2.5, width: 5, height: 5, borderRadius: 2.5 },
+  sparkOrigin: { position: 'absolute', top: 2, width: 0, height: 0 },
+  spark: { position: 'absolute', left: -3, top: -3, width: 6, height: 6, borderRadius: 1.5 },
+  toast: { position: 'absolute', top: 10, alignSelf: 'center', backgroundColor: 'rgba(0,26,51,0.9)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 14, paddingVertical: 7 },
+  toastText: { fontSize: 13, fontWeight: '800', color: 'white' },
 
   // Controls
   controlsRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: SPACING.md, paddingHorizontal: SPACING.sm },
   control: { alignItems: 'center', gap: 4, minWidth: 64 },
   controlCircle: { width: 46, height: 46, borderRadius: 23, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center', ...SHADOWS.card },
   controlCircleAccent: { backgroundColor: '#F9A825' },
+  adTag: { position: 'absolute', top: -5, right: -9, flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#1E90FF', borderRadius: 8, paddingHorizontal: 5, paddingVertical: 2, borderWidth: 1.5, borderColor: 'white' },
+  adTagText: { fontSize: 8, fontWeight: '900', color: 'white', letterSpacing: 0.3 },
   controlCircleOff: { backgroundColor: '#EEF1F4', shadowOpacity: 0, elevation: 0 },
   controlLabelOff: { color: '#B0B8C1' },
   controlLabel: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },

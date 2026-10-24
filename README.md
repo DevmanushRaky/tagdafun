@@ -29,8 +29,14 @@ Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memo
 - Track your win streak and total flips
 
 ### Memory Cards — Free to play
-- Flip cards and match all the pairs
-- Earn **+10 coins** and **+15 XP** for completing the board
+- Flip cards and match all the pairs; earn **+10 coins** and **+15 XP** per cleared level
+- **Levels** (saved between sessions): 4 cards per row, sized so the Hint button stays on screen: 4×3 (6 pairs) → 4×4 (8) → 4×4 (7 + 2 bombs) → 4×5 (9 + 2 bombs) → 4×5 (8 + 4 bombs) for every level after
+- **Stars** by moves: 3★ within `ceil(pairs × 1.6)` moves, 2★ within `ceil(pairs × 2.4)`, else 1★. Best stars per level are saved
+- **Bombs** (from Level 3): flipping one explodes it, adds +2 moves and reshuffles every unmatched card; matched pairs stay put
+- **Hint** (2 per level): watch a rewarded ad and every card still in play is shown for 3 seconds. The clock pauses during the ad. In dev builds / Expo Go, where no ad loads, the hint is given for free so it can be tested
+- **Music**: a soft looping melody (toggle 🎵 in the top bar, choice is saved); it pauses while an ad plays
+- **Vibration** only when a level is cleared
+- Tuning lives at the top of `components/MemoryCards.tsx` (`LEVELS`, `starLimits`, `BOMB_PENALTY_MOVES`, `HINTS_PER_LEVEL`, `HINT_REVEAL_MS`, `MUSIC_VOLUME`)
 
 ### Water Sorting — Free to play
 - Pour water between bottles until every bottle holds a single colour
@@ -110,6 +116,41 @@ The app runs fully offline using AsyncStorage — no backend, no login required.
 - 11-level XP progression
 
 **Not planned:** no backend, login, online leaderboard or cash-out. Coins are in-game currency only; revenue comes from ads.
+
+---
+
+## Ads
+
+Unity LevelPlay, all set up in code. Ad unit IDs, SDK quirks and build notes are in `ADS_INTEGRATION.md`.
+
+| Format | Where | When |
+|--------|-------|------|
+| Banner | Home, below the daily challenge | Always |
+| Native | Home (after games), inside each game screen, Weekly screen | Always (hidden until an ad loads) |
+| Rewarded (+50 coins) | Coins screen "Watch Ad" button | Whenever the player taps it |
+| Rewarded (+50 coins) | "Watch ad / Skip" popup after a game | **Capped**, see below |
+| Rewarded (no coins) | Memory Cards "Hint" button | Player taps it; 2 per level |
+
+### After-game popup cap
+
+Showing the popup after every round annoyed players and they just hit Skip, so it is capped:
+
+- It shows after every **4th** finished game (any game, Coin Toss flips included)
+- At most **once every 3 minutes**
+- The counter lives in memory, so it resets when the app restarts
+
+Change the numbers in `screens/HomeScreen.tsx`:
+
+```ts
+const REWARD_PROMPT_EVERY = 4;                   // show after every Nth finished game
+const REWARD_PROMPT_COOLDOWN_MS = 3 * 60 * 1000; // at most once per this window
+```
+
+For Coin Toss the popup waits 1.5 s after the coin lands (`RESULT_HOLD_MS` in `components/CoinToss.tsx`) so the result is seen first.
+
+Rewarded ads for in-game help go through `services/rewardedAd.ts` (`showRewardedAd()` → `'rewarded' | 'closed' | 'unavailable'`).
+
+**Ideas for later (not built):** the same "watch ad for a hint" in Water Sorting when free hints run out, and an optional "2x coins" button on a win. With those in place the after-game popup could be removed completely.
 
 ---
 

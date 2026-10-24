@@ -118,7 +118,7 @@ const LeaderboardScreen: React.FC = () => {
         style={[styles.hero, { paddingTop: insets.top + 16 }]}
       >
         <Ionicons name="trophy" size={40} color="white" />
-        <Text style={styles.heroTitle}>Leaderboard</Text>
+        <Text style={styles.heroTitle}>Weekly Stats</Text>
 
         {/* Live countdown */}
         <View style={styles.countdownBox}>

@@ -105,18 +105,6 @@ const CoinsScreen: React.FC = () => {
 
       <RewardedAdButton onRewarded={load} />
 
-      {/* Coming Soon Banner */}
-      <View style={styles.comingSoonBanner}>
-        <Ionicons name="gift-outline" size={20} color="#A55EEA" />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.comingSoonTitle}>Coin Redemption</Text>
-          <Text style={styles.comingSoonSub}>Coming soon — stay tuned!</Text>
-        </View>
-        <View style={styles.comingSoonBadge}>
-          <Text style={styles.comingSoonBadgeText}>Soon</Text>
-        </View>
-      </View>
-
       {/* Game breakdown */}
       <View style={styles.section}>
         <View style={styles.sectionTitleRow}>
@@ -311,11 +299,6 @@ const styles = StyleSheet.create({
   logNet: { fontSize: 16, fontWeight: '800' },
   logNetLabel: { ...TYPOGRAPHY.small, color: COLORS.textSecondary },
 
-  comingSoonBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: SPACING.md, marginBottom: SPACING.md, backgroundColor: 'rgba(165,94,234,0.08)', borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: 'rgba(165,94,234,0.2)', padding: SPACING.md },
-  comingSoonTitle: { ...TYPOGRAPHY.captionBold, color: COLORS.text },
-  comingSoonSub: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, marginTop: 2 },
-  comingSoonBadge: { backgroundColor: 'rgba(165,94,234,0.15)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 10, paddingVertical: 4 },
-  comingSoonBadgeText: { fontSize: 11, fontWeight: '700', color: '#A55EEA' },
 });
 
 export default CoinsScreen;

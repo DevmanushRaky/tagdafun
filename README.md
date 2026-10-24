@@ -8,7 +8,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-brightgreen)](https://github.com/DevmanushRaky/tagdafun)
 [![Version](https://img.shields.io/badge/version-1.2.0-orange)](https://github.com/DevmanushRaky/tagdafun/releases)
-[![Expo](https://img.shields.io/badge/Expo-SDK%2053-blue)](https://expo.dev)
+[![Expo](https://img.shields.io/badge/Expo-SDK%2057-blue)](https://expo.dev)
 
 </div>
 
@@ -16,7 +16,7 @@
 
 ## What is Tagda Fun?
 
-Tagda Fun is a gamified mini-game app with two games — **Coin Toss** and **Spin Roulette** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and a weekly leaderboard. All data is stored locally on your device.
+Tagda Fun is a gamified mini-game app with four games — **Coin Toss**, **Spin Roulette**, **Memory Cards** and **Water Sorting** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and weekly stats. All data is stored locally on your device.
 
 ---
 
@@ -35,6 +35,16 @@ Tagda Fun is a gamified mini-game app with two games — **Coin Toss** and **Spi
 - Earn **+15 XP** per spin
 - Spinning locked if balance is below 5
 
+### Memory Cards — Free to play
+- Flip cards and match all the pairs
+- Earn **+10 coins** and **+15 XP** for completing the board
+
+### Water Sorting — Free to play
+- Pour water between bottles until every bottle holds a single colour
+- Level-based, with hints; progress is saved between sessions
+- Reward depends on your moves vs. par: **100 coins** at par, up to **150** if under par, down to **10** if far over
+- Earn **+15 XP** per win
+
 ---
 
 ## Screens
@@ -43,7 +53,7 @@ Tagda Fun is a gamified mini-game app with two games — **Coin Toss** and **Spi
 |--------|--------------|
 | **Home** | Player card (level, XP bar, streak), daily challenge, game cards |
 | **Coins** | Coin balance, per-game breakdown, full game history log |
-| **Leaderboard** | Your weekly coins + games played, live countdown to Sunday reset (IST) |
+| **Weekly** | Your weekly coins + games played, live countdown to Sunday reset (IST) |
 | **Profile** | Level progress, all-time stats, detailed game stats, achievements |
 
 ---
@@ -71,7 +81,7 @@ Tagda Fun is a gamified mini-game app with two games — **Coin Toss** and **Spi
 - On completion: **+25 coins + 20 XP**
 - Resets at midnight
 
-### Weekly Leaderboard
+### Weekly Stats
 - Tracks your coins and games played for the current week
 - Resets every **Sunday at 12:00 AM IST**
 - Live countdown timer shown on screen
@@ -99,17 +109,14 @@ Tagda Fun is a gamified mini-game app with two games — **Coin Toss** and **Spi
 The app runs fully offline using AsyncStorage — no backend, no login required.
 
 **What works now:**
-- Both games with full coin and XP logic
+- All four games with full coin and XP logic
+- Ads via Unity LevelPlay (banner, native, optional rewarded +50 coins) — see `ADS_INTEGRATION.md`
 - Persistent stats, history, and achievements (AsyncStorage)
-- Weekly leaderboard tracking (local, resets Sunday IST)
+- Weekly stats tracking (local, resets Sunday IST)
 - Daily challenge with auto-reset
 - 11-level XP progression
 
-**Planned later:**
-- AdMob rewarded video ads
-- Supabase backend + Google login
-- Online leaderboard with real players
-- Coin redemption via separate website (outside the app)
+**Not planned:** no backend, login, online leaderboard or cash-out. Coins are in-game currency only (hints, unlocks, spins); revenue comes from ads.
 
 ---
 

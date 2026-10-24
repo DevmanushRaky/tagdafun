@@ -1,7 +1,7 @@
 # Privacy Policy — Tagda Fun
 
 **Effective Date:** August 19, 2025  
-**Last Updated:** August 19, 2025  
+**Last Updated:** October 24, 2026  
 **Developer:** DevmanushRaky 
 **App:** Tagda Fun  
 **Platform:** Google Play Store  
@@ -10,15 +10,15 @@
 
 ## 1. Overview
 
-Tagda Fun is a casual mobile gaming app featuring Coin Toss, Spin Roulette, and Memory Cards with a gamification system (XP, levels, achievements, leaderboard). This policy explains what data the app stores, how it is handled, and your rights as a user.
+Tagda Fun is a casual mobile gaming app featuring Coin Toss, Spin Roulette, Memory Cards, and Water Sorting with a gamification system (XP, levels, achievements, leaderboard). This policy explains what data the app stores, how it is handled, and your rights as a user.
 
-**Short version:** Tagda Fun stores only game progress locally on your device. No personal information is collected, no data is sent to any server, and no account is required to play.
+**Short version:** Tagda Fun stores your game progress locally on your device. We do not collect personal information, run no backend server, and require no account. The app shows ads through Unity LevelPlay, which may collect certain device data (such as the advertising ID) as described in Section 5.3.
 
 ---
 
 ## 2. What Data We Store
 
-All data is stored **only on your device** using AsyncStorage (local storage). Nothing is transmitted to any external server.
+All game data is stored **only on your device** using AsyncStorage (local storage). We do not transmit it to any server. (Ad networks, covered in Section 5.3, operate separately.)
 
 ### 2.1 Game Statistics (Stored Locally)
 
@@ -30,6 +30,7 @@ All data is stored **only on your device** using AsyncStorage (local storage). N
 | Coin toss wins / flips | Profile stats | Device only |
 | Spin roulette plays | Profile stats | Device only |
 | Memory card games played | Profile stats | Device only |
+| Water Sorting games played and current level | Profile stats and level progress | Device only |
 | Current streak and best streak | Achievement tracking | Device only |
 | Achievement unlock status | Profile screen | Device only |
 | Daily challenge progress | Home screen challenge | Device only |
@@ -38,7 +39,7 @@ All data is stored **only on your device** using AsyncStorage (local storage). N
 ### 2.2 Game History Log (Stored Locally)
 
 The app saves a log of recent game plays (up to 100 entries) on your device, including:
-- Game type (Coin Toss, Spin Roulette, Memory Cards)
+- Game type (Coin Toss, Spin Roulette, Memory Cards, Water Sorting, or a rewarded ad)
 - Timestamp of each play
 - Coins earned or spent per play
 - Coin toss outcome (heads/tails)
@@ -50,8 +51,9 @@ This log is used to display your game history in the Coins screen. It never leav
 
 ## 3. What We Do NOT Collect
 
+The app itself (our own code) does not collect:
+
 - ❌ Name, email address, phone number, or any personal identifier
-- ❌ Device ID, advertising ID, or any unique hardware identifier
 - ❌ Location or GPS data
 - ❌ Camera or microphone data
 - ❌ Contacts or call logs
@@ -59,15 +61,16 @@ This log is used to display your game history in the Coins screen. It never leav
 - ❌ Crash reports sent to any server
 - ❌ Any data linked to your identity
 
+We do not receive or have access to any data collected by the ad providers described in Section 5.3.
+
 ---
 
 ## 4. Internet Access
 
-Tagda Fun requests internet permission **only** for Google Play Store app updates. The app itself:
-- Does not make any network requests during gameplay
-- Does not connect to any backend server
-- Does not sync data to any cloud service
-- Works fully offline for all game features
+Tagda Fun uses the internet connection **only** to load and show ads. The app itself:
+- Does not connect to any backend server of ours
+- Does not sync your data to any cloud service
+- Works offline for all game features (ads simply won't load without a connection)
 
 ---
 
@@ -82,8 +85,16 @@ Tagda Fun is built using the Expo SDK. Expo may collect anonymized, aggregated c
 ### 5.2 Google Play Store
 When you download the app via Google Play Store, Google collects standard app store data (install counts, ratings, reviews). This is governed by [Google's Privacy Policy](https://policies.google.com/privacy) and is outside our control.
 
-### 5.3 AdMob (Planned — Not Active Yet)
-Ads are not currently active in this version of the app. When ads are added in a future update, this policy will be updated to reflect AdMob data practices and you will be notified via an app update.
+### 5.3 Unity LevelPlay (Advertising)
+Tagda Fun shows banner, native, and optional rewarded video ads through **Unity LevelPlay** (formerly ironSource), an ad mediation platform. LevelPlay may route ad requests to other ad networks (for example ironSource, Google AdMob, Meta, or Unity Ads). These services may collect and use data such as:
+- Your device's **advertising ID** (Google Advertising ID)
+- IP address and approximate location derived from it
+- Device and app information (model, OS version, app version)
+- Ad interaction data (impressions, clicks, rewarded ad completions)
+
+This data is collected by those providers for ad delivery, measurement, fraud prevention, and personalization. It is not accessible to us as the developer. See [Unity's Privacy Policy](https://unity.com/legal/privacy-policy) and [Google's Privacy Policy](https://policies.google.com/privacy).
+
+You can opt out of ad personalization or reset your advertising ID in your device settings (Android: Settings → Privacy → Ads).
 
 ---
 
@@ -126,7 +137,8 @@ Since we collect no personal data, there is nothing for us to provide, correct, 
 
 | Permission | Why It Is Used |
 |------------|---------------|
-| `INTERNET` | Required by Google Play for app updates only |
+| `INTERNET` | Required to load ads |
+| `AD_ID` (`com.google.android.gms.permission.AD_ID`) | Lets ad providers read the advertising ID for ad delivery and measurement |
 
 No other permissions are requested. The app does not access your camera, microphone, contacts, location, or storage beyond its own local data.
 
@@ -136,7 +148,7 @@ No other permissions are requested. The app does not access your camera, microph
 
 - **Game statistics** persist on your device until you uninstall the app or reset them
 - **Game history** is capped at 100 entries — oldest entries are automatically removed when the limit is reached
-- **We retain no data** on any server at any time
+- **We retain no data** on any server of our own. Data held by ad providers follows their own retention policies
 
 ---
 
@@ -162,7 +174,7 @@ For any questions or concerns about this privacy policy:
 
 ## 13. Legal
 
-Since Tagda Fun does not process personal data, no legal basis under GDPR, CCPA, or similar regulations is required. There are no international data transfers, no automated decision-making, and no profiling of any kind.
+Tagda Fun itself does not process personal data and has no backend. Ad providers (Section 5.3) act as independent controllers of the data they collect and are responsible for their own compliance with GDPR, CCPA, and similar regulations. We do not carry out automated decision-making or profiling ourselves.
 
 ---
 

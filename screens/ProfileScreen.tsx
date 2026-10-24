@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Keyboard,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Keyboard, Share, Linking, Platform,
 } from 'react-native';
+import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ import { COIN_SKINS, CARD_BACKS, BOTTLE_THEMES } from '../constants/shop';
 import { GameIcon } from '../components/GameIcons';
 import { MEMORY_LEVEL_KEY, MEMORY_STARS_KEY } from '../components/MemoryCards';
 import { WATER_LEVEL_KEY } from '../components/WaterSorting';
+import { PLAY_STORE_URL, PLAY_STORE_APP_URL, PLAY_STORE_SHARE_URL, PRIVACY_POLICY_URL } from '../constants/links';
 
 const TIER_COLOR = { bronze: '#CD7F32', silver: '#9AA3AD', gold: '#E0A800' };
 
@@ -67,6 +69,21 @@ const ProfileScreen: React.FC = () => {
     setEditing(false);
     Keyboard.dismiss();
   };
+
+  const shareGame = () => {
+    const message =
+      `I'm Level ${levelInfo.level} (${levelInfo.title}) on Tagda Fun 🎮\n` +
+      `Memory Cards level ${memoryLevel} · Water Sorting level ${waterLevel}.\n` +
+      `Think you can beat me? Play free: ${PLAY_STORE_SHARE_URL}`;
+    Share.share({ message }).catch(() => {});
+  };
+
+  const rateApp = () => {
+    const url = Platform.OS === 'android' ? PLAY_STORE_APP_URL : PLAY_STORE_URL;
+    Linking.openURL(url).catch(() => Linking.openURL(PLAY_STORE_URL).catch(() => {}));
+  };
+
+  const openPrivacy = () => { Linking.openURL(PRIVACY_POLICY_URL).catch(() => {}); };
 
   const maxLevel = levelInfo.progress >= 1 && levelInfo.xpForNext === levelInfo.xpRequired;
   const xpToNext = Math.max(0, levelInfo.xpForNext - stats.totalXP);
@@ -128,6 +145,9 @@ const ProfileScreen: React.FC = () => {
             )}
             <Text style={styles.levelTitle}>Level {levelInfo.level} · {levelInfo.title}</Text>
           </View>
+          <TouchableOpacity style={styles.sharePill} onPress={shareGame} activeOpacity={0.8} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+            <Ionicons name="share-social" size={16} color="white" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.xpBlock}>
@@ -192,6 +212,20 @@ const ProfileScreen: React.FC = () => {
         </View>
       </View>
 
+      {/* Invite */}
+      <TouchableOpacity style={styles.invite} onPress={shareGame} activeOpacity={0.88}>
+        <LinearGradient colors={['#FF8C42', '#FF5E00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.inviteGrad}>
+          <View style={styles.inviteIcon}>
+            <Ionicons name="people" size={22} color="white" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.inviteTitle}>Invite friends</Text>
+            <Text style={styles.inviteSub}>Share your level and the game link</Text>
+          </View>
+          <Ionicons name="share-social" size={20} color="white" />
+        </LinearGradient>
+      </TouchableOpacity>
+
       {/* Achievements */}
       <View style={styles.section}>
         <View style={styles.sectionRow}>
@@ -234,9 +268,37 @@ const ProfileScreen: React.FC = () => {
           })}
         </View>
       </View>
+      {/* More */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>More</Text>
+        <View style={styles.card}>
+          <MoreRow icon="star" color="#E0A800" label="Rate Tagda Fun" onPress={rateApp} />
+          <MoreRow icon="share-social" color={COLORS.primary} label="Share with friends" onPress={shareGame} border />
+          <MoreRow icon="shield-checkmark" color="#17B85A" label="Privacy Policy" onPress={openPrivacy} border />
+          <View style={[styles.moreRow, styles.rowBorder]}>
+            <View style={[styles.moreIcon, { backgroundColor: COLORS.surfaceDark }]}>
+              <Ionicons name="information-circle" size={18} color={COLORS.textSecondary} />
+            </View>
+            <Text style={styles.moreLabel}>Version</Text>
+            <Text style={styles.moreValue}>{Constants.expoConfig?.version ?? '-'}</Text>
+          </View>
+        </View>
+      </View>
     </ScrollView>
   );
 };
+
+const MoreRow: React.FC<{ icon: string; color: string; label: string; onPress: () => void; border?: boolean }> = ({
+  icon, color, label, onPress, border,
+}) => (
+  <TouchableOpacity style={[styles.moreRow, border && styles.rowBorder]} onPress={onPress} activeOpacity={0.7}>
+    <View style={[styles.moreIcon, { backgroundColor: color + '1A' }]}>
+      <Ionicons name={icon as any} size={18} color={color} />
+    </View>
+    <Text style={styles.moreLabel}>{label}</Text>
+    <Ionicons name="chevron-forward" size={18} color={COLORS.textLight} />
+  </TouchableOpacity>
+);
 
 const GameStatRow: React.FC<{
   id: string; title: string; border?: boolean; cells: { label: string; value: string | number }[];
@@ -274,6 +336,7 @@ const styles = StyleSheet.create({
   nameEditRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   nameInput: { flex: 1, fontSize: 18, fontWeight: '800', color: 'white', borderBottomWidth: 1.5, borderBottomColor: 'rgba(255,255,255,0.4)', paddingVertical: 4 },
   nameBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
+  sharePill: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' },
   levelTitle: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.7)', marginTop: 3 },
 
   xpBlock: { marginTop: SPACING.md },
@@ -308,6 +371,17 @@ const styles = StyleSheet.create({
   collectTile: { flex: 1, alignItems: 'center', gap: 3, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.lg, paddingVertical: 12, ...SHADOWS.card },
   collectValue: { fontSize: 17, fontWeight: '900', color: COLORS.text },
   collectLabel: { fontSize: 11, fontWeight: '600', color: COLORS.textSecondary },
+
+  invite: { marginHorizontal: SPACING.md, marginTop: SPACING.lg, borderRadius: BORDER_RADIUS.lg, overflow: 'hidden', ...SHADOWS.medium },
+  inviteGrad: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
+  inviteIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
+  inviteTitle: { fontSize: 16, fontWeight: '800', color: 'white' },
+  inviteSub: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.9)', marginTop: 1 },
+
+  moreRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13 },
+  moreIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  moreLabel: { flex: 1, ...TYPOGRAPHY.captionBold, color: COLORS.text },
+  moreValue: { ...TYPOGRAPHY.caption, color: COLORS.textSecondary, fontWeight: '700' },
 
   achRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   achDone: { opacity: 0.85 },

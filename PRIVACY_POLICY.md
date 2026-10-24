@@ -10,7 +10,7 @@
 
 ## 1. Overview
 
-Tagda Fun is a casual mobile gaming app featuring Coin Toss, Spin Roulette, Memory Cards, and Water Sorting with a gamification system (XP, levels, achievements, leaderboard). This policy explains what data the app stores, how it is handled, and your rights as a user.
+Tagda Fun is a casual mobile gaming app featuring Coin Toss, Memory Cards, and Water Sorting with a gamification system (XP, levels, achievements, leaderboard). This policy explains what data the app stores, how it is handled, and your rights as a user.
 
 **Short version:** Tagda Fun stores your game progress locally on your device. We do not collect personal information, run no backend server, and require no account. The app shows ads through Unity LevelPlay, which may collect certain device data (such as the advertising ID) as described in Section 5.3.
 
@@ -28,7 +28,6 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 | XP and level progress | Show your level in the app | Device only |
 | Games played count (per game type) | Show stats on profile screen | Device only |
 | Coin toss wins / flips | Profile stats | Device only |
-| Spin roulette plays | Profile stats | Device only |
 | Memory card games played | Profile stats | Device only |
 | Water Sorting games played and current level | Profile stats and level progress | Device only |
 | Current streak and best streak | Achievement tracking | Device only |
@@ -39,11 +38,10 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 ### 2.2 Game History Log (Stored Locally)
 
 The app saves a log of recent game plays (up to 100 entries) on your device, including:
-- Game type (Coin Toss, Spin Roulette, Memory Cards, Water Sorting, or a rewarded ad)
+- Game type (Coin Toss, Memory Cards, Water Sorting, or a rewarded ad)
 - Timestamp of each play
 - Coins earned or spent per play
 - Coin toss outcome (heads/tails)
-- Spin wheel value
 
 This log is used to display your game history in the Coins screen. It never leaves your device.
 

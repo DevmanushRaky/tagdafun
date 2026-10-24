@@ -18,8 +18,8 @@ Unity LevelPlay is a mediation platform: it routes ad requests to whichever unde
 | Ad unit name | Ad Unit ID         | Format   | Where it's shown |
 |---|---|---|---|
 | banner ads   | `suwmraw3whvjtbco` | Banner   | Home screen, between the profile card and the Games section (refresh rate: 10s) |
-| rawarded ads | `jqvx5o80z4v2i70t` | Rewarded | Coins screen "Watch Ad" button, and an automatic prompt shown after every game finishes |
-| native ads   | `d1das3rlcdyyqouj` | Native   | Home screen (after Games section), inside the gameplay screen (Coin Toss / Spin Roulette / Memory Cards), and at the bottom of the Leaderboard screen |
+| rawarded ads | `jqvx5o80z4v2i70t` | Rewarded | Coins screen "Watch Ad" button, and an automatic prompt after every 4th finished game (at most once every 3 minutes) |
+| native ads   | `d1das3rlcdyyqouj` | Native   | Home screen (after Games section), inside the gameplay screen (Coin Toss / Memory Cards / Water Sorting), and at the bottom of the Leaderboard screen |
 
 Interstitial and legacy ad formats were intentionally not added — a full-screen interruption ad was judged too disruptive for this app's flow.
 
@@ -50,7 +50,7 @@ Interstitial and legacy ad formats were intentionally not added — a full-scree
 - `services/ads.ts` — reads config from `app.json` extra, exposes `initAds()` (called once from `App.tsx`) and the `ADS` constants object.
 - `components/ads/AdBanner.tsx` — banner ad, explicitly calls `loadAd()` on mount via a ref (the banner view does not auto-load).
 - `components/ads/RewardedAdButton.tsx` — manual "Watch Ad" button (Coins screen), logs a `gameType: 'ad'` entry to game history on reward so it's visible and distinguishable in the History list.
-- `components/ads/PostGameRewardModal.tsx` — automatic Skip/Watch-Ad prompt shown after any game finishes; also logs to history on reward.
+- `components/ads/PostGameRewardModal.tsx` — automatic Skip/Watch-Ad prompt shown after a finished game; capped in `HomeScreen.tsx` (`REWARD_PROMPT_EVERY`, `REWARD_PROMPT_COOLDOWN_MS`) so it does not appear after every round. Also logs to history on reward.
 - `components/ads/NativeAdCard.tsx` — native ad card. Loading has two quirks worked around here:
   1. `loadAd()` must be called ~300ms after the native ad object is created, since the underlying native view takes an extra render cycle to mount and register its load callback — calling too early silently no-ops.
   2. While the ad hasn't loaded yet (or fails to load), the view is kept mounted but positioned off-screen (`position: absolute`, moved out of view) so it takes no visible space and doesn't show an empty box. Once `onAdLoaded` fires, it switches into the normal, styled, in-flow layout.

@@ -34,10 +34,6 @@ const CoinsScreen: React.FC = () => {
   useFocusEffect(useCallback(() => { load(); }, []));
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
-  const spinActualEarned = history
-    .filter(h => h.gameType === 'spin')
-    .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
-
   const memoryActualEarned = history
     .filter(h => h.gameType === 'memory')
     .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
@@ -48,20 +44,16 @@ const CoinsScreen: React.FC = () => {
     .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
 
   const gameBreakdown = GAMES.map(g => {
-    const plays = g.id === 'spin'
-      ? stats.gamesPlayed.spin ?? 0
-      : g.id === 'memory'
-        ? memoryPlays
-        : g.id === 'water'
-          ? stats.gamesPlayed.water ?? 0
-          : stats.gamesPlayed.coin ?? 0;
-    const earned = g.id === 'spin'
-      ? spinActualEarned
-      : g.id === 'memory'
-        ? memoryActualEarned
-        : g.id === 'water'
-          ? waterActualEarned
-          : plays * g.coinsPerPlay;
+    const plays = g.id === 'memory'
+      ? memoryPlays
+      : g.id === 'water'
+        ? stats.gamesPlayed.water ?? 0
+        : stats.gamesPlayed.coin ?? 0;
+    const earned = g.id === 'memory'
+      ? memoryActualEarned
+      : g.id === 'water'
+        ? waterActualEarned
+        : plays * g.coinsPerPlay;
     return { ...g, plays, earned };
   });
 
@@ -119,13 +111,11 @@ const CoinsScreen: React.FC = () => {
             <View style={styles.breakdownInfo}>
               <Text style={styles.breakdownName}>{g.title}</Text>
               <Text style={styles.breakdownPlays}>
-                {g.id === 'spin'
-                  ? `${g.plays} spins · wheel varies`
-                  : g.id === 'memory'
-                    ? `${g.plays} games · +10 coins per win`
-                    : g.id === 'water'
-                      ? `${g.plays} levels · up to 150 coins`
-                      : `${g.plays} plays × ${g.coinsPerPlay} coins each`}
+                {g.id === 'memory'
+                  ? `${g.plays} games · +10 coins per win`
+                  : g.id === 'water'
+                    ? `${g.plays} levels · up to 150 coins`
+                    : `${g.plays} plays × ${g.coinsPerPlay} coins each`}
               </Text>
               <View style={styles.progressBar}>
                 <View style={[styles.progressFill, {

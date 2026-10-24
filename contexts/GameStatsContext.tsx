@@ -4,7 +4,7 @@ import { GAME_CONFIG, LEVELS, ACHIEVEMENT_XP } from '../constants/gameConfig';
 
 export type GameType = 'coin' | 'memory' | 'water';
 /** Where coins came from; kept as lifetime totals so the Coins screen never depends on the capped history. */
-export type CoinSource = GameType | 'ad' | 'daily';
+export type CoinSource = GameType | 'ad' | 'daily' | 'gift';
 
 export interface Achievement {
   id: string;
@@ -32,6 +32,7 @@ export interface PlayerStats {
   coinWins: number;
   coinFlips: number;
   coinsEarned: Record<CoinSource, number>;
+  coinsSpent: number;
 }
 
 export interface LevelInfo {
@@ -50,7 +51,9 @@ interface GameStatsContextValue {
   recordGame: (gameType: GameType, extra?: Partial<PlayerStats>) => Promise<Achievement[]>;
   newlyUnlocked: Achievement[];
   clearNewlyUnlocked: () => void;
-  addBonusCoins: (amount: number, source?: 'ad' | 'daily', xp?: number) => Promise<void>;
+  addBonusCoins: (amount: number, source?: 'ad' | 'daily' | 'gift', xp?: number) => Promise<void>;
+  /** Takes coins for a shop purchase; false (and nothing changes) if the balance is too low. */
+  spendCoins: (amount: number) => Promise<boolean>;
 }
 
 const STORAGE_KEY = '@tagdafun_stats_v3';
@@ -87,7 +90,8 @@ const defaultStats = (): PlayerStats => ({
   achievementUnlockTimes: {},
   coinWins: 0,
   coinFlips: 0,
-  coinsEarned: { coin: 0, memory: 0, water: 0, ad: 0, daily: 0 },
+  coinsEarned: { coin: 0, memory: 0, water: 0, ad: 0, daily: 0, gift: 0 },
+  coinsSpent: 0,
 });
 
 /**
@@ -111,6 +115,7 @@ function seedCoinsEarned(saved: Partial<PlayerStats>, historyRaw: string | null)
     water,
     ad,
     daily: 0,
+    gift: 0,
   };
 }
 
@@ -243,7 +248,7 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
   const clearNewlyUnlocked = useCallback(() => setNewlyUnlocked([]), []);
 
   /** Coins that don't come from playing a game: rewarded ads and the daily challenge. Not counted as a game. */
-  const addBonusCoins = useCallback(async (amount: number, source: 'ad' | 'daily' = 'ad', xp = 0): Promise<void> => {
+  const addBonusCoins = useCallback(async (amount: number, source: 'ad' | 'daily' | 'gift' = 'ad', xp = 0): Promise<void> => {
     const s: PlayerStats = {
       ...stats,
       totalCoins: stats.totalCoins + amount,
@@ -259,8 +264,16 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (unlocked.length > 0) setNewlyUnlocked(prev => [...prev, ...unlocked]);
   }, [stats, saveStats]);
 
+  const spendCoins = useCallback(async (amount: number): Promise<boolean> => {
+    if (amount <= 0 || stats.totalCoins < amount) return false;
+    const s: PlayerStats = { ...stats, totalCoins: stats.totalCoins - amount, coinsSpent: stats.coinsSpent + amount };
+    await saveStats(s);
+    setStats(s);
+    return true;
+  }, [stats, saveStats]);
+
   return (
-    <GameStatsContext.Provider value={{ stats, levelInfo, achievements: buildAchievements(), recordGame, newlyUnlocked, clearNewlyUnlocked, addBonusCoins }}>
+    <GameStatsContext.Provider value={{ stats, levelInfo, achievements: buildAchievements(), recordGame, newlyUnlocked, clearNewlyUnlocked, addBonusCoins, spendCoins }}>
       {children}
     </GameStatsContext.Provider>
   );

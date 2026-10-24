@@ -22,6 +22,8 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'memory', label: 'Memory' },
   { id: 'water', label: 'Water' },
   { id: 'ad', label: 'Ads' },
+  { id: 'gift', label: 'Gifts' },
+  { id: 'shop', label: 'Shop' },
 ];
 
 interface DayGroup { label: string; entries: GameLog[]; }
@@ -79,6 +81,10 @@ const CoinsScreen: React.FC = () => {
       color: COLORS.primary, earned: earned.daily, icon: <Ionicons name="flash" size={22} color={COLORS.primary} />,
     },
     {
+      id: 'gift', title: 'Daily Gift', sub: 'Free coins from the Shop',
+      color: '#FF5E00', earned: earned.gift, icon: <Ionicons name="gift" size={22} color="#FF5E00" />,
+    },
+    {
       id: 'ad', title: 'Rewarded Ads', sub: 'Coins from watching ads',
       color: '#A55EEA', earned: earned.ad, icon: <Ionicons name="play-circle" size={24} color="#A55EEA" />,
     },
@@ -108,6 +114,11 @@ const CoinsScreen: React.FC = () => {
           <View style={styles.heroStat}>
             <Text style={styles.heroStatValue}>{totalEarned}</Text>
             <Text style={styles.heroStatLabel}>Total earned</Text>
+          </View>
+          <View style={styles.heroDivider} />
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatValue}>{stats.coinsSpent}</Text>
+            <Text style={styles.heroStatLabel}>Spent in Shop</Text>
           </View>
           <View style={styles.heroDivider} />
           <View style={styles.heroStat}>
@@ -196,14 +207,20 @@ const Stars: React.FC<{ count: number }> = ({ count }) => (
 const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
   const t = log.gameType;
 
-  const title = t === 'ad' ? 'Rewarded Ad'
+  const title = t === 'shop' ? `Bought ${log.item ?? 'item'}`
+    : t === 'gift' ? 'Daily Gift'
+    : t === 'ad' ? 'Rewarded Ad'
     : t === 'coin' ? 'Coin Toss'
     : t === 'memory' ? 'Memory Cards'
     : 'Water Sorting';
 
-  const icon = t === 'ad'
-    ? <Ionicons name="play-circle" size={22} color="#A55EEA" />
-    : <GameIcon id={t} size={26} />;
+  const icon = t === 'shop'
+    ? <Ionicons name="bag-handle" size={20} color="#0077B6" />
+    : t === 'gift'
+      ? <Ionicons name="gift" size={20} color="#FF5E00" />
+      : t === 'ad'
+        ? <Ionicons name="play-circle" size={22} color="#A55EEA" />
+        : <GameIcon id={t} size={26} />;
 
   let detail: React.ReactNode = null;
   if (t === 'coin') {
@@ -224,11 +241,15 @@ const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
         {log.stars ? <Stars count={log.stars} /> : null}
       </View>
     );
+  } else if (t === 'shop') {
+    detail = <Text style={styles.logDetail}>Shop purchase</Text>;
+  } else if (t === 'gift') {
+    detail = <Text style={styles.logDetail}>Free coins</Text>;
   } else {
     detail = <Text style={styles.logDetail}>Ad reward</Text>;
   }
 
-  const net = log.earnedCoins;
+  const net = log.netCoins ?? log.earnedCoins;
 
   return (
     <View style={[styles.logRow, !first && styles.sourceRowBorder]}>

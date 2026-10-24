@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, Easing,
 } from 'react-native';
@@ -15,6 +15,8 @@ import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
 import { GAME_CONFIG } from '../constants/gameConfig';
 import { logGame } from '../utils/gameHistory';
+import { useShop } from '../contexts/ShopContext';
+import { coinPalette, type CoinPalette } from '../constants/shop';
 
 const COIN_SIZE = 104;
 const TOSS_MS = 1900;
@@ -35,59 +37,63 @@ const REEDS = Array.from({ length: 72 }, (_, i) => (i / 72) * Math.PI * 2);
 
 const CROWN = 'M62 128 L54 78 L80 100 L100 64 L120 100 L146 78 L138 128 Z';
 
-const Emboss: React.FC<{ children: (fill: string) => React.ReactNode }> = ({ children }) => (
+const Emboss: React.FC<{ p: CoinPalette; metal: string; children: (fill: string) => React.ReactNode }> = ({ p, metal, children }) => (
   <>
-    <G transform="translate(1.6,1.8)" opacity={0.55}>{children('#7A4E00')}</G>
-    <G transform="translate(-1,-1)" opacity={0.7}>{children('#FFF6CC')}</G>
-    {children('url(#metal)')}
+    <G transform="translate(1.6,1.8)" opacity={0.55}>{children(p.shadow)}</G>
+    <G transform="translate(-1,-1)" opacity={0.7}>{children(p.highlight)}</G>
+    {children(metal)}
   </>
 );
 
-export const CoinFace: React.FC<{ side: Side; size: number }> = ({ side, size }) => (
+export const CoinFace: React.FC<{ side: Side; size: number; skin?: CoinPalette }> = ({ side, size, skin }) => {
+  const p = skin ?? coinPalette('gold');
+  // Unique gradient ids, so several coins with different skins can share a screen.
+  const u = useId().replace(/[^a-zA-Z0-9]/g, '');
+  return (
   <Svg width={size} height={size} viewBox="0 0 200 200">
     <Defs>
-      <SvgLinearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
-        <Stop offset="0" stopColor="#FFF0A8" />
-        <Stop offset="0.35" stopColor="#E9B530" />
-        <Stop offset="0.7" stopColor="#A86E06" />
-        <Stop offset="1" stopColor="#F2C94C" />
+      <SvgLinearGradient id={`rim${u}`} x1="0" y1="0" x2="1" y2="1">
+        <Stop offset="0" stopColor={p.rim[0]} />
+        <Stop offset="0.35" stopColor={p.rim[1]} />
+        <Stop offset="0.7" stopColor={p.rim[2]} />
+        <Stop offset="1" stopColor={p.rim[3]} />
       </SvgLinearGradient>
-      <RadialGradient id="field" cx="38%" cy="32%" r="75%">
-        <Stop offset="0" stopColor="#FFF4C2" />
-        <Stop offset="0.45" stopColor="#F4C440" />
-        <Stop offset="1" stopColor="#B57A0C" />
+      <RadialGradient id={`field${u}`} cx="38%" cy="32%" r="75%">
+        <Stop offset="0" stopColor={p.field[0]} />
+        <Stop offset="0.45" stopColor={p.field[1]} />
+        <Stop offset="1" stopColor={p.field[2]} />
       </RadialGradient>
-      <SvgLinearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
-        <Stop offset="0" stopColor="#FCD86A" />
-        <Stop offset="1" stopColor="#D49A1C" />
+      <SvgLinearGradient id={`metal${u}`} x1="0" y1="0" x2="0" y2="1">
+        <Stop offset="0" stopColor={p.metal[0]} />
+        <Stop offset="1" stopColor={p.metal[1]} />
       </SvgLinearGradient>
-      <Path id="legend" d="M 34 100 A 66 66 0 0 1 166 100" />
+      <Path id={`legend${u}`} d="M 34 100 A 66 66 0 0 1 166 100" />
     </Defs>
 
     {/* Rim with reeded edge */}
-    <Circle cx="100" cy="100" r="99" fill="url(#rim)" />
+    <Circle cx="100" cy="100" r="99" fill={`url(#rim${u})`} />
     {REEDS.map((a, i) => (
       <Line
         key={i}
         x1={100 + Math.cos(a) * 92} y1={100 + Math.sin(a) * 92}
         x2={100 + Math.cos(a) * 98.5} y2={100 + Math.sin(a) * 98.5}
-        stroke="#8A5A00" strokeOpacity={0.35} strokeWidth={1.4}
+        stroke={p.ink} strokeOpacity={0.35} strokeWidth={1.4}
       />
     ))}
 
     {/* Field */}
-    <Circle cx="100" cy="100" r="88" fill="url(#field)" />
-    <Circle cx="100" cy="100" r="88" fill="none" stroke="#8A5A00" strokeOpacity={0.5} strokeWidth={2} />
+    <Circle cx="100" cy="100" r="88" fill={`url(#field${u})`} />
+    <Circle cx="100" cy="100" r="88" fill="none" stroke={p.ink} strokeOpacity={0.5} strokeWidth={2} />
 
 
     {/* Curved legend */}
-    <SvgText fill="#8A5A00" fillOpacity={0.75} fontSize="15" fontWeight="bold" letterSpacing="3">
-      <TextPath href="#legend" startOffset="50%" textAnchor="middle">TAGDA FUN</TextPath>
+    <SvgText fill={p.ink} fillOpacity={0.75} fontSize="15" fontWeight="bold" letterSpacing="3">
+      <TextPath href={`#legend${u}`} startOffset="50%" textAnchor="middle">TAGDA FUN</TextPath>
     </SvgText>
 
     {side === 'heads' ? (
       <>
-        <Emboss>
+        <Emboss p={p} metal={`url(#metal${u})`}>
           {fill => (
             <>
               <Path d={CROWN} fill={fill} />
@@ -98,22 +104,23 @@ export const CoinFace: React.FC<{ side: Side; size: number }> = ({ side, size })
             </>
           )}
         </Emboss>
-        <SvgText x="100" y="172" fill="#8A5A00" fillOpacity={0.8} fontSize="14" fontWeight="bold" letterSpacing="4" textAnchor="middle">HEADS</SvgText>
+        <SvgText x="100" y="172" fill={p.ink} fillOpacity={0.8} fontSize="14" fontWeight="bold" letterSpacing="4" textAnchor="middle">HEADS</SvgText>
       </>
     ) : (
       <>
-        <Emboss>
+        <Emboss p={p} metal={`url(#metal${u})`}>
           {fill => (
             <SvgText x="100" y="136" fill={fill} fontSize="78" fontWeight="900" textAnchor="middle">
               {GAME_CONFIG.coin.coinsPerPlay}
             </SvgText>
           )}
         </Emboss>
-        <SvgText x="100" y="172" fill="#8A5A00" fillOpacity={0.8} fontSize="14" fontWeight="bold" letterSpacing="4" textAnchor="middle">TAILS</SvgText>
+        <SvgText x="100" y="172" fill={p.ink} fillOpacity={0.8} fontSize="14" fontWeight="bold" letterSpacing="4" textAnchor="middle">TAILS</SvgText>
       </>
     )}
   </Svg>
-);
+  );
+};
 
 // ── Toss curves ─────────────────────────────────────────────────────────────
 // Parabolic arc while in the air, then a small double bounce on landing.
@@ -139,6 +146,7 @@ interface CoinTossProps {
 
 const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
   const { stats, recordGame } = useGameStats();
+  const skin = coinPalette(useShop().shop.coinSkin);
   const [choice, setChoice] = useState<Side>('heads');
   const [isFlipping, setIsFlipping] = useState(false);
   const [lastResult, setLastResult] = useState<{ outcome: Side; win: boolean } | null>(null);
@@ -225,10 +233,10 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
           <Animated.View style={[styles.coinWrapper, { transform: [{ translateY }, { scale }] }]}>
             <Animated.View style={[styles.coinSpin, { transform: [{ perspective: 900 }, { rotateX }] }]}>
               <Animated.View style={[styles.face, { opacity: headsOpacity }]}>
-                <CoinFace side="heads" size={COIN_SIZE} />
+                <CoinFace side="heads" size={COIN_SIZE} skin={skin} />
               </Animated.View>
               <Animated.View style={[styles.face, styles.tailFace, { opacity: tailsOpacity }]}>
-                <CoinFace side="tails" size={COIN_SIZE} />
+                <CoinFace side="tails" size={COIN_SIZE} skin={skin} />
               </Animated.View>
               <Animated.View pointerEvents="none" style={[styles.shine, { opacity: shine }]} />
             </Animated.View>

@@ -13,6 +13,8 @@ import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constant
 import { GAME_CONFIG } from '../constants/gameConfig';
 import { logGame } from '../utils/gameHistory';
 import { showRewardedAd } from '../services/rewardedAd';
+import { useShop } from '../contexts/ShopContext';
+import { cardBackColors } from '../constants/shop';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -124,8 +126,8 @@ const wait = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 const run = (anim: Animated.CompositeAnimation) => new Promise<void>(r => anim.start(() => r()));
 
 // ── Card ────────────────────────────────────────────────────────────────────
-const CardView = memo(({ card, anims, size, hint, onPress }: {
-  card: Card; anims: CardAnims; size: number; hint: Animated.Value; onPress: (id: number) => void;
+const CardView = memo(({ card, anims, size, hint, back, onPress }: {
+  card: Card; anims: CardAnims; size: number; hint: Animated.Value; back: [string, string]; onPress: (id: number) => void;
 }) => {
   const press = useRef(new Animated.Value(1)).current;
   const backRotate = anims.flip.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
@@ -158,7 +160,7 @@ const CardView = memo(({ card, anims, size, hint, onPress }: {
       >
         {/* Back */}
         <Animated.View style={[styles.face, { opacity: backOpacity, transform: [{ perspective: 700 }, { rotateY: backRotate }] }]}>
-          <LinearGradient colors={['#0B3F70', '#002244']} style={styles.faceFill}>
+          <LinearGradient colors={back} style={styles.faceFill}>
             <View style={[styles.backInset, { borderRadius: BORDER_RADIUS.md - 4 }]}>
               <Text style={[styles.backMark, { fontSize: Math.round(size * 0.34) }]}>?</Text>
             </View>
@@ -239,6 +241,9 @@ interface MemoryCardsProps {
 
 const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
   const { stats, recordGame } = useGameStats();
+  const { shop, consumePowerUp } = useShop();
+  const back = cardBackColors(shop.cardBack);
+  const ownedHints = shop.powerUps.memoryHint;
   const insets = useSafeAreaInsets();
   const safeH = insets.top + insets.bottom;
   const [level, setLevel] = useState<number | null>(null);
@@ -531,15 +536,19 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
   const showHint = async () => {
     if (busyRef.current || won || hintsLeft <= 0 || hintLoading) return;
     busyRef.current = true;
-    setHintLoading(true);
     const wasRunning = running;
-    setRunning(false);   // the clock doesn't tick while the ad is on screen
 
-    let result = await showRewardedAd();
-    setHintLoading(false);
-    // Expo Go and dev builds usually have no ad fill; let the hint through so it can be tested.
-    if (result === 'unavailable' && __DEV__) result = 'rewarded';
-    if (wasRunning) setRunning(true);
+    // A hint bought in the Shop is used first; otherwise it costs a rewarded ad.
+    let result: 'rewarded' | 'closed' | 'unavailable' = 'rewarded';
+    if (!consumePowerUp('memoryHint')) {
+      setHintLoading(true);
+      setRunning(false);   // the clock doesn't tick while the ad is on screen
+      result = await showRewardedAd();
+      setHintLoading(false);
+      // Expo Go and dev builds usually have no ad fill; let the hint through so it can be tested.
+      if (result === 'unavailable' && __DEV__) result = 'rewarded';
+      if (wasRunning) setRunning(true);
+    }
 
     if (result !== 'rewarded') {
       showToast(result === 'closed' ? 'Watch the whole ad to get the hint' : 'No ad available right now, try again soon');
@@ -654,7 +663,7 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
       <Animated.View key={round} style={[styles.board, { width: gridW, height: gridH, transform: [{ translateX: gridShake }] }]}>
         <Animated.View pointerEvents="none" style={[styles.boardGlow, { opacity: Animated.multiply(hintGlow, hintPulse) }]} />
         {deck.map(card => (
-          <CardView key={card.id} card={card} anims={animsRef.current[card.id]} size={size} hint={hintGlow} onPress={handlePress} />
+          <CardView key={card.id} card={card} anims={animsRef.current[card.id]} size={size} hint={hintGlow} back={back} onPress={handlePress} />
         ))}
         {explosion && <Explosion key={explosion.key} x={explosion.x} y={explosion.y} />}
         <Animated.View pointerEvents="none" style={[styles.toast, { opacity: toastAnim, transform: [{ translateY: toastY }] }]}>
@@ -697,8 +706,9 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
           </View>
           {hintsLeft > 0 && (
             <View style={styles.adBadge}>
-              <Ionicons name="play" size={10} color="#0077B6" />
-              <Text style={styles.adBadgeText}>AD</Text>
+              {ownedHints > 0
+                ? <Text style={styles.adBadgeText}>×{ownedHints}</Text>
+                : <><Ionicons name="play" size={10} color="#0077B6" /><Text style={styles.adBadgeText}>AD</Text></>}
               <View style={styles.hintDots}>
                 {Array.from({ length: HINTS_PER_LEVEL }, (_, i) => (
                   <View key={i} style={[styles.hintDot, i < hintsLeft && styles.hintDotOn]} />

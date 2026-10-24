@@ -8,11 +8,12 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 
 import HomeScreen from './screens/HomeScreen';
 import CoinsScreen from './screens/CoinsScreen';
-import LeaderboardScreen from './screens/LeaderboardScreen';
+import ShopScreen from './screens/ShopScreen';
 import ProfileScreen from './screens/ProfileScreen';
 
 import { LanguageProvider } from './contexts/LanguageContext';
 import { GameStatsProvider } from './contexts/GameStatsContext';
+import { ShopProvider } from './contexts/ShopContext';
 import { RootTabParamList } from './types';
 import { COLORS } from './constants/theme';
 import { initAds } from './services/ads';
@@ -33,7 +34,7 @@ const MainTabs = () => {
           let icon: keyof typeof Ionicons.glyphMap = 'help-circle-outline';
           if (route.name === 'Home') icon = focused ? 'home' : 'home-outline';
           else if (route.name === 'Coins') icon = focused ? 'wallet' : 'wallet-outline';
-          else if (route.name === 'Leaderboard') icon = focused ? 'trophy' : 'trophy-outline';
+          else if (route.name === 'Shop') icon = focused ? 'bag-handle' : 'bag-handle-outline';
           else if (route.name === 'Profile') icon = focused ? 'person' : 'person-outline';
           return <Ionicons name={icon} size={size} color={color} />;
         },
@@ -60,7 +61,7 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Coins" component={CoinsScreen} />
-      <Tab.Screen name="Leaderboard" component={LeaderboardScreen} options={{ tabBarLabel: 'Weekly' }} />
+      <Tab.Screen name="Shop" component={ShopScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -128,10 +129,12 @@ export default function App() {
     <LanguageProvider>
       <SafeAreaProvider>
         <GameStatsProvider>
-          <NavigationContainer>
-            <StatusBar style="light" />
-            <MainTabs />
-          </NavigationContainer>
+          <ShopProvider>
+            <NavigationContainer>
+              <StatusBar style="light" />
+              <MainTabs />
+            </NavigationContainer>
+          </ShopProvider>
         </GameStatsProvider>
       </SafeAreaProvider>
     </LanguageProvider>

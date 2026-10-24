@@ -1,6 +1,6 @@
 import React from 'react';
 import Svg, {
-  ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText,
+  Circle, ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText,
 } from 'react-native-svg';
 import { CoinFace } from './CoinToss';
 import { useShop } from '../contexts/ShopContext';
@@ -80,6 +80,34 @@ export const WaterThemeIcon: React.FC<{ size: number; glass: string; stroke: str
   </Svg>
 );
 
+const KiteIcon: React.FC<{ size: number }> = ({ size }) => (
+  <Svg width={size} height={size} viewBox="0 0 64 64">
+    <Path d="M 34 44 Q 22 54 10 60" stroke="#FFFFFF" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+    <Path d="M 34 44 L 29 53 L 39 53 Z" fill="#FF5E00" />
+    <Path d="M 34 6 L 18 24 L 34 46 Z" fill="#FF5E00" />
+    <Path d="M 34 6 L 50 24 L 34 46 Z" fill="#FFFFFF" />
+    <Path d="M 34 6 L 34 46" stroke="#5D4037" strokeWidth="1.6" />
+    <Path d="M 18 24 Q 34 16 50 24" stroke="#5D4037" strokeWidth="1.6" fill="none" />
+  </Svg>
+);
+
+const BubbleIcon: React.FC<{ size: number }> = ({ size }) => {
+  const b = (cx: number, cy: number, color: string) => (
+    <>
+      <Circle cx={cx} cy={cy} r="9" fill={color} />
+      <Circle cx={cx - 3} cy={cy - 3} r="2.6" fill="#FFFFFF" fillOpacity="0.6" />
+    </>
+  );
+  return (
+    <Svg width={size} height={size} viewBox="0 0 64 64">
+      {b(14, 14, '#FF4757')}{b(32, 14, '#FFC312')}{b(50, 14, '#2ED573')}
+      {b(23, 29, '#1E90FF')}{b(41, 29, '#FF4757')}
+      <Path d="M 32 56 L 32 42" stroke="#FFFFFF" strokeWidth="2" strokeDasharray="2 3" strokeLinecap="round" />
+      {b(32, 52, '#FFC312')}
+    </Svg>
+  );
+};
+
 // The coin icon shows the coin skin the player picked in the Shop.
 const CoinIcon: React.FC<{ size: number }> = ({ size }) => (
   <CoinFace side="heads" size={size} skin={coinPalette(useShop().shop.coinSkin)} />
@@ -89,5 +117,7 @@ export const GameIcon: React.FC<{ id: string; size: number }> = ({ id, size }) =
   if (id === 'coin') return <CoinIcon size={size} />;
   if (id === 'memory') return <MemoryIcon size={size} />;
   if (id === 'water') return <WaterIcon size={size} />;
+  if (id === 'kite') return <KiteIcon size={size} />;
+  if (id === 'bubble') return <BubbleIcon size={size} />;
   return null;
 };

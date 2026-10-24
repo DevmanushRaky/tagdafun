@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GAME_CONFIG, LEVELS, ACHIEVEMENT_XP } from '../constants/gameConfig';
 
-export type GameType = 'coin' | 'memory' | 'water';
+export type GameType = 'coin' | 'memory' | 'water' | 'kite' | 'bubble';
 /** Where coins came from; kept as lifetime totals so the Coins screen never depends on the capped history. */
 export type CoinSource = GameType | 'ad' | 'daily' | 'gift';
 
@@ -84,7 +84,7 @@ const defaultStats = (): PlayerStats => ({
   totalXP: 0,
   totalCoins: 0,
   level: 1,
-  gamesPlayed: { coin: 0, memory: 0, water: 0 },
+  gamesPlayed: { coin: 0, memory: 0, water: 0, kite: 0, bubble: 0 },
   totalGamesPlayed: 0,
   currentStreak: 0,
   bestStreak: 0,
@@ -93,7 +93,7 @@ const defaultStats = (): PlayerStats => ({
   achievementUnlockTimes: {},
   coinWins: 0,
   coinFlips: 0,
-  coinsEarned: { coin: 0, memory: 0, water: 0, ad: 0, daily: 0, gift: 0 },
+  coinsEarned: { coin: 0, memory: 0, water: 0, kite: 0, bubble: 0, ad: 0, daily: 0, gift: 0 },
   coinsSpent: 0,
   playerName: 'Tagda Player',
 });
@@ -120,6 +120,8 @@ function seedCoinsEarned(saved: Partial<PlayerStats>, historyRaw: string | null)
     coin: (played.coin ?? 0) * LEGACY_COIN_PER_FLIP,
     memory: (played.memory ?? 0) * LEGACY_MEMORY_PER_WIN,
     water,
+    kite: 0,
+    bubble: 0,
     ad,
     daily: 0,
     gift: 0,
@@ -234,7 +236,7 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
     s.totalGamesPlayed += 1;
     if (extra) Object.assign(s, extra);
 
-    const xpMap: Record<GameType, number> = { coin: GAME_CONFIG.coin.xpPerPlay, memory: GAME_CONFIG.memory.xpPerWin, water: GAME_CONFIG.water.xpPerWin };
+    const xpMap: Record<GameType, number> = { coin: GAME_CONFIG.coin.xpPerPlay, memory: GAME_CONFIG.memory.xpPerWin, water: GAME_CONFIG.water.xpPerWin, kite: GAME_CONFIG.kite.xpPerWin, bubble: GAME_CONFIG.bubble.xpPerWin };
     s.totalXP += xpMap[gameType];
     s.totalCoins += coins;
     const gained = s.totalCoins - stats.totalCoins;

@@ -15,6 +15,8 @@ import { COIN_SKINS, CARD_BACKS, BOTTLE_THEMES } from '../constants/shop';
 import { GameIcon } from '../components/GameIcons';
 import { MEMORY_LEVEL_KEY, MEMORY_STARS_KEY } from '../components/MemoryCards';
 import { WATER_LEVEL_KEY } from '../components/WaterSorting';
+import { KITE_LEVEL_KEY } from '../components/KiteFight';
+import { BUBBLE_LEVEL_KEY } from '../components/BubbleShooter';
 import { PLAY_STORE_URL, PLAY_STORE_APP_URL, PLAY_STORE_SHARE_URL, PRIVACY_POLICY_URL } from '../constants/links';
 
 const TIER_COLOR = { bronze: '#CD7F32', silver: '#9AA3AD', gold: '#E0A800' };
@@ -46,6 +48,8 @@ const ProfileScreen: React.FC = () => {
   const [memoryLevel, setMemoryLevel] = useState(1);
   const [memoryStars, setMemoryStars] = useState(0);
   const [waterLevel, setWaterLevel] = useState(1);
+  const [kiteLevel, setKiteLevel] = useState(1);
+  const [bubbleLevel, setBubbleLevel] = useState(1);
 
   // Game progress lives in each game's own storage; refresh it whenever the tab is opened.
   useFocusEffect(useCallback(() => {
@@ -53,13 +57,17 @@ const ProfileScreen: React.FC = () => {
       AsyncStorage.getItem(MEMORY_LEVEL_KEY),
       AsyncStorage.getItem(MEMORY_STARS_KEY),
       AsyncStorage.getItem(WATER_LEVEL_KEY),
-    ]).then(([ml, ms, wl]) => {
+      AsyncStorage.getItem(KITE_LEVEL_KEY),
+      AsyncStorage.getItem(BUBBLE_LEVEL_KEY),
+    ]).then(([ml, ms, wl, kl, bl]) => {
       setMemoryLevel(Math.max(1, parseInt(ml ?? '1', 10) || 1));
       try {
         const best: Record<string, number> = ms ? JSON.parse(ms) : {};
         setMemoryStars(Object.values(best).reduce((a, b) => a + b, 0));
       } catch { setMemoryStars(0); }
       setWaterLevel(Math.max(1, parseInt(wl ?? '1', 10) || 1));
+      setKiteLevel(Math.max(1, parseInt(kl ?? '1', 10) || 1));
+      setBubbleLevel(Math.max(1, parseInt(bl ?? '1', 10) || 1));
     }).catch(() => {});
   }, []));
 
@@ -190,6 +198,14 @@ const ProfileScreen: React.FC = () => {
           <GameStatRow
             id="water" title="Water Sorting" border
             cells={[{ label: 'Cleared', value: stats.gamesPlayed.water }, { label: 'Level', value: waterLevel }, { label: 'Coins', value: stats.coinsEarned.water }]}
+          />
+          <GameStatRow
+            id="kite" title="Patang Baazi" border
+            cells={[{ label: 'Cleared', value: stats.gamesPlayed.kite }, { label: 'Level', value: kiteLevel }, { label: 'Coins', value: stats.coinsEarned.kite }]}
+          />
+          <GameStatRow
+            id="bubble" title="Bubble Shooter" border
+            cells={[{ label: 'Cleared', value: stats.gamesPlayed.bubble }, { label: 'Level', value: bubbleLevel }, { label: 'Coins', value: stats.coinsEarned.bubble }]}
           />
         </View>
       </View>

@@ -3,22 +3,15 @@
 
 export const GAME_CONFIG = {
   coin: {
-    coinsPerPlay: 5,      // coins awarded per flip (win or lose)
+    winCoins: 10,         // coins for calling the flip right
+    loseCoins: 5,         // coins for a wrong call (every flip still pays)
     xpPerPlay: 10,
   },
   memory: {
-    coinsPerWin: 10,      // coins awarded on completing the board
-    xpPerWin: 15,
-    costToPlay: 0,        // free to play
+    xpPerWin: 15,         // coins come from STAR_REWARDS
   },
   water: {
-    costToPlay: 0,        // free to play
-    baseWinCoins: 100,    // base reward for completing a level
-    overParPenalty: 2,    // coins lost per move above par
-    minWinCoins: 10,      // reward floor when over par
-    underParBonus: 5,     // bonus coins per move under par
-    maxWinCoins: 150,     // reward cap when under par
-    xpPerWin: 15,
+    xpPerWin: 15,         // coins come from STAR_REWARDS
   },
   dailyChallenge: {
     targetFlips: 5,       // flips needed to complete daily challenge
@@ -26,6 +19,16 @@ export const GAME_CONFIG = {
     xpReward: 20,
   },
 } as const;
+
+// ─── LEVEL REWARDS (Memory Cards + Water Sorting) ─────────────────────────────
+// Coins for clearing a level, by the stars earned on it.
+export const STAR_REWARDS: Record<1 | 2 | 3, number> = { 3: 150, 2: 100, 1: 80 };
+
+export const coinsForStars = (stars: number): number =>
+  STAR_REWARDS[Math.max(1, Math.min(3, Math.round(stars))) as 1 | 2 | 3];
+
+/** "80–150", for labels that show the range a level can pay. */
+export const starRewardRange = `${STAR_REWARDS[1]}–${STAR_REWARDS[3]}`;
 
 // ─── LEVEL SYSTEM ─────────────────────────────────────────────────────────────
 // XP required for each level and its title

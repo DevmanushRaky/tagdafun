@@ -1,5 +1,5 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { GAME_CONFIG } from '../constants/gameConfig';
+import { starRewardRange } from '../constants/gameConfig';
 
 
 export type RootTabParamList = {
@@ -29,7 +29,6 @@ export interface GameConfig {
   icon: string;
   color: string;
   gradient: readonly [string, string];
-  coinsPerPlay: number;
 }
 
 export const GAMES: GameConfig[] = [
@@ -40,24 +39,21 @@ export const GAMES: GameConfig[] = [
     icon: 'cash-outline',
     color: '#F9A825',
     gradient: ['#FFD54F', '#F9A825'],
-    coinsPerPlay: GAME_CONFIG.coin.coinsPerPlay,
   },
   {
     id: 'memory',
     title: 'Memory Cards',
-    description: `Match all pairs to win +${GAME_CONFIG.memory.coinsPerWin} coins. Free to play!`,
+    description: `Match every pair. Win ${starRewardRange} coins by stars.`,
     icon: 'albums-outline',
     color: '#00B4D8',
     gradient: ['#48CAE4', '#0077B6'],
-    coinsPerPlay: GAME_CONFIG.memory.costToPlay,
   },
   {
     id: 'water',
     title: 'Water Sorting',
-    description: `Sort every color to win up to ${GAME_CONFIG.water.maxWinCoins} coins!`,
+    description: `Sort every colour. Win ${starRewardRange} coins by stars.`,
     icon: 'water-outline',
     color: '#2ED573',
     gradient: ['#2ED573', '#17B85A'],
-    coinsPerPlay: GAME_CONFIG.water.costToPlay,
   },
 ];

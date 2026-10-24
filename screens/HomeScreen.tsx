@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING, GRADIENTS } from '../constants/theme';
-import { GAME_CONFIG } from '../constants/gameConfig';
+import { GAME_CONFIG, starRewardRange } from '../constants/gameConfig';
 import { GAMES, GameConfig } from '../types';
 import CoinToss from '../components/CoinToss';
 import MemoryCards from '../components/MemoryCards';
@@ -264,14 +264,14 @@ const HomeScreen: React.FC = () => {
 // ── Game Card ──────────────────────────────────────────────────────────────
 // Full-width row: icon tile, title + tagline, rewards, play button.
 const CARD_META: Record<string, { tagline: string; coins: string; xp: number }> = {
-  coin: { tagline: 'Heads or tails? Call it.', coins: `+${GAME_CONFIG.coin.coinsPerPlay}`, xp: GAME_CONFIG.coin.xpPerPlay },
-  memory: { tagline: 'Flip the cards, match every pair.', coins: `+${GAME_CONFIG.memory.coinsPerWin}`, xp: GAME_CONFIG.memory.xpPerWin },
-  water: { tagline: 'Pour until every bottle is one colour.', coins: `Up to ${GAME_CONFIG.water.maxWinCoins}`, xp: GAME_CONFIG.water.xpPerWin },
+  coin: { tagline: 'Heads or tails? Call it.', coins: `+${GAME_CONFIG.coin.loseCoins}–${GAME_CONFIG.coin.winCoins}`, xp: GAME_CONFIG.coin.xpPerPlay },
+  memory: { tagline: 'Flip the cards, match every pair.', coins: starRewardRange, xp: GAME_CONFIG.memory.xpPerWin },
+  water: { tagline: 'Pour until every bottle is one colour.', coins: starRewardRange, xp: GAME_CONFIG.water.xpPerWin },
 };
 
 const GameCard: React.FC<{ game: GameConfig; onPress: () => void }> = ({ game, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const meta = CARD_META[game.id] ?? { tagline: game.description, coins: `+${game.coinsPerPlay}`, xp: 10 };
+  const meta = CARD_META[game.id] ?? { tagline: game.description, coins: '', xp: 10 };
 
   const onPressIn = () => Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
   const onPressOut = () => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();

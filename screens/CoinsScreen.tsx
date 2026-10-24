@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useGameStats, CoinSource } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
-import { GAME_CONFIG } from '../constants/gameConfig';
+import { GAME_CONFIG, starRewardRange } from '../constants/gameConfig';
 import { GAMES } from '../types';
 import { getHistory, GameLog, GameLogType, formatTime, formatDate } from '../utils/gameHistory';
 import { GameIcon } from '../components/GameIcons';
@@ -63,9 +63,9 @@ const CoinsScreen: React.FC = () => {
   const earned = stats.coinsEarned;
   const played = stats.gamesPlayed;
   const subFor: Record<string, string> = {
-    coin: `${played.coin} flips · +${GAME_CONFIG.coin.coinsPerPlay} each`,
-    memory: `${played.memory} levels · +${GAME_CONFIG.memory.coinsPerWin} per level`,
-    water: `${played.water} levels · up to ${GAME_CONFIG.water.maxWinCoins} each`,
+    coin: `${played.coin} flips · +${GAME_CONFIG.coin.winCoins} win, +${GAME_CONFIG.coin.loseCoins} loss`,
+    memory: `${played.memory} levels · ${starRewardRange} by stars`,
+    water: `${played.water} levels · ${starRewardRange} by stars`,
   };
   const rows: SourceRow[] = [
     ...GAMES.map(g => ({

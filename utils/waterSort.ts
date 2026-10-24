@@ -339,15 +339,9 @@ export function suggestHint(bottles: Bottles): PourMove | null {
   return moves.length > 0 ? moves[0] : null;
 }
 
-export interface RewardConfig {
-  baseWinCoins: number;
-  overParPenalty: number;
-  minWinCoins: number;
-  underParBonus: number;
-  maxWinCoins: number;
-}
-
-export function waterReward(moves: number, par: number, cfg: RewardConfig): number {
-  if (moves <= par) return Math.min(cfg.maxWinCoins, cfg.baseWinCoins + cfg.underParBonus * (par - moves));
-  return Math.max(cfg.minWinCoins, cfg.baseWinCoins - cfg.overParPenalty * (moves - par));
+/** Stars for a cleared level: 3★ within 20% over par, 2★ within 60%, otherwise 1★. */
+export function waterStars(moves: number, par: number): 1 | 2 | 3 {
+  if (moves <= Math.ceil(par * 1.2)) return 3;
+  if (moves <= Math.ceil(par * 1.6)) return 2;
+  return 1;
 }

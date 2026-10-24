@@ -32,6 +32,7 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 | Water Sorting games played and current level | Profile stats and level progress | Device only |
 | Memory Cards level and best stars per level | Resume where you left off | Device only |
 | Music on/off choice for each game | Remember your sound setting | Device only |
+| Player nickname you type on the Profile screen (optional) | Shown on the Home and Profile screens | Device only |
 | Current streak and best streak | Achievement tracking | Device only |
 | Achievement unlock status | Profile screen | Device only |
 | Daily challenge progress | Home screen challenge | Device only |
@@ -53,7 +54,7 @@ This log is used to display your game history in the Coins screen. It never leav
 
 The app itself (our own code) does not collect:
 
-- ❌ Name, email address, phone number, or any personal identifier
+- ❌ Email address, phone number, or any personal identifier (the optional nickname you type stays on your device and is never sent anywhere)
 - ❌ Location or GPS data
 - ❌ Camera or microphone data
 - ❌ Contacts or call logs

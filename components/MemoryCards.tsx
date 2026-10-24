@@ -19,10 +19,12 @@ import { cardBackColors } from '../constants/shop';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
-const LEVEL_KEY = '@tagdafun_memory_level_v1';
+export const MEMORY_LEVEL_KEY = '@tagdafun_memory_level_v1';
+const LEVEL_KEY = MEMORY_LEVEL_KEY;
 const MUSIC_KEY = '@tagdafun_memory_music_v1';
 const MUSIC_VOLUME = 0.35;     // background melody stays soft under the game
-const STARS_KEY = '@tagdafun_memory_stars_v1';
+export const MEMORY_STARS_KEY = '@tagdafun_memory_stars_v1';
+const STARS_KEY = MEMORY_STARS_KEY;
 
 const CARD_GAP = 8;
 const MAX_CARD = 84;

@@ -25,7 +25,8 @@ import {
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
-const LEVEL_KEY = '@tagdafun_water_level_v1';
+export const WATER_LEVEL_KEY = '@tagdafun_water_level_v1';
+const LEVEL_KEY = WATER_LEVEL_KEY;
 const PROGRESS_KEY = '@tagdafun_water_progress_v1';
 const MUSIC_KEY = '@tagdafun_water_music_v1';
 

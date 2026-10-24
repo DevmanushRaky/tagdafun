@@ -43,15 +43,6 @@ export const GAMES: GameConfig[] = [
     coinsPerPlay: GAME_CONFIG.coin.coinsPerPlay,
   },
   {
-    id: 'spin',
-    title: 'Spin Roulette',
-    description: `Spin the wheel & win big! Costs ${GAME_CONFIG.spin.costPerSpin} coins per spin.`,
-    icon: 'refresh-circle-outline',
-    color: '#E91E8C',
-    gradient: ['#F953C6', '#B91D73'],
-    coinsPerPlay: GAME_CONFIG.spin.costPerSpin,
-  },
-  {
     id: 'memory',
     title: 'Memory Cards',
     description: `Match all pairs to win +${GAME_CONFIG.memory.coinsPerWin} coins. Free to play!`,

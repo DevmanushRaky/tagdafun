@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Modal, Dimensions, Animated,
+  Modal, Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,15 +12,18 @@ import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING, GRADIENTS } from '
 import { GAME_CONFIG } from '../constants/gameConfig';
 import { GAMES, GameConfig } from '../types';
 import CoinToss from '../components/CoinToss';
-import SpinRoulette from '../components/SpinRoulette';
 import MemoryCards from '../components/MemoryCards';
 import WaterSorting from '../components/WaterSorting';
+import { GameIcon } from '../components/GameIcons';
 import AdBanner from '../components/ads/AdBanner';
 import NativeAdCard from '../components/ads/NativeAdCard';
 import PostGameRewardModal from '../components/ads/PostGameRewardModal';
 
-const { width } = Dimensions.get('window');
 const DAILY_KEY = '@tagdafun_daily_v1';
+
+// The "watch an ad for coins" prompt after a game is capped so it doesn't interrupt every round.
+const REWARD_PROMPT_EVERY = 4;                 // show after every Nth finished game...
+const REWARD_PROMPT_COOLDOWN_MS = 3 * 60 * 1000; // ...and at most once per this window
 
 interface DailyChallenge {
   date: string;
@@ -59,6 +62,8 @@ const HomeScreen: React.FC = () => {
   const { stats, recordGame } = useGameStats();
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [showRewardPrompt, setShowRewardPrompt] = useState(false);
+  const gamesSincePromptRef = useRef(0);
+  const lastPromptAtRef = useRef(0);
   const [daily, setDaily] = useState<DailyChallenge>(getTodayChallenge());
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -101,7 +106,13 @@ const HomeScreen: React.FC = () => {
       setDaily(updated);
       AsyncStorage.setItem(DAILY_KEY, JSON.stringify(updated));
     }
-    setShowRewardPrompt(true);
+    gamesSincePromptRef.current += 1;
+    const now = Date.now();
+    if (gamesSincePromptRef.current >= REWARD_PROMPT_EVERY && now - lastPromptAtRef.current >= REWARD_PROMPT_COOLDOWN_MS) {
+      gamesSincePromptRef.current = 0;
+      lastPromptAtRef.current = now;
+      setShowRewardPrompt(true);
+    }
   };
 
   const claimDaily = async () => {
@@ -191,7 +202,7 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.gamesSectionTitle}>Play now</Text>
             <Text style={styles.sectionCount}>{GAMES.length} games</Text>
           </View>
-          <View style={styles.grid}>
+          <View style={styles.list}>
             {GAMES.map(game => (
               <GameCard key={game.id} game={game} onPress={() => setActiveGame(game.id)} />
             ))}
@@ -226,13 +237,6 @@ const HomeScreen: React.FC = () => {
                 }}
               />
             )}
-            {activeGame === 'spin' && (
-              <SpinRoulette
-                onResult={() => {
-                  handleGamePlayed();
-                }}
-              />
-            )}
             {activeGame === 'memory' && (
               <MemoryCards
                 onWin={() => {
@@ -261,53 +265,51 @@ const HomeScreen: React.FC = () => {
 };
 
 // ── Game Card ──────────────────────────────────────────────────────────────
-const CARD_META: Record<string, { cost: string; reward: string }> = {
-  coin: { cost: 'Free', reward: `+${GAME_CONFIG.coin.coinsPerPlay} coins` },
-  spin: { cost: `${GAME_CONFIG.spin.costPerSpin} coins`, reward: `Win up to ${Math.max(...GAME_CONFIG.spin.segments)}` },
-  memory: { cost: 'Free', reward: `+${GAME_CONFIG.memory.coinsPerWin} coins` },
-  water: { cost: 'Free', reward: `Up to ${GAME_CONFIG.water.maxWinCoins} coins` },
+// Full-width row: icon tile, title + tagline, rewards, play button.
+const CARD_META: Record<string, { tagline: string; coins: string; xp: number }> = {
+  coin: { tagline: 'Heads or tails? Call it.', coins: `+${GAME_CONFIG.coin.coinsPerPlay}`, xp: GAME_CONFIG.coin.xpPerPlay },
+  memory: { tagline: 'Flip the cards, match every pair.', coins: `+${GAME_CONFIG.memory.coinsPerWin}`, xp: GAME_CONFIG.memory.xpPerWin },
+  water: { tagline: 'Pour until every bottle is one colour.', coins: `Up to ${GAME_CONFIG.water.maxWinCoins}`, xp: GAME_CONFIG.water.xpPerWin },
 };
 
 const GameCard: React.FC<{ game: GameConfig; onPress: () => void }> = ({ game, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const meta = CARD_META[game.id] ?? { cost: 'Free', reward: `+${game.coinsPerPlay} coins` };
+  const meta = CARD_META[game.id] ?? { tagline: game.description, coins: `+${game.coinsPerPlay}`, xp: 10 };
 
-  const onPressIn = () => Animated.spring(scaleAnim, { toValue: 0.96, useNativeDriver: true }).start();
+  const onPressIn = () => Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
   const onPressOut = () => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
 
   return (
     <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, styles.cardWrapper]}>
       <TouchableOpacity onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut} activeOpacity={1}>
         <LinearGradient colors={game.gradient as any} style={styles.cardGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-          <Ionicons name={game.icon as any} size={110} color="rgba(255,255,255,0.14)" style={styles.cardWatermark} />
+          <View style={styles.cardIconTile}>
+            <GameIcon id={game.id} size={48} />
+          </View>
 
-          <View style={styles.cardTopRow}>
-            <View style={styles.cardIconTile}>
-              <Ionicons name={game.icon as any} size={24} color="white" />
-            </View>
-            <View style={styles.costChip}>
-              <Text style={styles.costChipText}>{meta.cost}</Text>
+          <View style={styles.cardBody}>
+            <Text style={styles.cardTitle} numberOfLines={1}>{game.title}</Text>
+            <Text style={styles.cardTagline} numberOfLines={1}>{meta.tagline}</Text>
+            <View style={styles.cardChips}>
+              <View style={styles.chip}>
+                <Ionicons name="wallet" size={11} color="#FFE27A" />
+                <Text style={styles.chipText}>{meta.coins}</Text>
+              </View>
+              <View style={styles.chip}>
+                <Ionicons name="star" size={11} color="#FFE27A" />
+                <Text style={styles.chipText}>+{meta.xp} XP</Text>
+              </View>
             </View>
           </View>
 
-          <Text style={styles.cardTitle}>{game.title}</Text>
-
-          <View style={styles.cardBottomRow}>
-            <View style={styles.rewardWrap}>
-              <Ionicons name="wallet" size={12} color="#FFE27A" />
-              <Text style={styles.rewardText} numberOfLines={1}>{meta.reward}</Text>
-            </View>
-            <View style={styles.playBtn}>
-              <Ionicons name="play" size={14} color={game.color} style={{ marginLeft: 2 }} />
-            </View>
+          <View style={styles.playBtn}>
+            <Ionicons name="play" size={18} color={game.color} style={{ marginLeft: 3 }} />
           </View>
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
   );
 };
-
-const CARD_W = (width - SPACING.md * 2 - SPACING.sm) / 2;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.background },
@@ -348,19 +350,17 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: SPACING.md },
   gamesSectionTitle: { ...TYPOGRAPHY.h3, fontWeight: '800', color: COLORS.text },
   sectionCount: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  cardWrapper: { width: CARD_W, borderRadius: BORDER_RADIUS.lg, overflow: 'hidden', ...SHADOWS.card },
-  cardGradient: { padding: 14, height: 168, justifyContent: 'space-between', overflow: 'hidden' },
-  cardWatermark: { position: 'absolute', right: -22, bottom: -22 },
-  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  cardIconTile: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', justifyContent: 'center', alignItems: 'center' },
-  costChip: { backgroundColor: 'rgba(0,0,0,0.22)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 9, paddingVertical: 4 },
-  costChipText: { fontSize: 11, fontWeight: '800', color: 'white' },
+  list: { gap: 12 },
+  cardWrapper: { borderRadius: BORDER_RADIUS.lg, overflow: 'hidden', ...SHADOWS.card },
+  cardGradient: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, paddingLeft: 16, paddingRight: 14, overflow: 'hidden' },
+  cardIconTile: { width: 62, height: 62, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center' },
+  cardBody: { flex: 1 },
   cardTitle: { fontSize: 18, fontWeight: '800', color: 'white', letterSpacing: 0.2 },
-  cardBottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
-  rewardWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5 },
-  rewardText: { flex: 1, fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.95)' },
-  playBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
+  cardTagline: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.88)', marginTop: 2 },
+  cardChips: { flexDirection: 'row', gap: 6, marginTop: 10 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 9, paddingVertical: 4 },
+  chipText: { fontSize: 11, fontWeight: '800', color: 'white' },
+  playBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
 
   // ── Game Modal ──
   gameModal: { flex: 1, backgroundColor: COLORS.background },

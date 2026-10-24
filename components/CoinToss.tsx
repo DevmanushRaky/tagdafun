@@ -9,6 +9,7 @@ import Svg, {
 } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useAudioPlayer, type AudioPlayer } from 'expo-audio';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
 import { GAME_CONFIG } from '../constants/gameConfig';
@@ -25,6 +26,14 @@ type Side = 'heads' | 'tails';
 
 const haptic = (style: Haptics.ImpactFeedbackStyle) => {
   Haptics.impactAsync(style).catch(() => {});
+};
+
+// Restart from the top so quick repeat flips still play the sound.
+const playSound = (player: AudioPlayer) => {
+  try {
+    player.seekTo(0).catch(() => {});
+    player.play();
+  } catch {}
 };
 
 // ── Coin face (SVG) ─────────────────────────────────────────────────────────
@@ -143,6 +152,9 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
   const tossAnim = useRef(new Animated.Value(0)).current;
   const rotAnim = useRef(new Animated.Value(0)).current; // degrees, accumulates across flips
   const degRef = useRef(0);
+  const flipSound = useAudioPlayer(require('../assets/sounds/coin-flip.m4a'));
+  const landSound = useAudioPlayer(require('../assets/sounds/coin-land.m4a'));
+  const winSound = useAudioPlayer(require('../assets/sounds/coin-win.m4a'));
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Closing the game mid-flip must not record a result afterwards.
@@ -153,6 +165,7 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
     setIsFlipping(true);
     setLastResult(null);
     haptic(Haptics.ImpactFeedbackStyle.Light);
+    playSound(flipSound);
 
     const outcome: Side = Math.random() < 0.5 ? 'heads' : 'tails';
     const win = outcome === choice;
@@ -170,11 +183,15 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
 
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [
-      setTimeout(() => haptic(Haptics.ImpactFeedbackStyle.Heavy), TOSS_MS * AIR),
+      setTimeout(() => {
+        haptic(Haptics.ImpactFeedbackStyle.Heavy);
+        playSound(landSound);
+      }, TOSS_MS * AIR),
       setTimeout(async () => {
         setLastResult({ outcome, win });
         setIsFlipping(false);
         Haptics.notificationAsync(win ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning).catch(() => {});
+        if (win) playSound(winSound);
 
         await recordGame('coin', win ? { coinWins: stats.coinWins + 1, coinFlips: stats.coinFlips + 1 } : { coinFlips: stats.coinFlips + 1 });
         await logGame({ timestamp: Date.now(), gameType: 'coin', choice, outcome, coinWon: win, costCoins: 0, earnedCoins: 5, netCoins: 5 });

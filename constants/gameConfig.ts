@@ -7,9 +7,7 @@ export const GAME_CONFIG = {
     xpPerPlay: 10,
   },
   spin: {
-    costPerSpin: 5,       // coins deducted per spin
-    xpPerPlay: 15,
-    segments: [0, 1, 2, 3, 5, 5, 10, 15, 20, 25, 50, 100] as number[],
+    xpPerPlay: 15,        // legacy: Spin Roulette was removed; kept so old saved stats still load
   },
   memory: {
     coinsPerWin: 10,      // coins awarded on completing the board

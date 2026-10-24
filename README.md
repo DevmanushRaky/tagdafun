@@ -16,7 +16,7 @@
 
 ## What is Tagda Fun?
 
-Tagda Fun is a gamified mini-game app with four games — **Coin Toss**, **Spin Roulette**, **Memory Cards** and **Water Sorting** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and weekly stats. All data is stored locally on your device.
+Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memory Cards** and **Water Sorting** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and weekly stats. All data is stored locally on your device.
 
 ---
 
@@ -27,13 +27,6 @@ Tagda Fun is a gamified mini-game app with four games — **Coin Toss**, **Spin 
 - 3D animated coin flip
 - Always earn **+5 coins** and **+10 XP** per flip
 - Track your win streak and total flips
-
-### Spin Roulette — Costs 5 coins per spin
-- Requires minimum **5 coins** to play
-- Spin the wheel — land on 0, 1, 2, 3, 5, 10, 15, 20, 25, 50, or 100
-- Net result: coins spent − 5 + wheel value
-- Earn **+15 XP** per spin
-- Spinning locked if balance is below 5
 
 ### Memory Cards — Free to play
 - Flip cards and match all the pairs
@@ -109,14 +102,14 @@ Tagda Fun is a gamified mini-game app with four games — **Coin Toss**, **Spin 
 The app runs fully offline using AsyncStorage — no backend, no login required.
 
 **What works now:**
-- All four games with full coin and XP logic
+- All three games with full coin and XP logic
 - Ads via Unity LevelPlay (banner, native, optional rewarded +50 coins) — see `ADS_INTEGRATION.md`
 - Persistent stats, history, and achievements (AsyncStorage)
 - Weekly stats tracking (local, resets Sunday IST)
 - Daily challenge with auto-reset
 - 11-level XP progression
 
-**Not planned:** no backend, login, online leaderboard or cash-out. Coins are in-game currency only (hints, unlocks, spins); revenue comes from ads.
+**Not planned:** no backend, login, online leaderboard or cash-out. Coins are in-game currency only; revenue comes from ads.
 
 ---
 
@@ -178,7 +171,8 @@ tagdafun/
 │   └── ProfileScreen.tsx       # Level, all-time stats, achievements
 ├── components/
 │   ├── CoinToss.tsx            # Animated coin flip game
-│   └── SpinRoulette.tsx        # Roulette wheel with spin animation
+│   ├── MemoryCards.tsx         # Card matching game
+│   └── WaterSorting.tsx        # Water sort puzzle
 ├── contexts/
 │   └── GameStatsContext.tsx    # XP, coins, level, achievements (AsyncStorage)
 ├── constants/

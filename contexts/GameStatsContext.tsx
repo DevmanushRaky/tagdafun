@@ -2,7 +2,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GAME_CONFIG, LEVELS, ACHIEVEMENT_XP } from '../constants/gameConfig';
 
-export type GameType = 'coin' | 'spin' | 'memory' | 'water';
+export type GameType = 'coin' | 'memory' | 'water';
+/** Where coins came from; kept as lifetime totals so the Coins screen never depends on the capped history. */
+export type CoinSource = GameType | 'ad' | 'daily';
 
 export interface Achievement {
   id: string;
@@ -29,8 +31,7 @@ export interface PlayerStats {
   achievementUnlockTimes: Record<string, number>;
   coinWins: number;
   coinFlips: number;
-  spinPlays: number;
-  spinTotalWon: number;
+  coinsEarned: Record<CoinSource, number>;
 }
 
 export interface LevelInfo {
@@ -49,10 +50,11 @@ interface GameStatsContextValue {
   recordGame: (gameType: GameType, extra?: Partial<PlayerStats>) => Promise<Achievement[]>;
   newlyUnlocked: Achievement[];
   clearNewlyUnlocked: () => void;
-  addBonusCoins: (amount: number) => Promise<void>;
+  addBonusCoins: (amount: number, source?: 'ad' | 'daily', xp?: number) => Promise<void>;
 }
 
 const STORAGE_KEY = '@tagdafun_stats_v3';
+const HISTORY_KEY = '@tagdafun_history_v1';
 
 const XP_PER_LEVEL = LEVELS.map(l => l.xp);
 const LEVEL_TITLES = LEVELS.map(l => l.title);
@@ -76,7 +78,7 @@ const defaultStats = (): PlayerStats => ({
   totalXP: 0,
   totalCoins: 0,
   level: 1,
-  gamesPlayed: { coin: 0, spin: 0, memory: 0, water: 0 },
+  gamesPlayed: { coin: 0, memory: 0, water: 0 },
   totalGamesPlayed: 0,
   currentStreak: 0,
   bestStreak: 0,
@@ -85,9 +87,32 @@ const defaultStats = (): PlayerStats => ({
   achievementUnlockTimes: {},
   coinWins: 0,
   coinFlips: 0,
-  spinPlays: 0,
-  spinTotalWon: 0,
+  coinsEarned: { coin: 0, memory: 0, water: 0, ad: 0, daily: 0 },
 });
+
+/**
+ * One-time estimate for players saved before coinsEarned existed: games from their play counts,
+ * water and ads from whatever history is still stored (the last 100 entries).
+ */
+function seedCoinsEarned(saved: Partial<PlayerStats>, historyRaw: string | null): Record<CoinSource, number> {
+  const played = saved.gamesPlayed ?? {} as Partial<Record<GameType, number>>;
+  let water = 0;
+  let ad = 0;
+  try {
+    const logs: { gameType?: string; earnedCoins?: number }[] = historyRaw ? JSON.parse(historyRaw) : [];
+    for (const l of logs) {
+      if (l.gameType === 'water') water += l.earnedCoins ?? 0;
+      if (l.gameType === 'ad') ad += l.earnedCoins ?? 0;
+    }
+  } catch {}
+  return {
+    coin: (played.coin ?? 0) * GAME_CONFIG.coin.coinsPerPlay,
+    memory: (played.memory ?? 0) * GAME_CONFIG.memory.coinsPerWin,
+    water,
+    ad,
+    daily: 0,
+  };
+}
 
 function calculateLevel(xp: number): number {
   let level = 1;
@@ -162,7 +187,7 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement[]>([]);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then(raw => {
+    Promise.all([AsyncStorage.getItem(STORAGE_KEY), AsyncStorage.getItem(HISTORY_KEY)]).then(([raw, historyRaw]) => {
       if (raw) {
         try {
           const saved = JSON.parse(raw);
@@ -171,6 +196,7 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
             ...def,
             ...saved,
             gamesPlayed: { ...def.gamesPlayed, ...(saved.gamesPlayed ?? {}) } as Record<GameType, number>,
+            coinsEarned: { ...def.coinsEarned, ...(saved.coinsEarned ?? seedCoinsEarned(saved, historyRaw)) },
           });
         } catch {}
       }
@@ -196,10 +222,12 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
     s.totalGamesPlayed += 1;
     if (extra) Object.assign(s, extra);
 
-    const xpMap: Record<GameType, number> = { coin: GAME_CONFIG.coin.xpPerPlay, spin: GAME_CONFIG.spin.xpPerPlay, memory: GAME_CONFIG.memory.xpPerWin, water: GAME_CONFIG.water.xpPerWin };
+    const xpMap: Record<GameType, number> = { coin: GAME_CONFIG.coin.xpPerPlay, memory: GAME_CONFIG.memory.xpPerWin, water: GAME_CONFIG.water.xpPerWin };
     s.totalXP += xpMap[gameType];
     if (gameType === 'coin') s.totalCoins += GAME_CONFIG.coin.coinsPerPlay;
     if (gameType === 'memory') s.totalCoins += GAME_CONFIG.memory.coinsPerWin;
+    const gained = s.totalCoins - stats.totalCoins;
+    if (gained > 0) s.coinsEarned = { ...s.coinsEarned, [gameType]: s.coinsEarned[gameType] + gained };
     s.level = calculateLevel(s.totalXP);
 
     const unlocked = checkAchievements(s);
@@ -214,10 +242,21 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const clearNewlyUnlocked = useCallback(() => setNewlyUnlocked([]), []);
 
-  const addBonusCoins = useCallback(async (amount: number): Promise<void> => {
-    const s = { ...stats, totalCoins: stats.totalCoins + amount };
+  /** Coins that don't come from playing a game: rewarded ads and the daily challenge. Not counted as a game. */
+  const addBonusCoins = useCallback(async (amount: number, source: 'ad' | 'daily' = 'ad', xp = 0): Promise<void> => {
+    const s: PlayerStats = {
+      ...stats,
+      totalCoins: stats.totalCoins + amount,
+      totalXP: stats.totalXP + xp,
+      coinsEarned: { ...stats.coinsEarned, [source]: stats.coinsEarned[source] + amount },
+    };
+    s.level = calculateLevel(s.totalXP);
+    const unlocked = checkAchievements(s);
+    for (const a of unlocked) s.totalXP += a.xpReward;
+    s.level = calculateLevel(s.totalXP);
     await saveStats(s);
     setStats(s);
+    if (unlocked.length > 0) setNewlyUnlocked(prev => [...prev, ...unlocked]);
   }, [stats, saveStats]);
 
   return (

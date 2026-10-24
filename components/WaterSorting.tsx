@@ -713,6 +713,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
       moves: finalMoves,
       par,
       waterLevel: level,
+      stars: finalMoves <= Math.ceil(par * 1.2) ? 3 : finalMoves <= Math.ceil(par * 1.6) ? 2 : 1,
     });
     await AsyncStorage.setItem(LEVEL_KEY, String(level + 1)).catch(() => {});
     await AsyncStorage.removeItem(PROGRESS_KEY).catch(() => {});

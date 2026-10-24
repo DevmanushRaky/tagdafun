@@ -131,7 +131,6 @@ Unity LevelPlay, all set up in code. Ad unit IDs, SDK quirks and build notes are
 |--------|-------|------|
 | Banner | Home, below the daily challenge | Always |
 | Native | Home (after games), inside each game screen, Weekly screen | Always (hidden until an ad loads) |
-| Rewarded (+50 coins) | Coins screen "Watch Ad" button | Whenever the player taps it |
 | Rewarded (+50 coins) | "Watch ad / Skip" popup after a game | **Capped**, see below |
 | Rewarded (no coins) | Memory Cards "Hint" button | Player taps it; 2 per level |
 | Rewarded (no coins) | Water Sorting "Hint" and "+ Bottle" | Player taps it; Hint any time, + Bottle once per level |

@@ -6,9 +6,6 @@ export const GAME_CONFIG = {
     coinsPerPlay: 5,      // coins awarded per flip (win or lose)
     xpPerPlay: 10,
   },
-  spin: {
-    xpPerPlay: 15,        // legacy: Spin Roulette was removed; kept so old saved stats still load
-  },
   memory: {
     coinsPerWin: 10,      // coins awarded on completing the board
     xpPerWin: 15,

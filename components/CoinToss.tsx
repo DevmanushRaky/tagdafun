@@ -1,15 +1,135 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, Easing,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, {
+  Circle, Defs, G, Line, LinearGradient as SvgLinearGradient, Path, RadialGradient,
+  Stop, Text as SvgText, TextPath,
+} from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
 import { GAME_CONFIG } from '../constants/gameConfig';
 import { logGame } from '../utils/gameHistory';
 
-const COIN_SIZE = 140;
+const COIN_SIZE = 104;
+const TOSS_MS = 1900;
+const AIR = 0.8;          // fraction of the toss spent in the air; the rest is the landing bounce
+const TOSS_HEIGHT = 70;   // px the coin rises at its peak
+const SPINS = 7;          // full turns while in the air
+const RESULT_HOLD_MS = 1500; // time the result stays visible before the post-game popup
+
+type Side = 'heads' | 'tails';
+
+const haptic = (style: Haptics.ImpactFeedbackStyle) => {
+  Haptics.impactAsync(style).catch(() => {});
+};
+
+// ── Coin face (SVG) ─────────────────────────────────────────────────────────
+// Drawn in a 200×200 box: reeded rim, curved legend and an embossed centre.
+const REEDS = Array.from({ length: 72 }, (_, i) => (i / 72) * Math.PI * 2);
+
+const CROWN = 'M62 128 L54 78 L80 100 L100 64 L120 100 L146 78 L138 128 Z';
+
+const Emboss: React.FC<{ children: (fill: string) => React.ReactNode }> = ({ children }) => (
+  <>
+    <G transform="translate(1.6,1.8)" opacity={0.55}>{children('#7A4E00')}</G>
+    <G transform="translate(-1,-1)" opacity={0.7}>{children('#FFF6CC')}</G>
+    {children('url(#metal)')}
+  </>
+);
+
+export const CoinFace: React.FC<{ side: Side; size: number }> = ({ side, size }) => (
+  <Svg width={size} height={size} viewBox="0 0 200 200">
+    <Defs>
+      <SvgLinearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+        <Stop offset="0" stopColor="#FFF0A8" />
+        <Stop offset="0.35" stopColor="#E9B530" />
+        <Stop offset="0.7" stopColor="#A86E06" />
+        <Stop offset="1" stopColor="#F2C94C" />
+      </SvgLinearGradient>
+      <RadialGradient id="field" cx="38%" cy="32%" r="75%">
+        <Stop offset="0" stopColor="#FFF4C2" />
+        <Stop offset="0.45" stopColor="#F4C440" />
+        <Stop offset="1" stopColor="#B57A0C" />
+      </RadialGradient>
+      <SvgLinearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+        <Stop offset="0" stopColor="#FCD86A" />
+        <Stop offset="1" stopColor="#D49A1C" />
+      </SvgLinearGradient>
+      <Path id="legend" d="M 34 100 A 66 66 0 0 1 166 100" />
+    </Defs>
+
+    {/* Rim with reeded edge */}
+    <Circle cx="100" cy="100" r="99" fill="url(#rim)" />
+    {REEDS.map((a, i) => (
+      <Line
+        key={i}
+        x1={100 + Math.cos(a) * 92} y1={100 + Math.sin(a) * 92}
+        x2={100 + Math.cos(a) * 98.5} y2={100 + Math.sin(a) * 98.5}
+        stroke="#8A5A00" strokeOpacity={0.35} strokeWidth={1.4}
+      />
+    ))}
+
+    {/* Field */}
+    <Circle cx="100" cy="100" r="88" fill="url(#field)" />
+    <Circle cx="100" cy="100" r="88" fill="none" stroke="#8A5A00" strokeOpacity={0.5} strokeWidth={2} />
+
+
+    {/* Curved legend */}
+    <SvgText fill="#8A5A00" fillOpacity={0.75} fontSize="15" fontWeight="bold" letterSpacing="3">
+      <TextPath href="#legend" startOffset="50%" textAnchor="middle">TAGDA FUN</TextPath>
+    </SvgText>
+
+    {side === 'heads' ? (
+      <>
+        <Emboss>
+          {fill => (
+            <>
+              <Path d={CROWN} fill={fill} />
+              <Path d="M60 134 H140 V146 H60 Z" fill={fill} />
+              <Circle cx="54" cy="74" r="6" fill={fill} />
+              <Circle cx="100" cy="58" r="7" fill={fill} />
+              <Circle cx="146" cy="74" r="6" fill={fill} />
+            </>
+          )}
+        </Emboss>
+        <SvgText x="100" y="172" fill="#8A5A00" fillOpacity={0.8} fontSize="14" fontWeight="bold" letterSpacing="4" textAnchor="middle">HEADS</SvgText>
+      </>
+    ) : (
+      <>
+        <Emboss>
+          {fill => (
+            <SvgText x="100" y="136" fill={fill} fontSize="78" fontWeight="900" textAnchor="middle">
+              {GAME_CONFIG.coin.coinsPerPlay}
+            </SvgText>
+          )}
+        </Emboss>
+        <SvgText x="100" y="172" fill="#8A5A00" fillOpacity={0.8} fontSize="14" fontWeight="bold" letterSpacing="4" textAnchor="middle">TAILS</SvgText>
+      </>
+    )}
+  </Svg>
+);
+
+// ── Toss curves ─────────────────────────────────────────────────────────────
+// Parabolic arc while in the air, then a small double bounce on landing.
+const ARC_STEPS = 10;
+const arcIn: number[] = [];
+const arcY: number[] = [];
+const arcScale: number[] = [];
+for (let i = 0; i <= ARC_STEPS; i++) {
+  const p = i / ARC_STEPS;
+  const h = 4 * p * (1 - p); // 0 → 1 → 0
+  arcIn.push(p * AIR);
+  arcY.push(-TOSS_HEIGHT * h);
+  arcScale.push(1 + 0.12 * h);
+}
+const LAND_IN = [AIR + 0.07, AIR + 0.14, AIR + 0.17, 1];
+const tossIn = [...arcIn, ...LAND_IN];
+const tossY = [...arcY, -14, 0, -3, 0];
+const tossScale = [...arcScale, 1.02, 1, 1, 1];
 
 interface CoinTossProps {
   onShowResult: (type: 'coin', result: string, subtitle: string, badgeText: string, win: boolean) => void;
@@ -17,176 +137,120 @@ interface CoinTossProps {
 
 const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
   const { stats, recordGame } = useGameStats();
-  const [choice, setChoice] = useState<'heads' | 'tails'>('heads');
+  const [choice, setChoice] = useState<Side>('heads');
   const [isFlipping, setIsFlipping] = useState(false);
-  const [lastResult, setLastResult] = useState<{ outcome: 'heads' | 'tails'; win: boolean } | null>(null);
-  const flipAnim = useRef(new Animated.Value(0)).current;
-  const targetDegRef = useRef<number>(0);
-  const outcomeRef = useRef<'heads' | 'tails'>('heads');
+  const [lastResult, setLastResult] = useState<{ outcome: Side; win: boolean } | null>(null);
+  const tossAnim = useRef(new Animated.Value(0)).current;
+  const rotAnim = useRef(new Animated.Value(0)).current; // degrees, accumulates across flips
+  const degRef = useRef(0);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const startFlip = () => {
-    setLastResult(null);
-    outcomeRef.current = Math.random() < 0.5 ? 'heads' : 'tails';
-
-    const baseSpins = 6;
-    const endOffset = outcomeRef.current === 'heads' ? 0 : 180;
-    targetDegRef.current = baseSpins * 360 + endOffset;
-
-    flipAnim.setValue(0);
-    Animated.timing(flipAnim, {
-      toValue: 1,
-      duration: 1800,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start(async ({ finished }) => {
-      if (!finished) return;
-      const raw = outcomeRef.current;
-      const win = raw === choice;
-      setLastResult({ outcome: raw, win });
-      setIsFlipping(false);
-
-      await recordGame('coin', win ? { coinWins: stats.coinWins + 1, coinFlips: stats.coinFlips + 1 } : { coinFlips: stats.coinFlips + 1 });
-      await logGame({ timestamp: Date.now(), gameType: 'coin', choice, outcome: raw, coinWon: win, costCoins: 0, earnedCoins: 5, netCoins: 5 });
-      onShowResult('coin', raw, win ? 'You won!' : 'Try again!', raw, win);
-    });
-  };
+  // Closing the game mid-flip must not record a result afterwards.
+  useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
 
   const flipCoin = () => {
     if (isFlipping) return;
     setIsFlipping(true);
-    startFlip();
+    setLastResult(null);
+    haptic(Haptics.ImpactFeedbackStyle.Light);
+
+    const outcome: Side = Math.random() < 0.5 ? 'heads' : 'tails';
+    const win = outcome === choice;
+    // Continue from the current angle so the coin never jumps, and land on the right face.
+    const from = degRef.current;
+    const base = from - (from % 360) + SPINS * 360;
+    const to = base + (outcome === 'heads' ? 0 : 180);
+    degRef.current = to;
+
+    tossAnim.setValue(0);
+    Animated.parallel([
+      Animated.timing(tossAnim, { toValue: 1, duration: TOSS_MS, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(rotAnim, { toValue: to, duration: TOSS_MS * AIR, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start();
+
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [
+      setTimeout(() => haptic(Haptics.ImpactFeedbackStyle.Heavy), TOSS_MS * AIR),
+      setTimeout(async () => {
+        setLastResult({ outcome, win });
+        setIsFlipping(false);
+        Haptics.notificationAsync(win ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning).catch(() => {});
+
+        await recordGame('coin', win ? { coinWins: stats.coinWins + 1, coinFlips: stats.coinFlips + 1 } : { coinFlips: stats.coinFlips + 1 });
+        await logGame({ timestamp: Date.now(), gameType: 'coin', choice, outcome, coinWon: win, costCoins: 0, earnedCoins: 5, netCoins: 5 });
+      }, TOSS_MS),
+      setTimeout(() => {
+        onShowResult('coin', outcome, win ? 'You won!' : 'Try again!', outcome, win);
+      }, TOSS_MS + RESULT_HOLD_MS),
+    ];
   };
 
-  const rotateY = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', `${targetDegRef.current}deg`],
-  });
-  const scale = flipAnim.interpolate({
-    inputRange: [0, 0.3, 0.7, 1],
-    outputRange: [1, 1.15, 1.15, 1],
-  });
-  const translateY = flipAnim.interpolate({
-    inputRange: [0, 0.3, 0.7, 1],
-    outputRange: [0, -30, -30, 0],
-  });
+  const earned = `+${GAME_CONFIG.coin.coinsPerPlay} coins`;
+  const status = isFlipping
+    ? { icon: 'sync', color: 'rgba(255,255,255,0.75)', tint: null, text: 'Flipping...' }
+    : lastResult
+      ? {
+          icon: lastResult.win ? 'checkmark-circle' : 'close-circle',
+          color: lastResult.win ? '#2ED573' : '#FF6B6B',
+          tint: lastResult.win ? 'rgba(46,213,115,0.14)' : 'rgba(255,107,107,0.14)',
+          text: `${lastResult.outcome.toUpperCase()} · ${lastResult.win ? 'You won' : 'You lost'} · ${earned}`,
+        }
+      : { icon: 'hand-left-outline', color: 'rgba(255,255,255,0.75)', tint: null, text: 'Pick your side and flip' };
 
-  const { frontOpacity, backOpacity } = useMemo(() => {
-    const totalHalfTurns = Math.max(1, Math.round(targetDegRef.current / 180));
-    const inputRange: number[] = [];
-    const frontRange: number[] = [];
-    const backRange: number[] = [];
-    for (let i = 0; i <= totalHalfTurns; i++) {
-      inputRange.push(i / totalHalfTurns);
-      frontRange.push(i % 2 === 0 ? 1 : 0);
-      backRange.push(i % 2 === 1 ? 1 : 0);
-    }
-    return {
-      frontOpacity: flipAnim.interpolate({ inputRange, outputRange: frontRange as any }),
-      backOpacity: flipAnim.interpolate({ inputRange, outputRange: backRange as any }),
-    };
-  }, [flipAnim, targetDegRef.current]);
+  const turn = Animated.modulo(rotAnim, 360);
+  const headsOpacity = turn.interpolate({ inputRange: [0, 89.9, 90, 269.9, 270, 360], outputRange: [1, 1, 0, 0, 1, 1] });
+  const tailsOpacity = turn.interpolate({ inputRange: [0, 89.9, 90, 269.9, 270, 360], outputRange: [0, 0, 1, 1, 0, 0] });
+  const rotateX = rotAnim.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '360deg'], extrapolate: 'extend' });
+  const tilt = Animated.modulo(rotAnim, 180);
+  // Light catches the face as it tilts toward the viewer.
+  const shine = tilt.interpolate({ inputRange: [0, 30, 60, 90, 120, 150, 180], outputRange: [0, 0.35, 0.1, 0, 0.1, 0.35, 0] });
+  const translateY = tossAnim.interpolate({ inputRange: tossIn, outputRange: tossY });
+  const scale = tossAnim.interpolate({ inputRange: tossIn, outputRange: tossScale });
 
   return (
     <View style={styles.root}>
       {/* Coin stage */}
-      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.stage}>
-        {/* Shadow glow under coin */}
-        <View style={[styles.coinGlow, lastResult && { backgroundColor: lastResult.win ? 'rgba(46,213,115,0.2)' : 'rgba(231,76,60,0.2)' }]} />
-
-        <Animated.View style={[
-          styles.coinWrapper,
-          { transform: [{ perspective: 800 }, { rotateY }, { scale }, { translateY }] },
-        ]}>
-          {/* HEADS face */}
-          <Animated.View style={[styles.face, styles.headFace, { opacity: frontOpacity }]}>
-            <LinearGradient colors={['#FFD700', '#FFA000']} style={styles.faceGrad}>
-              <View style={styles.faceInner}>
-                <Text style={styles.faceEmoji}>H</Text>
-                <Text style={styles.faceName}>HEADS</Text>
-              </View>
-            </LinearGradient>
+      <LinearGradient colors={['#001A33', '#002A52', '#0B3F70']} style={styles.stage}>
+        <View style={styles.coinArea}>
+          <Animated.View style={[styles.coinWrapper, { transform: [{ translateY }, { scale }] }]}>
+            <Animated.View style={[styles.coinSpin, { transform: [{ perspective: 900 }, { rotateX }] }]}>
+              <Animated.View style={[styles.face, { opacity: headsOpacity }]}>
+                <CoinFace side="heads" size={COIN_SIZE} />
+              </Animated.View>
+              <Animated.View style={[styles.face, styles.tailFace, { opacity: tailsOpacity }]}>
+                <CoinFace side="tails" size={COIN_SIZE} />
+              </Animated.View>
+              <Animated.View pointerEvents="none" style={[styles.shine, { opacity: shine }]} />
+            </Animated.View>
           </Animated.View>
+        </View>
 
-          {/* TAILS face */}
-          <Animated.View style={[styles.face, styles.tailFace, { opacity: backOpacity }]}>
-            <LinearGradient colors={['#B8C6DB', '#868F96']} style={styles.faceGrad}>
-              <View style={styles.faceInner}>
-                <Text style={styles.faceEmoji}>T</Text>
-                <Text style={styles.faceName}>TAILS</Text>
-              </View>
-            </LinearGradient>
-          </Animated.View>
-
-          {/* Outer ring */}
-          <View style={styles.coinRing} />
-        </Animated.View>
-
-        {/* Status text inside stage */}
-        {isFlipping ? (
-          <Text style={styles.stageStatus}>Flipping...</Text>
-        ) : lastResult ? (
-          <View style={styles.resultBadge}>
-            <Ionicons
-              name={lastResult.win ? 'checkmark-circle' : 'close-circle'}
-              size={18}
-              color={lastResult.win ? '#2ED573' : '#E74C3C'}
-            />
-            <Text style={[styles.resultBadgeText, { color: lastResult.win ? '#2ED573' : '#E74C3C' }]}>
-              {lastResult.outcome.toUpperCase()} — {lastResult.win ? `You Won! +${GAME_CONFIG.coin.coinsPerPlay} coins` : 'You Lost!'}
-            </Text>
-          </View>
-        ) : (
-          <Text style={styles.stageStatus}>Pick your side</Text>
-        )}
+        {/* Status pill: same size in every state so the layout never jumps */}
+        <View style={[styles.statusPill, status.tint && { backgroundColor: status.tint }]}>
+          <Ionicons name={status.icon as any} size={16} color={status.color} />
+          <Text style={[styles.statusText, { color: status.color }]} numberOfLines={1}>{status.text}</Text>
+        </View>
       </LinearGradient>
 
       {/* Choice selector */}
       <View style={styles.choiceSection}>
         <Text style={styles.choiceLabel}>YOUR BET</Text>
-        <View style={styles.choiceRow}>
-          <TouchableOpacity
-            style={[styles.choiceBtn, choice === 'heads' && styles.choiceBtnActive]}
-            onPress={() => !isFlipping && setChoice('heads')}
-            disabled={isFlipping}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={choice === 'heads' ? ['#FFD700', '#FFA000'] : ['#f5f5f5', '#ebebeb']}
-              style={styles.choiceBtnGrad}
-            >
-              <View style={[styles.choiceCoin, { backgroundColor: choice === 'heads' ? '#FFF8DC' : '#e0e0e0' }]}>
-                <Text style={[styles.choiceCoinLetter, { color: choice === 'heads' ? '#B8860B' : '#9e9e9e' }]}>H</Text>
-              </View>
-              <Text style={[styles.choiceName, { color: choice === 'heads' ? '#7B5800' : '#757575' }]}>HEADS</Text>
-              {choice === 'heads' && (
-                <View style={styles.selectedDot} />
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <View style={styles.vsCircle}>
-            <Text style={styles.vsText}>VS</Text>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.choiceBtn, choice === 'tails' && styles.choiceBtnActiveSilver]}
-            onPress={() => !isFlipping && setChoice('tails')}
-            disabled={isFlipping}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={choice === 'tails' ? ['#B8C6DB', '#868F96'] : ['#f5f5f5', '#ebebeb']}
-              style={styles.choiceBtnGrad}
-            >
-              <View style={[styles.choiceCoin, { backgroundColor: choice === 'tails' ? '#ecf0f1' : '#e0e0e0' }]}>
-                <Text style={[styles.choiceCoinLetter, { color: choice === 'tails' ? '#607d8b' : '#9e9e9e' }]}>T</Text>
-              </View>
-              <Text style={[styles.choiceName, { color: choice === 'tails' ? '#455A64' : '#757575' }]}>TAILS</Text>
-              {choice === 'tails' && (
-                <View style={[styles.selectedDot, { backgroundColor: '#607d8b' }]} />
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+        <View style={styles.segment}>
+          {(['heads', 'tails'] as Side[]).map(side => {
+            const active = choice === side;
+            return (
+              <TouchableOpacity
+                key={side}
+                style={[styles.segmentBtn, active && styles.segmentBtnActive]}
+                onPress={() => setChoice(side)}
+                disabled={isFlipping}
+                activeOpacity={0.8}
+              >
+                {active && <Ionicons name="checkmark" size={16} color="white" />}
+                <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{side.toUpperCase()}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -204,7 +268,7 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
         activeOpacity={0.85}
       >
         <LinearGradient
-          colors={isFlipping ? ['#9e9e9e', '#757575'] : ['#FF6B6B', '#EE0979']}
+          colors={isFlipping ? ['#9e9e9e', '#757575'] : ['#FF8C42', '#FF5E00']}
           style={styles.flipBtnGrad}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
         >
@@ -233,80 +297,48 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
 };
 
 const styles = StyleSheet.create({
-  root: { width: '100%', gap: SPACING.md },
+  root: { width: '100%', gap: 12 },
 
   // Stage
   stage: {
     borderRadius: BORDER_RADIUS.xl,
-    paddingTop: 36,
-    paddingBottom: 24,
+    paddingTop: TOSS_HEIGHT + 10,
+    paddingBottom: 14,
     paddingHorizontal: 16,
     alignItems: 'center',
-    gap: 20,
+    gap: 10,
     overflow: 'hidden',
     ...SHADOWS.medium,
   },
-  coinGlow: {
-    position: 'absolute',
-    top: 36 + COIN_SIZE - 10,
-    width: COIN_SIZE + 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,215,0,0.15)',
-  },
-  coinWrapper: {
-    width: COIN_SIZE,
-    height: COIN_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  coinArea: { width: COIN_SIZE, height: COIN_SIZE, alignItems: 'center' },
+  coinWrapper: { width: COIN_SIZE, height: COIN_SIZE },
+  coinSpin: { width: COIN_SIZE, height: COIN_SIZE },
   face: {
     position: 'absolute',
     width: COIN_SIZE,
     height: COIN_SIZE,
     borderRadius: COIN_SIZE / 2,
-    overflow: 'hidden',
   },
-  headFace: {},
-  tailFace: { transform: [{ rotateY: '180deg' }] },
-  faceGrad: {
-    width: COIN_SIZE,
-    height: COIN_SIZE,
-    borderRadius: COIN_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  faceInner: { alignItems: 'center', gap: 2 },
-  faceEmoji: { fontSize: 36, fontWeight: '900', color: 'rgba(0,0,0,0.25)' },
-  faceName: { fontSize: 11, fontWeight: '800', letterSpacing: 2, color: 'rgba(0,0,0,0.35)' },
-  coinRing: {
+  tailFace: { transform: [{ rotateX: '180deg' }] },
+  shine: {
     position: 'absolute',
     width: COIN_SIZE,
     height: COIN_SIZE,
     borderRadius: COIN_SIZE / 2,
-    borderWidth: 6,
-    borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: '#FFFFFF',
   },
 
-  stageStatus: { ...TYPOGRAPHY.caption, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, textAlign: 'center' },
-  resultBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 14, paddingVertical: 6, maxWidth: '100%' },
-  resultBadgeText: { ...TYPOGRAPHY.captionBold, letterSpacing: 0.5, flexShrink: 1 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 32, minWidth: 220, maxWidth: '100%', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 14 },
+  statusText: { ...TYPOGRAPHY.captionBold, letterSpacing: 0.5, flexShrink: 1 },
 
   // Choice
-  choiceSection: { gap: 10 },
+  choiceSection: { gap: 6 },
   choiceLabel: { ...TYPOGRAPHY.smallBold, color: COLORS.textSecondary, textAlign: 'center', letterSpacing: 2 },
-  choiceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  choiceBtn: { flex: 1, borderRadius: BORDER_RADIUS.lg, overflow: 'hidden', ...SHADOWS.card, borderWidth: 2, borderColor: 'transparent' },
-  choiceBtnActive: { borderColor: '#FFD700' },
-  choiceBtnActiveSilver: { borderColor: '#B8C6DB' },
-  choiceBtnGrad: { paddingVertical: 14, alignItems: 'center', gap: 6 },
-  choiceCoin: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  choiceCoinLetter: { fontSize: 20, fontWeight: '900' },
-  choiceName: { fontSize: 12, fontWeight: '800', letterSpacing: 1.5 },
-  selectedDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFD700' },
-
-  vsCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' },
-  vsText: { fontSize: 10, fontWeight: '900', color: COLORS.textSecondary },
+  segment: { flexDirection: 'row', backgroundColor: COLORS.surfaceDark, borderRadius: BORDER_RADIUS.md, padding: 4, gap: 4 },
+  segmentBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: BORDER_RADIUS.sm + 2 },
+  segmentBtnActive: { backgroundColor: COLORS.primary, ...SHADOWS.small },
+  segmentText: { fontSize: 14, fontWeight: '800', letterSpacing: 1.5, color: COLORS.textSecondary },
+  segmentTextActive: { color: 'white' },
 
   // Earn info
   earnRow: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
@@ -316,7 +348,7 @@ const styles = StyleSheet.create({
   // Flip button
   flipBtn: { borderRadius: BORDER_RADIUS.full, overflow: 'hidden', ...SHADOWS.medium },
   flipBtnDisabled: { opacity: 0.6 },
-  flipBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16, paddingHorizontal: 32 },
+  flipBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 13, paddingHorizontal: 32 },
   flipBtnText: { fontSize: 18, fontWeight: '900', color: 'white', letterSpacing: 1 },
 
   // Stats row

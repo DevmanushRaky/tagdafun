@@ -5,7 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useAudioPlayer } from 'expo-audio';
+import { useBackgroundMusic } from '../utils/sound';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameStats } from '../contexts/GameStatsContext';
@@ -259,8 +259,6 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
   const [revealing, setRevealing] = useState(false);
   const [hintCount, setHintCount] = useState(0);
   const hintPulse = useRef(new Animated.Value(1)).current;
-  const [musicOn, setMusicOn] = useState(true);
-  const music = useAudioPlayer(require('../assets/sounds/memory-music.m4a'));
   const hintGlow = useRef(new Animated.Value(0)).current;
   const hintTimer = useRef(new Animated.Value(1)).current;
 
@@ -332,41 +330,17 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
 
   // Load saved level and stars
   useEffect(() => {
-    Promise.all([AsyncStorage.getItem(LEVEL_KEY), AsyncStorage.getItem(STARS_KEY), AsyncStorage.getItem(MUSIC_KEY)]).then(([lvl, st, mu]) => {
+    Promise.all([AsyncStorage.getItem(LEVEL_KEY), AsyncStorage.getItem(STARS_KEY)]).then(([lvl, st]) => {
       if (st) { try { setBestStars(JSON.parse(st)); } catch {} }
-      if (mu === 'off') setMusicOn(false);
       startLevel(Math.max(1, parseInt(lvl ?? '1', 10) || 1));
     });
   }, []);
 
   // Soft looping melody; it pauses while an ad is playing and when switched off.
-  useEffect(() => {
-    music.loop = true;
-  }, [music]);
-
-  const musicShouldPlay = musicOn && level !== null && !hintLoading;
-  useEffect(() => {
-    if (!musicShouldPlay) {
-      try { music.pause(); } catch {}
-      return;
-    }
-    // Fade in rather than starting at full volume.
-    let v = 0;
-    try { music.volume = 0; music.play(); } catch {}
-    const id = setInterval(() => {
-      v = Math.min(MUSIC_VOLUME, v + MUSIC_VOLUME / 10);
-      try { music.volume = v; } catch {}
-      if (v >= MUSIC_VOLUME) clearInterval(id);
-    }, 60);
-    return () => clearInterval(id);
-  }, [musicShouldPlay, music]);
-
-  const toggleMusic = () => {
-    setMusicOn(on => {
-      AsyncStorage.setItem(MUSIC_KEY, on ? 'off' : 'on').catch(() => {});
-      return !on;
-    });
-  };
+  const { musicOn, toggleMusic } = useBackgroundMusic(require('../assets/sounds/memory-music.m4a'), MUSIC_KEY, {
+    active: level !== null && !hintLoading,
+    volume: MUSIC_VOLUME,
+  });
 
   // Timer starts on the first flip and stops on a win.
   useEffect(() => {

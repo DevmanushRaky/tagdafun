@@ -30,6 +30,8 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 | Coin toss wins / flips | Profile stats | Device only |
 | Memory card games played | Profile stats | Device only |
 | Water Sorting games played and current level | Profile stats and level progress | Device only |
+| Memory Cards level and best stars per level | Resume where you left off | Device only |
+| Music on/off choice for each game | Remember your sound setting | Device only |
 | Current streak and best streak | Achievement tracking | Device only |
 | Achievement unlock status | Profile screen | Device only |
 | Daily challenge progress | Home screen challenge | Device only |
@@ -139,6 +141,8 @@ Since we collect no personal data, there is nothing for us to provide, correct, 
 | `AD_ID` (`com.google.android.gms.permission.AD_ID`) | Lets ad providers read the advertising ID for ad delivery and measurement |
 
 No other permissions are requested. The app does not access your camera, microphone, contacts, location, or storage beyond its own local data.
+
+The app plays sound effects and background music that are bundled inside the app. It never records audio: the microphone and background-audio options of the audio library are switched off, so no microphone permission is ever requested.
 
 ---
 

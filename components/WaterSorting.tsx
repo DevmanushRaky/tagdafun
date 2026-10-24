@@ -568,7 +568,11 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
   });
 
   const later = (fn: () => void, ms: number) => {
-    timersRef.current.push(setTimeout(() => { if (mountedRef.current) fn(); }, ms));
+    const id = setTimeout(() => {
+      timersRef.current = timersRef.current.filter(t => t !== id);
+      if (mountedRef.current) fn();
+    }, ms);
+    timersRef.current.push(id);
   };
 
   const showToast = (text: string) => {

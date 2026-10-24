@@ -4,6 +4,24 @@ All notable releases of Tagda Fun are documented here.
 
 ---
 
+## [1.2.0] — Gamification, Ads & Water Sorting
+
+**New Features**
+- **Gamification System** — XP, 11 levels, achievements, daily challenge, and a local weekly leaderboard (resets Sunday 12:00 AM IST).
+- **Coins Wallet** — Coins screen with balance, per-game breakdown and full game history.
+- **Spin Roulette** — Spin the wheel for 0–100 coins (costs 5 coins per spin).
+- **Memory Cards** — Match the pairs to win coins and XP.
+- **Water Sorting** — Level-based bottle sorting puzzle with hints. Coin reward depends on moves vs. par (10–150 coins) plus +15 XP per win. Progress is saved between sessions.
+- **Ads (Unity LevelPlay)** — Banner and native ads, plus optional rewarded ads (+50 coins) from the Coins screen and after a game. See `ADS_INTEGRATION.md`.
+- **Redesigned Navigation** — 4-tab layout: Home, Coins, Leaderboard, Profile.
+
+**Improvements**
+- Upgraded to the latest Expo SDK and refreshed dependencies
+- Navbar safe-area and Android build fixes
+- Privacy Policy updated for ads
+
+---
+
 ## [1.1.0] — Mastermind & More
 
 **New Features**

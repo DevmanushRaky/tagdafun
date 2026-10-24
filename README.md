@@ -16,7 +16,7 @@
 
 ## What is Tagda Fun?
 
-Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memory Cards** and **Water Sorting** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and weekly stats. All data is stored locally on your device.
+Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memory Cards** and **Water Sorting** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and a Shop where coins buy power-ups and skins. All data is stored locally on your device.
 
 ---
 
@@ -56,7 +56,7 @@ Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memo
 |--------|--------------|
 | **Home** | Player card (level, XP bar, streak), daily challenge, game cards |
 | **Coins** | Coin balance, per-game breakdown, full game history log |
-| **Weekly** | Your weekly coins + games played, live countdown to Sunday reset (IST) |
+| **Shop** | Daily gift, power-ups, coin skins and card backs bought with coins |
 | **Profile** | Level progress, all-time stats, detailed game stats, achievements |
 
 ---
@@ -84,10 +84,15 @@ Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memo
 - On completion: **+25 coins + 20 XP**
 - Resets at midnight
 
-### Weekly Stats
-- Tracks your coins and games played for the current week
-- Resets every **Sunday at 12:00 AM IST**
-- Live countdown timer shown on screen
+### Shop
+Coins have no cash value; this is where they are spent. Catalog and prices live in `constants/shop.ts`, ownership in `contexts/ShopContext.tsx` (saved locally).
+
+- **Daily gift**: free coins once a day, climbing 10 → 15 → 20 → 25 → 30 → 40 → 60 on consecutive days; a missed day starts over at day 1
+- **Power-ups** (stack, used one at a time): Memory Hint 40, Water Hint 30, Extra Bottle 60. A game uses an owned power-up first and only falls back to a rewarded ad when you have none. The hint and bottle buttons show `×N` instead of `AD` while you own some
+- **Coin skins** for Coin Toss (also shown on the Home card): Gold (free), Silver 300, Rose Gold 600, Emerald 1000, Diamond 2000
+- **Card backs** for Memory Cards: Navy (free), Galaxy 400, Sunset 400, Ocean 700
+- Every purchase asks for confirmation and is logged in the Coins history
+- No random "mystery box": paid random rewards count as loot boxes on Google Play
 
 ### Achievements (11 total)
 
@@ -115,7 +120,7 @@ The app runs fully offline using AsyncStorage — no backend, no login required.
 - All three games with full coin and XP logic
 - Ads via Unity LevelPlay (banner, native, optional rewarded +50 coins) — see `ADS_INTEGRATION.md`
 - Persistent stats, history, and achievements (AsyncStorage)
-- Weekly stats tracking (local, resets Sunday IST)
+- Shop with daily gift, power-ups, coin skins and card backs
 - Daily challenge with auto-reset
 - 11-level XP progression
 
@@ -130,7 +135,7 @@ Unity LevelPlay, all set up in code. Ad unit IDs, SDK quirks and build notes are
 | Format | Where | When |
 |--------|-------|------|
 | Banner | Home, below the daily challenge | Always |
-| Native | Home (after games), inside each game screen, Weekly screen | Always (hidden until an ad loads) |
+| Native | Home (after games), inside each game screen, bottom of the Shop | Always (hidden until an ad loads) |
 | Rewarded (+50 coins) | "Watch ad / Skip" popup after a game | **Capped**, see below |
 | Rewarded (no coins) | Memory Cards "Hint" button | Player taps it; 2 per level |
 | Rewarded (no coins) | Water Sorting "Hint" and "+ Bottle" | Player taps it; Hint any time, + Bottle once per level |
@@ -212,7 +217,7 @@ tagdafun/
 ├── screens/
 │   ├── HomeScreen.tsx          # Player card, daily challenge, game cards
 │   ├── CoinsScreen.tsx         # Balance, game breakdown, history log
-│   ├── LeaderboardScreen.tsx   # Weekly stats, live IST countdown
+│   ├── ShopScreen.tsx          # Daily gift, power-ups, coin skins, card backs
 │   └── ProfileScreen.tsx       # Level, all-time stats, achievements
 ├── components/
 │   ├── CoinToss.tsx            # Animated coin flip game
@@ -239,7 +244,7 @@ tagdafun/
 | expo-linear-gradient | Gradients throughout |
 | @expo/vector-icons | Ionicons — no emojis in UI |
 | @react-navigation/bottom-tabs | 4-tab navigation |
-| AsyncStorage | Persist all stats, history, weekly data |
+| AsyncStorage | Persist all stats, history, shop items |
 | react-native-safe-area-context | Safe area insets |
 
 ---

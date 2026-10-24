@@ -19,7 +19,7 @@ Unity LevelPlay is a mediation platform: it routes ad requests to whichever unde
 |---|---|---|---|
 | banner ads   | `suwmraw3whvjtbco` | Banner   | Home screen, between the profile card and the Games section (refresh rate: 10s) |
 | rawarded ads | `jqvx5o80z4v2i70t` | Rewarded | Memory Cards "Hint" button (no coins, reveals the cards), Water Sorting "Hint" and "+ Bottle" (no coins), and an automatic prompt after every 4th finished game (at most once every 3 minutes) |
-| native ads   | `d1das3rlcdyyqouj` | Native   | Home screen (after Games section), inside the gameplay screen (Coin Toss / Memory Cards / Water Sorting), and at the bottom of the Leaderboard screen |
+| native ads   | `d1das3rlcdyyqouj` | Native   | Home screen (after Games section), inside the gameplay screen (Coin Toss / Memory Cards / Water Sorting), and at the bottom of the Shop screen |
 
 Interstitial and legacy ad formats were intentionally not added — a full-screen interruption ad was judged too disruptive for this app's flow.
 

@@ -3,6 +3,8 @@ import Svg, {
   ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText,
 } from 'react-native-svg';
 import { CoinFace } from './CoinToss';
+import { useShop } from '../contexts/ShopContext';
+import { coinPalette } from '../constants/shop';
 import { WATER_COLORS } from '../utils/waterSort';
 
 // Game artwork for the home cards, drawn in a 64×64 box.
@@ -68,8 +70,13 @@ const WaterIcon: React.FC<{ size: number }> = ({ size }) => (
   </Svg>
 );
 
+// The coin icon shows the coin skin the player picked in the Shop.
+const CoinIcon: React.FC<{ size: number }> = ({ size }) => (
+  <CoinFace side="heads" size={size} skin={coinPalette(useShop().shop.coinSkin)} />
+);
+
 export const GameIcon: React.FC<{ id: string; size: number }> = ({ id, size }) => {
-  if (id === 'coin') return <CoinFace side="heads" size={size} />;
+  if (id === 'coin') return <CoinIcon size={size} />;
   if (id === 'memory') return <MemoryIcon size={size} />;
   if (id === 'water') return <WaterIcon size={size} />;
   return null;

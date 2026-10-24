@@ -10,7 +10,7 @@
 
 ## 1. Overview
 
-Tagda Fun is a casual mobile gaming app featuring Coin Toss, Memory Cards, and Water Sorting with a gamification system (XP, levels, achievements, leaderboard). This policy explains what data the app stores, how it is handled, and your rights as a user.
+Tagda Fun is a casual mobile gaming app featuring Coin Toss, Memory Cards, and Water Sorting with a gamification system (XP, levels, achievements, and an in-app shop for virtual items bought with in-game coins). This policy explains what data the app stores, how it is handled, and your rights as a user.
 
 **Short version:** Tagda Fun stores your game progress locally on your device. We do not collect personal information, run no backend server, and require no account. The app shows ads through Unity LevelPlay, which may collect certain device data (such as the advertising ID) as described in Section 5.3.
 
@@ -35,7 +35,7 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 | Current streak and best streak | Achievement tracking | Device only |
 | Achievement unlock status | Profile screen | Device only |
 | Daily challenge progress | Home screen challenge | Device only |
-| Weekly coin total | Leaderboard screen | Device only |
+| Shop items (power-ups, coin skins, card backs) and daily gift progress | Shop screen | Device only |
 
 ### 2.2 Game History Log (Stored Locally)
 

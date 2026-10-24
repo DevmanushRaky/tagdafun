@@ -52,9 +52,9 @@ CHASE ACHIEVEMENTS
 11 achievements to unlock — from your very first flip to reaching Legend
 status. Build a streak and see how many you can collect.
 
-WEEKLY STATS
-Track your coins and games played for the week, with a live countdown to
-the next reset every Sunday. Come back and try to beat your own best week.
+SHOP
+Spend your coins on new coin skins, card designs and power-ups, and claim
+a free daily gift that grows every day you come back.
 
 SIMPLE, CLEAN, AND FAST
 No clutter, no confusing menus — just open the app and play. All games work
@@ -62,7 +62,7 @@ offline, so you can enjoy them anytime, anywhere.
 
 Download Tagda Fun and start playing today!
 ```
-Character count: 1,289 / 4000
+Character count: 1,261 / 4000
 
 ---
 
@@ -71,9 +71,8 @@ Character count: 1,289 / 4000
 - No mention of "reward," "real money," "cash," "prizes," or any wording that
   implies winning real-world value. All coins, XP, and levels are described
   as in-app/virtual only.
-- The leaderboard is described accurately as personal weekly tracking (the
-  app currently has no multiplayer/online leaderboard — see
-  `screens/LeaderboardScreen.tsx`), so the copy doesn't overclaim.
+- The Shop sells only virtual items for in-game coins; there are no real-money
+  purchases and no random paid rewards.
 - No game costs coins to play, so nothing in the app resembles betting.
 
 ## Suggested category

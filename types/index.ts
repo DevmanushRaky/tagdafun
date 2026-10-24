@@ -5,13 +5,13 @@ import { GAME_CONFIG } from '../constants/gameConfig';
 export type RootTabParamList = {
   Home: undefined;
   Coins: undefined;
-  Leaderboard: undefined;
+  Shop: undefined;
   Profile: undefined;
 };
 
 export type HomeScreenProps = BottomTabScreenProps<RootTabParamList, 'Home'>;
 export type CoinsScreenProps = BottomTabScreenProps<RootTabParamList, 'Coins'>;
-export type LeaderboardScreenProps = BottomTabScreenProps<RootTabParamList, 'Leaderboard'>;
+export type ShopScreenProps = BottomTabScreenProps<RootTabParamList, 'Shop'>;
 export type ProfileScreenProps = BottomTabScreenProps<RootTabParamList, 'Profile'>;
 
 export type Language = 'en';

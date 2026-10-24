@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAudioPlayer } from 'expo-audio';
 import { playSound, useBackgroundMusic } from '../utils/sound';
 import { showRewardedAd } from '../services/rewardedAd';
+import { useShop } from '../contexts/ShopContext';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
 import { GAME_CONFIG } from '../constants/gameConfig';
@@ -489,12 +490,13 @@ interface ControlProps {
   disabled?: boolean;
   accent?: boolean;
   ad?: boolean;        // costs a rewarded ad
+  owned?: number;      // power-ups bought in the Shop; used instead of an ad
   loading?: boolean;
 }
 
 // Press feedback is a gentle scale, not an opacity fade: fading a shadowed circle on iOS
 // briefly draws its shadow as a polygon instead of a round shape.
-const Control: React.FC<ControlProps> = ({ icon, label, onPress, disabled, accent, ad, loading }) => {
+const Control: React.FC<ControlProps> = ({ icon, label, onPress, disabled, accent, ad, owned = 0, loading }) => {
   const press = useRef(new Animated.Value(1)).current;
   const to = (v: number) => Animated.spring(press, { toValue: v, tension: 300, friction: 12, useNativeDriver: true }).start();
 
@@ -514,9 +516,10 @@ const Control: React.FC<ControlProps> = ({ icon, label, onPress, disabled, accen
             : <Ionicons name={icon} size={20} color={disabled ? '#B0B8C1' : accent ? 'white' : COLORS.text} />}
         </View>
         {ad && !disabled && (
-          <View style={styles.adTag}>
-            <Ionicons name="play" size={7} color="white" />
-            <Text style={styles.adTagText}>AD</Text>
+          <View style={[styles.adTag, owned > 0 && styles.ownedTag]}>
+            {owned > 0
+              ? <Text style={styles.adTagText}>×{owned}</Text>
+              : <><Ionicons name="play" size={7} color="white" /><Text style={styles.adTagText}>AD</Text></>}
           </View>
         )}
       </Animated.View>
@@ -532,6 +535,7 @@ interface WaterSortingProps {
 
 const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
   const { stats, recordGame } = useGameStats();
+  const { shop, consumePowerUp } = useShop();
   const [ready, setReady] = useState(false);
   const [level, setLevel] = useState(1);
   const [bottles, setBottles] = useState<Bottles>([]);
@@ -891,7 +895,8 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
 
   const addBottle = async () => {
     if (pouringRef.current || won || celebrate || addedBottle || adBusy !== null) return;
-    if (!(await earnWithAd('bottle'))) return;
+    // A bottle bought in the Shop is used first; otherwise it costs a rewarded ad.
+    if (!consumePowerUp('waterBottle') && !(await earnWithAd('bottle'))) return;
     setBottles(prev => [...prev, []]);
     setAddedBottle(true);
   };
@@ -904,7 +909,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
       showToast(addedBottle ? 'No good move left, try Undo or Restart' : 'No good move left, try Undo or + Bottle');
       return;
     }
-    if (!(await earnWithAd('hint'))) return;
+    if (!consumePowerUp('waterHint') && !(await earnWithAd('hint'))) return;
     setHint(move);
     if (hintTimer.current) clearTimeout(hintTimer.current);
     hintTimer.current = setTimeout(() => setHint(null), HINT_SHOW_MS);
@@ -1099,8 +1104,8 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
       <View style={styles.controlsRow}>
         <Control icon="arrow-undo" label="Undo" onPress={undo} disabled={undoStack.length === 0} />
         <Control icon="refresh" label="Restart" onPress={restart} />
-        <Control icon="add" label={addedBottle ? 'Added' : 'Bottle'} onPress={addBottle} disabled={addedBottle} ad loading={adBusy === 'bottle'} />
-        <Control icon="bulb" label="Hint" onPress={showHint} accent ad loading={adBusy === 'hint'} />
+        <Control icon="add" label={addedBottle ? 'Added' : 'Bottle'} onPress={addBottle} disabled={addedBottle} ad owned={shop.powerUps.waterBottle} loading={adBusy === 'bottle'} />
+        <Control icon="bulb" label="Hint" onPress={showHint} accent ad owned={shop.powerUps.waterHint} loading={adBusy === 'hint'} />
       </View>
 
       {/* Win Modal */}
@@ -1234,6 +1239,7 @@ const styles = StyleSheet.create({
   controlCircle: { width: 46, height: 46, borderRadius: 23, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center', ...SHADOWS.card },
   controlCircleAccent: { backgroundColor: '#F9A825' },
   adTag: { position: 'absolute', top: -5, right: -9, flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#1E90FF', borderRadius: 8, paddingHorizontal: 5, paddingVertical: 2, borderWidth: 1.5, borderColor: 'white' },
+  ownedTag: { backgroundColor: '#2ED573' },
   adTagText: { fontSize: 8, fontWeight: '900', color: 'white', letterSpacing: 0.3 },
   controlCircleOff: { backgroundColor: '#EEF1F4', shadowOpacity: 0, elevation: 0 },
   controlLabelOff: { color: '#B0B8C1' },

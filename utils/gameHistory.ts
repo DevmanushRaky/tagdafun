@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const HISTORY_KEY = '@tagdafun_history_v1';
 const MAX_ENTRIES = 100;
 
-export type GameLogType = 'coin' | 'memory' | 'water' | 'ad';
+export type GameLogType = 'coin' | 'memory' | 'water' | 'ad' | 'gift' | 'shop';
 
 export interface GameLog {
   id: string;
@@ -13,6 +13,8 @@ export interface GameLog {
   choice?: 'heads' | 'tails';
   outcome?: 'heads' | 'tails';
   coinWon?: boolean;
+  // shop purchase: item title
+  item?: string;
   // rewarded ad
   adNetwork?: string;
   // memory cards

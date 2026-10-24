@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGameStats } from './GameStatsContext';
 import { logGame } from '../utils/gameHistory';
 import {
-  POWER_UPS, COIN_SKINS, CARD_BACKS, DAILY_GIFT_LADDER,
-  PowerUpId, CoinSkinId, CardBackId,
+  POWER_UPS, COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, DAILY_GIFT_LADDER,
+  PowerUpId, CoinSkinId, CardBackId, BottleThemeId,
 } from '../constants/shop';
 
 const SHOP_KEY = '@tagdafun_shop_v1';
@@ -15,6 +15,8 @@ interface ShopState {
   coinSkin: CoinSkinId;
   ownedBacks: CardBackId[];
   cardBack: CardBackId;
+  ownedThemes: BottleThemeId[];
+  waterTheme: BottleThemeId;
   giftLastDate: string;   // toDateString() of the last claim
   giftStreak: number;     // consecutive days claimed, 1-based
 }
@@ -25,6 +27,8 @@ const defaultShop = (): ShopState => ({
   coinSkin: 'gold',
   ownedBacks: ['navy'],
   cardBack: 'navy',
+  ownedThemes: ['classic'],
+  waterTheme: 'classic',
   giftLastDate: '',
   giftStreak: 0,
 });
@@ -40,6 +44,8 @@ interface ShopContextValue {
   selectSkin: (id: CoinSkinId) => void;
   buyBack: (id: CardBackId) => Promise<BuyResult>;
   selectBack: (id: CardBackId) => void;
+  buyTheme: (id: BottleThemeId) => Promise<BuyResult>;
+  selectTheme: (id: BottleThemeId) => void;
   /** Today's gift amount and which ladder step it is, or null when already claimed today. */
   giftToday: { amount: number; day: number } | null;
   claimGift: () => Promise<number>;
@@ -119,6 +125,18 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (shop.ownedBacks.includes(id)) save({ ...shop, cardBack: id });
   };
 
+  const buyTheme = async (id: BottleThemeId): Promise<BuyResult> => {
+    if (shop.ownedThemes.includes(id)) return 'owned';
+    const t = BOTTLE_THEMES.find(x => x.id === id)!;
+    if (!(await pay(t.price, `${t.title} bottles`))) return 'poor';
+    save({ ...shop, ownedThemes: [...shop.ownedThemes, id], waterTheme: id });
+    return 'ok';
+  };
+
+  const selectTheme = (id: BottleThemeId) => {
+    if (shop.ownedThemes.includes(id)) save({ ...shop, waterTheme: id });
+  };
+
   const nextStreak = shop.giftLastDate === yesterday() ? shop.giftStreak + 1 : 1;
   const giftToday = shop.giftLastDate === today()
     ? null
@@ -133,7 +151,7 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <ShopContext.Provider value={{ shop, buyPowerUp, consumePowerUp, buySkin, selectSkin, buyBack, selectBack, giftToday, claimGift }}>
+    <ShopContext.Provider value={{ shop, buyPowerUp, consumePowerUp, buySkin, selectSkin, buyBack, selectBack, buyTheme, selectTheme, giftToday, claimGift }}>
       {children}
     </ShopContext.Provider>
   );

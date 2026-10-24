@@ -12,7 +12,7 @@ All notable releases of Tagda Fun are documented here.
 - **Memory Cards** — Match the pairs to win coins and XP.
 - **Water Sorting** — Level-based bottle sorting puzzle with hints. Coin reward depends on moves vs. par (10–150 coins) plus +15 XP per win. Progress is saved between sessions.
 - **Ads (Unity LevelPlay)** — Banner and native ads, plus optional rewarded ads (+50 coins) after a game. See `ADS_INTEGRATION.md`.
-- **Shop** — Daily gift, power-ups (Memory hint, Water hint, extra bottle), coin skins and card backs, all bought with in-game coins.
+- **Shop** — Daily gift, power-ups (Memory hint, Water hint, extra bottle), coin skins, card backs and bottle themes, all bought with in-game coins.
 - **Redesigned Navigation** — 4-tab layout: Home, Coins, Shop, Profile.
 
 **Removed**

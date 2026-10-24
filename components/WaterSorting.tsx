@@ -12,6 +12,7 @@ import { playSound, useBackgroundMusic } from '../utils/sound';
 import { showRewardedAd } from '../services/rewardedAd';
 import StarRewardTiers from './StarRewardTiers';
 import { useShop } from '../contexts/ShopContext';
+import { bottleTheme, type BottleTheme } from '../constants/shop';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
 import { GAME_CONFIG, coinsForStars } from '../constants/gameConfig';
@@ -101,15 +102,15 @@ const bottlePath = (w: number, closed: boolean): string => {
 };
 
 /** Translucent glass body, sits behind the liquid. */
-const GlassBack: React.FC<{ width: number }> = ({ width }) => (
+const GlassBack: React.FC<{ width: number; fill: string }> = ({ width, fill }) => (
   <Svg width={width} height={BOTTLE_H} style={StyleSheet.absoluteFill} pointerEvents="none">
-    <Path d={bottlePath(width, true)} fill="rgba(255,255,255,0.42)" />
+    <Path d={bottlePath(width, true)} fill={fill} />
   </Svg>
 );
 
 /** Outline, lip and gloss streaks, sits in front of the liquid. */
-const GlassFront: React.FC<{ width: number; stroke: string; strokeWidth: number; plain?: boolean }> = ({
-  width, stroke, strokeWidth, plain,
+const GlassFront: React.FC<{ width: number; stroke: string; strokeWidth: number; plain?: boolean; lip?: string }> = ({
+  width, stroke, strokeWidth, plain, lip = 'rgba(110,130,150,0.6)',
 }) => {
   const nw = neckWidth(width);
   const x0 = (width - nw) / 2;
@@ -118,7 +119,7 @@ const GlassFront: React.FC<{ width: number; stroke: string; strokeWidth: number;
       <Path d={bottlePath(width, false)} stroke={stroke} strokeWidth={strokeWidth} fill="none" strokeLinejoin="round" />
       {!plain && (
         <>
-          <Rect x={x0 - 3} y={0} width={nw + 6} height={7} rx={3.5} fill="rgba(110,130,150,0.6)" />
+          <Rect x={x0 - 3} y={0} width={nw + 6} height={7} rx={3.5} fill={lip} />
           <Rect x={x0 + 2} y={1.5} width={nw - 4} height={2} rx={1} fill="rgba(255,255,255,0.75)" />
           <Path d={`M ${x0 + 4} 10 L ${x0 + 4} ${NECK_H - 2}`} stroke="rgba(255,255,255,0.7)" strokeWidth={2.5} strokeLinecap="round" />
           <Path d={`M 7 ${LIQ_TOP + 6} L 7 ${BOTTLE_H - 32}`} stroke="rgba(255,255,255,0.7)" strokeWidth={4} strokeLinecap="round" />
@@ -132,6 +133,7 @@ const GlassFront: React.FC<{ width: number; stroke: string; strokeWidth: number;
 // ── One bottle ─────────────────────────────────────────────────────────────
 interface BottleViewProps {
   bottle: number[];
+  theme: BottleTheme;
   width: number;
   selected: boolean;
   hinted: boolean;
@@ -159,7 +161,7 @@ const LayerBlock: React.FC<{ colorIdx: number }> = ({ colorIdx }) => (
 );
 
 const BottleView: React.FC<BottleViewProps> = ({
-  bottle, width, selected, hinted, shakeToken, role, fx, travel, tilt, flow, disabled,
+  bottle, theme, width, selected, hinted, shakeToken, role, fx, travel, tilt, flow, disabled,
   enterDelay, celebrate, celebrateDelay, onPress,
 }) => {
   const lift = useRef(new Animated.Value(0)).current;
@@ -272,7 +274,7 @@ const BottleView: React.FC<BottleViewProps> = ({
           ],
         }}
       >
-        <GlassBack width={width} />
+        <GlassBack width={width} fill={theme.glass} />
 
         {/* Liquid column, clipped to the rounded base */}
         <View style={styles.tube}>
@@ -302,7 +304,8 @@ const BottleView: React.FC<BottleViewProps> = ({
 
         <GlassFront
           width={width}
-          stroke={selected ? '#1E90FF' : 'rgba(95,115,135,0.6)'}
+          stroke={selected ? '#1E90FF' : theme.stroke}
+          lip={theme.lip}
           strokeWidth={selected ? 3.5 : 2.5}
         />
 
@@ -537,6 +540,7 @@ interface WaterSortingProps {
 const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
   const { stats, recordGame } = useGameStats();
   const { shop, consumePowerUp } = useShop();
+  const theme = bottleTheme(shop.waterTheme);
   const [ready, setReady] = useState(false);
   const [level, setLevel] = useState(1);
   const [bottles, setBottles] = useState<Bottles>([]);
@@ -998,7 +1002,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
       </LinearGradient>
 
       {/* Board */}
-      <LinearGradient colors={['#E9F5FF', '#D2E9FA']} style={styles.panel}>
+      <LinearGradient colors={theme.panel} style={styles.panel}>
         <View
           style={{ height: boardH * scale }}
           onLayout={e => {
@@ -1017,7 +1021,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
             <View
               key={`sh${i}`}
               pointerEvents="none"
-              style={[styles.floorShadow, { left: s.x + 2, top: s.y + BOTTLE_H - 4, width: bottleW - 4 }]}
+              style={[styles.floorShadow, { backgroundColor: theme.floor, left: s.x + 2, top: s.y + BOTTLE_H - 4, width: bottleW - 4 }]}
             />
           ))}
 
@@ -1034,6 +1038,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
                 }}
               >
                 <BottleView
+                  theme={theme}
                   bottle={b}
                   width={bottleW}
                   selected={selected === idx}

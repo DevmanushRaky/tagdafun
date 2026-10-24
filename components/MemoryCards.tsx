@@ -10,7 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
-import { GAME_CONFIG } from '../constants/gameConfig';
+import { GAME_CONFIG, coinsForStars } from '../constants/gameConfig';
+import StarRewardTiers from './StarRewardTiers';
 import { logGame } from '../utils/gameHistory';
 import { showRewardedAd } from '../services/rewardedAd';
 import { useShop } from '../contexts/ShopContext';
@@ -415,12 +416,13 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
       Animated.spring(a, { toValue: 1, useNativeDriver: true, speed: 12, bounciness: 14 }),
     )).start();
 
-    await recordGame('memory');
+    const coins = coinsForStars(stars);
+    await recordGame('memory', undefined, coins);
     await logGame({
       gameType: 'memory',
-      costCoins: GAME_CONFIG.memory.costToPlay,
-      earnedCoins: GAME_CONFIG.memory.coinsPerWin,
-      netCoins: GAME_CONFIG.memory.coinsPerWin,
+      costCoins: 0,
+      earnedCoins: coins,
+      netCoins: coins,
       memoryLevel: lvl,
       stars,
       timestamp: Date.now(),
@@ -751,8 +753,9 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
             {/* Coins reward */}
             <LinearGradient colors={['#FF8C42', '#FF6B00']} style={styles.winRewardBox} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Ionicons name="wallet" size={20} color="white" />
-              <Text style={styles.winRewardText}>+{GAME_CONFIG.memory.coinsPerWin} Coins Earned!</Text>
+              <Text style={styles.winRewardText}>+{coinsForStars(earnedStars)} Coins Earned!</Text>
             </LinearGradient>
+            <StarRewardTiers stars={earnedStars} />
 
             {/* New balance */}
             <View style={styles.winBalanceRow}>

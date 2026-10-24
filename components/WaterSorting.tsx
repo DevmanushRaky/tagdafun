@@ -10,14 +10,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAudioPlayer } from 'expo-audio';
 import { playSound, useBackgroundMusic } from '../utils/sound';
 import { showRewardedAd } from '../services/rewardedAd';
+import StarRewardTiers from './StarRewardTiers';
 import { useShop } from '../contexts/ShopContext';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constants/theme';
-import { GAME_CONFIG } from '../constants/gameConfig';
+import { GAME_CONFIG, coinsForStars } from '../constants/gameConfig';
 import { logGame } from '../utils/gameHistory';
 import {
   WATER_COLORS, BOTTLE_CAPACITY, Bottles, PourMove, cloneBottles, colorsForLevel,
-  pourAmount, applyPour, isSolved, isCompleteBottle, generateLevel, suggestHint, waterReward,
+  pourAmount, applyPour, isSolved, isCompleteBottle, generateLevel, suggestHint, waterStars,
   difficultyForLevel,
 } from '../utils/waterSort';
 
@@ -693,21 +694,15 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
   }, [won, winCard]);
 
   const handleWin = useCallback(async (finalMoves: number) => {
-    const cfg = GAME_CONFIG.water;
-    const reward = waterReward(finalMoves, par, {
-      baseWinCoins: cfg.baseWinCoins,
-      overParPenalty: cfg.overParPenalty,
-      minWinCoins: cfg.minWinCoins,
-      underParBonus: cfg.underParBonus,
-      maxWinCoins: cfg.maxWinCoins,
-    });
+    const finalStars = waterStars(finalMoves, par);
+    const reward = coinsForStars(finalStars);
     // The only vibration in this game: clearing a level.
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     playSound(winSound);
     setEarned(reward);
     setCelebrate(true);
     later(() => setWon(true), bottles.length * CELEBRATE_STAGGER_MS + 550);
-    await recordGame('water', { totalCoins: stats.totalCoins + reward });
+    await recordGame('water', undefined, reward);
     await logGame({
       timestamp: Date.now(),
       gameType: 'water',
@@ -717,12 +712,12 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
       moves: finalMoves,
       par,
       waterLevel: level,
-      stars: finalMoves <= Math.ceil(par * 1.2) ? 3 : finalMoves <= Math.ceil(par * 1.6) ? 2 : 1,
+      stars: finalStars,
     });
     await AsyncStorage.setItem(LEVEL_KEY, String(level + 1)).catch(() => {});
     await AsyncStorage.removeItem(PROGRESS_KEY).catch(() => {});
     onWin();
-  }, [par, level, stats.totalCoins, recordGame, onWin, bottles.length, winSound]);
+  }, [par, level, recordGame, onWin, bottles.length, winSound]);
 
   // ── Layout ──
   const count = bottles.length;
@@ -931,7 +926,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
   const done = bottles.filter(isCompleteBottle).length;
   const progress = Math.min(1, done / totalColors);
   const underPar = par - moves;
-  const stars = moves <= Math.ceil(par * 1.2) ? 3 : moves <= Math.ceil(par * 1.6) ? 2 : 1;
+  const stars = waterStars(moves, par);
   const movesColor = moves > Math.ceil(par * 1.5) ? '#FF6B6B' : moves > par ? '#FFC107' : 'white';
   const sortedColors = new Set(bottles.filter(isCompleteBottle).map(b => b[0]));
   // One row of dots, shrinking if needed: header padding, the count and the music button take ~110px.
@@ -1133,6 +1128,7 @@ const WaterSorting: React.FC<WaterSortingProps> = ({ onWin }) => {
               <Ionicons name="wallet" size={20} color="white" />
               <Text style={styles.winRewardText}>+{earned} Coins Earned!</Text>
             </LinearGradient>
+            <StarRewardTiers stars={stars} />
 
             <View style={styles.winBalanceRow}>
               <Text style={styles.winBalanceLabel}>New Balance</Text>

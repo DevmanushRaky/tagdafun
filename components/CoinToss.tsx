@@ -111,7 +111,7 @@ export const CoinFace: React.FC<{ side: Side; size: number; skin?: CoinPalette }
         <Emboss p={p} metal={`url(#metal${u})`}>
           {fill => (
             <SvgText x="100" y="136" fill={fill} fontSize="78" fontWeight="900" textAnchor="middle">
-              {GAME_CONFIG.coin.coinsPerPlay}
+              {GAME_CONFIG.coin.winCoins}
             </SvgText>
           )}
         </Emboss>
@@ -194,8 +194,9 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
         Haptics.notificationAsync(win ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning).catch(() => {});
         if (win) playSound(winSound);
 
-        await recordGame('coin', win ? { coinWins: stats.coinWins + 1, coinFlips: stats.coinFlips + 1 } : { coinFlips: stats.coinFlips + 1 });
-        await logGame({ timestamp: Date.now(), gameType: 'coin', choice, outcome, coinWon: win, costCoins: 0, earnedCoins: 5, netCoins: 5 });
+        const coins = win ? GAME_CONFIG.coin.winCoins : GAME_CONFIG.coin.loseCoins;
+        await recordGame('coin', win ? { coinWins: stats.coinWins + 1, coinFlips: stats.coinFlips + 1 } : { coinFlips: stats.coinFlips + 1 }, coins);
+        await logGame({ timestamp: Date.now(), gameType: 'coin', choice, outcome, coinWon: win, costCoins: 0, earnedCoins: coins, netCoins: coins });
       }, TOSS_MS),
       setTimeout(() => {
         onShowResult('coin', outcome, win ? 'You won!' : 'Try again!', outcome, win);
@@ -203,7 +204,6 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
     ];
   };
 
-  const earned = `+${GAME_CONFIG.coin.coinsPerPlay} coins`;
   const status = isFlipping
     ? { icon: 'sync', color: 'rgba(255,255,255,0.75)', tint: null, text: 'Flipping...' }
     : lastResult
@@ -211,7 +211,7 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
           icon: lastResult.win ? 'checkmark-circle' : 'close-circle',
           color: lastResult.win ? '#2ED573' : '#FF6B6B',
           tint: lastResult.win ? 'rgba(46,213,115,0.14)' : 'rgba(255,107,107,0.14)',
-          text: `${lastResult.outcome.toUpperCase()} · ${lastResult.win ? 'You won' : 'You lost'} · ${earned}`,
+          text: `${lastResult.outcome.toUpperCase()} · ${lastResult.win ? 'You won' : 'You lost'} · +${lastResult.win ? GAME_CONFIG.coin.winCoins : GAME_CONFIG.coin.loseCoins} coins`,
         }
       : { icon: 'hand-left-outline', color: 'rgba(255,255,255,0.75)', tint: null, text: 'Pick your side and flip' };
 
@@ -275,7 +275,7 @@ const CoinToss: React.FC<CoinTossProps> = ({ onShowResult }) => {
       {/* Earn info */}
       <View style={styles.earnRow}>
         <Ionicons name="wallet" size={14} color="#F9A825" />
-        <Text style={styles.earnText}>Win or lose — earn <Text style={styles.earnBold}>+{GAME_CONFIG.coin.coinsPerPlay} coins</Text> per flip</Text>
+        <Text style={styles.earnText}>Win <Text style={styles.earnBold}>+{GAME_CONFIG.coin.winCoins}</Text> · Lose <Text style={styles.earnBold}>+{GAME_CONFIG.coin.loseCoins}</Text> coins per flip</Text>
       </View>
 
       {/* Flip button */}

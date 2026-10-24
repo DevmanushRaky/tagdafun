@@ -22,14 +22,24 @@ Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memo
 
 ## Games
 
+### Coin rewards
+All values live in `constants/gameConfig.ts`.
+
+| Game | Coins |
+|------|-------|
+| Coin Toss | **+10** for a right call, **+5** for a wrong one |
+| Memory Cards and Water Sorting | per cleared level by stars: **3★ = 150**, **2★ = 100**, **1★ = 80** (`STAR_REWARDS`) |
+| Daily challenge | +25 |
+| Daily gift (Shop) | 10 → 60 over a 7-day run |
+
 ### Coin Toss — Free to play
 - Pick **Heads** or **Tails**
 - 3D animated coin flip
-- Always earn **+5 coins** and **+10 XP** per flip
+- **+10 coins** for a right call, **+5** for a wrong one, and **+10 XP** per flip
 - Track your win streak and total flips
 
 ### Memory Cards — Free to play
-- Flip cards and match all the pairs; earn **+10 coins** and **+15 XP** per cleared level
+- Flip cards and match all the pairs; earn **80 / 100 / 150 coins** for 1★ / 2★ / 3★ and **+15 XP** per cleared level
 - **Levels** (saved between sessions): 4 cards per row, sized so the Hint button stays on screen: 4×3 (6 pairs) → 4×4 (8) → 4×4 (7 + 2 bombs) → 4×5 (9 + 2 bombs) → 4×5 (8 + 4 bombs) for every level after
 - **Stars** by moves: 3★ within `ceil(pairs × 1.6)` moves, 2★ within `ceil(pairs × 2.4)`, else 1★. Best stars per level are saved
 - **Bombs** (from Level 3): flipping one explodes it, adds +2 moves and reshuffles every unmatched card; matched pairs stay put
@@ -41,7 +51,7 @@ Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memo
 ### Water Sorting — Free to play
 - Pour water between bottles until every bottle holds a single colour
 - Level-based, with hints; progress is saved between sessions
-- Reward depends on your moves vs. par: **100 coins** at par, up to **150** if under par, down to **10** if far over
+- Stars by moves vs. the best possible (par): 3★ within 20% over par, 2★ within 60%, else 1★ (`waterStars` in `utils/waterSort.ts`). Coins: **80 / 100 / 150** for 1★ / 2★ / 3★
 - Earn **+15 XP** per win
 - **Hint** and **+ Bottle** each cost a rewarded ad. The hint is checked first, so no ad is shown when there is no useful move. The extra bottle (one per level) stays through Undo and Restart, since it was paid for
 - Sounds: pour, a glass "ting" when a bottle is finished, a steel-drum jingle on a win, and a calm looping melody (toggle 🎵 in the header, saved). Music pauses during ads and dips under the win jingle
@@ -88,9 +98,10 @@ Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memo
 Coins have no cash value; this is where they are spent. Catalog and prices live in `constants/shop.ts`, ownership in `contexts/ShopContext.tsx` (saved locally).
 
 - **Daily gift**: free coins once a day, climbing 10 → 15 → 20 → 25 → 30 → 40 → 60 on consecutive days; a missed day starts over at day 1
-- **Power-ups** (stack, used one at a time): Memory Hint 40, Water Hint 30, Extra Bottle 60. A game uses an owned power-up first and only falls back to a rewarded ad when you have none. The hint and bottle buttons show `×N` instead of `AD` while you own some
-- **Coin skins** for Coin Toss (also shown on the Home card): Gold (free), Silver 300, Rose Gold 600, Emerald 1000, Diamond 2000
-- **Card backs** for Memory Cards: Navy (free), Galaxy 400, Sunset 400, Ocean 700
+- **Power-ups** (stack, used one at a time): Memory Hint 100, Water Hint 80, Extra Bottle 150. A game uses an owned power-up first and only falls back to a rewarded ad when you have none. The hint and bottle buttons show `×N` instead of `AD` while you own some
+- **Coin skins** for Coin Toss (also shown on the Home card): Gold (free), Silver 1,000, Rose Gold 2,500, Emerald 4,000, Diamond 7,500
+- **Card backs** for Memory Cards: Navy (free), Galaxy 1,500, Sunset 1,500, Ocean 3,000
+- Unlocking every skin and card back costs **21,000 coins**, about 175 levels at a 2–3★ average
 - Every purchase asks for confirmation and is logged in the Coins history
 - No random "mystery box": paid random rewards count as loot boxes on Google Play
 

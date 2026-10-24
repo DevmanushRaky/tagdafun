@@ -48,7 +48,8 @@ interface GameStatsContextValue {
   stats: PlayerStats;
   levelInfo: LevelInfo;
   achievements: Achievement[];
-  recordGame: (gameType: GameType, extra?: Partial<PlayerStats>) => Promise<Achievement[]>;
+  /** Records a finished game; `coins` is what that game paid out. */
+  recordGame: (gameType: GameType, extra?: Partial<PlayerStats>, coins?: number) => Promise<Achievement[]>;
   newlyUnlocked: Achievement[];
   clearNewlyUnlocked: () => void;
   addBonusCoins: (amount: number, source?: 'ad' | 'daily' | 'gift', xp?: number) => Promise<void>;
@@ -109,9 +110,12 @@ function seedCoinsEarned(saved: Partial<PlayerStats>, historyRaw: string | null)
       if (l.gameType === 'ad') ad += l.earnedCoins ?? 0;
     }
   } catch {}
+  // The rates these games paid before the star-based rewards.
+  const LEGACY_COIN_PER_FLIP = 5;
+  const LEGACY_MEMORY_PER_WIN = 10;
   return {
-    coin: (played.coin ?? 0) * GAME_CONFIG.coin.coinsPerPlay,
-    memory: (played.memory ?? 0) * GAME_CONFIG.memory.coinsPerWin,
+    coin: (played.coin ?? 0) * LEGACY_COIN_PER_FLIP,
+    memory: (played.memory ?? 0) * LEGACY_MEMORY_PER_WIN,
     water,
     ad,
     daily: 0,
@@ -221,7 +225,7 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
       unlockedAt: stats.achievementUnlockTimes[def.id],
     })), [stats]);
 
-  const recordGame = useCallback(async (gameType: GameType, extra?: Partial<PlayerStats>): Promise<Achievement[]> => {
+  const recordGame = useCallback(async (gameType: GameType, extra?: Partial<PlayerStats>, coins = 0): Promise<Achievement[]> => {
     let s = updateStreak({ ...stats });
     s.gamesPlayed = { ...s.gamesPlayed, [gameType]: s.gamesPlayed[gameType] + 1 };
     s.totalGamesPlayed += 1;
@@ -229,8 +233,7 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const xpMap: Record<GameType, number> = { coin: GAME_CONFIG.coin.xpPerPlay, memory: GAME_CONFIG.memory.xpPerWin, water: GAME_CONFIG.water.xpPerWin };
     s.totalXP += xpMap[gameType];
-    if (gameType === 'coin') s.totalCoins += GAME_CONFIG.coin.coinsPerPlay;
-    if (gameType === 'memory') s.totalCoins += GAME_CONFIG.memory.coinsPerWin;
+    s.totalCoins += coins;
     const gained = s.totalCoins - stats.totalCoins;
     if (gained > 0) s.coinsEarned = { ...s.coinsEarned, [gameType]: s.coinsEarned[gameType] + gained };
     s.level = calculateLevel(s.totalXP);

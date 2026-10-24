@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const HISTORY_KEY = '@tagdafun_history_v1';
 const MAX_ENTRIES = 100;
 
-export type GameLogType = 'coin' | 'spin' | 'memory' | 'water' | 'ad';
+export type GameLogType = 'coin' | 'memory' | 'water' | 'ad';
 
 export interface GameLog {
   id: string;
@@ -13,10 +13,12 @@ export interface GameLog {
   choice?: 'heads' | 'tails';
   outcome?: 'heads' | 'tails';
   coinWon?: boolean;
-  // spin
-  wheelValue?: number;
   // rewarded ad
   adNetwork?: string;
+  // memory cards
+  memoryLevel?: number;
+  // memory cards + water sorting
+  stars?: number;
   // water sorting
   moves?: number;
   par?: number;
@@ -38,8 +40,9 @@ export async function getHistory(): Promise<GameLog[]> {
   const raw = await AsyncStorage.getItem(HISTORY_KEY);
   if (!raw) return [];
   const all: GameLog[] = JSON.parse(raw);
-  // Filter out any corrupt entries with missing or invalid timestamps
-  return all.filter(e => e && typeof e.timestamp === 'number' && !isNaN(e.timestamp) && e.timestamp > 0);
+  // Drop corrupt entries, and entries from the removed Spin Roulette game that older installs may still hold.
+  return all.filter(e =>
+    e && typeof e.timestamp === 'number' && !isNaN(e.timestamp) && e.timestamp > 0 && (e.gameType as string) !== 'spin');
 }
 
 export async function clearHistory(): Promise<void> {

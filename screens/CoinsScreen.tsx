@@ -1,16 +1,28 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, RefreshControl,
+  View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { useGameStats } from '../contexts/GameStatsContext';
+import { useGameStats, CoinSource } from '../contexts/GameStatsContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
+import { GAME_CONFIG } from '../constants/gameConfig';
 import { GAMES } from '../types';
-import { getHistory, GameLog, formatTime, formatDate } from '../utils/gameHistory';
-import RewardedAdButton from '../components/ads/RewardedAdButton';
+import { getHistory, GameLog, GameLogType, formatTime, formatDate } from '../utils/gameHistory';
+import { GameIcon } from '../components/GameIcons';
+
+const PAGE_SIZE = 20;
+
+type Filter = 'all' | GameLogType;
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'coin', label: 'Coin Toss' },
+  { id: 'memory', label: 'Memory' },
+  { id: 'water', label: 'Water' },
+  { id: 'ad', label: 'Ads' },
+];
 
 interface DayGroup { label: string; entries: GameLog[]; }
 
@@ -24,41 +36,58 @@ function groupByDay(logs: GameLog[]): DayGroup[] {
   return Array.from(map.entries()).map(([label, entries]) => ({ label, entries }));
 }
 
+interface SourceRow {
+  id: CoinSource;
+  title: string;
+  sub: string;
+  color: string;
+  earned: number;
+  icon: React.ReactNode;
+}
+
 const CoinsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { stats } = useGameStats();
   const [history, setHistory] = useState<GameLog[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [shown, setShown] = useState(PAGE_SIZE);
 
   const load = async () => { const h = await getHistory(); setHistory(h); };
   useFocusEffect(useCallback(() => { load(); }, []));
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
-  const memoryActualEarned = history
-    .filter(h => h.gameType === 'memory')
-    .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
-  const memoryPlays = history.filter(h => h.gameType === 'memory').length;
+  // Lifetime totals live in stats, so they never shrink when old history entries drop off.
+  const earned = stats.coinsEarned;
+  const played = stats.gamesPlayed;
+  const subFor: Record<string, string> = {
+    coin: `${played.coin} flips · +${GAME_CONFIG.coin.coinsPerPlay} each`,
+    memory: `${played.memory} levels · +${GAME_CONFIG.memory.coinsPerWin} per level`,
+    water: `${played.water} levels · up to ${GAME_CONFIG.water.maxWinCoins} each`,
+  };
+  const rows: SourceRow[] = [
+    ...GAMES.map(g => ({
+      id: g.id as CoinSource,
+      title: g.title,
+      sub: subFor[g.id] ?? '',
+      color: g.color,
+      earned: earned[g.id as CoinSource] ?? 0,
+      icon: <GameIcon id={g.id} size={30} />,
+    })),
+    {
+      id: 'daily', title: 'Daily Challenge', sub: `+${GAME_CONFIG.dailyChallenge.coinsReward} per completed day`,
+      color: COLORS.primary, earned: earned.daily, icon: <Ionicons name="flash" size={22} color={COLORS.primary} />,
+    },
+    {
+      id: 'ad', title: 'Rewarded Ads', sub: 'Coins from watching ads',
+      color: '#A55EEA', earned: earned.ad, icon: <Ionicons name="play-circle" size={24} color="#A55EEA" />,
+    },
+  ];
+  const totalEarned = rows.reduce((sum, r) => sum + r.earned, 0);
 
-  const waterActualEarned = history
-    .filter(h => h.gameType === 'water')
-    .reduce((sum, h) => sum + (h.earnedCoins ?? 0), 0);
-
-  const gameBreakdown = GAMES.map(g => {
-    const plays = g.id === 'memory'
-      ? memoryPlays
-      : g.id === 'water'
-        ? stats.gamesPlayed.water ?? 0
-        : stats.gamesPlayed.coin ?? 0;
-    const earned = g.id === 'memory'
-      ? memoryActualEarned
-      : g.id === 'water'
-        ? waterActualEarned
-        : plays * g.coinsPerPlay;
-    return { ...g, plays, earned };
-  });
-
-  const totalEarned = gameBreakdown.reduce((sum, g) => sum + g.earned, 0);
-  const dayGroups = groupByDay(history);
+  const filtered = filter === 'all' ? history : history.filter(h => h.gameType === filter);
+  const dayGroups = groupByDay(filtered.slice(0, shown));
+  const pickFilter = (f: Filter) => { setFilter(f); setShown(PAGE_SIZE); };
 
   return (
     <ScrollView
@@ -67,99 +96,90 @@ const CoinsScreen: React.FC = () => {
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {/* Balance Hero */}
-      <LinearGradient colors={['#F9A825', '#FF6B00']} style={[styles.hero, { paddingTop: insets.top + 20 }]}>
-        <Ionicons name="wallet" size={44} color="white" />
-        <Text style={styles.heroBalance}>{stats.totalCoins}</Text>
-        <Text style={styles.heroLabel}>Your Coin Balance</Text>
+      {/* Balance */}
+      <LinearGradient colors={['#001A33', '#002A52', '#0B3F70']} style={[styles.hero, { paddingTop: insets.top + 16 }]}>
+        <View style={styles.glow} />
+        <Text style={styles.heroLabel}>COIN BALANCE</Text>
+        <View style={styles.balanceRow}>
+          <Ionicons name="wallet" size={30} color="#FFC83D" />
+          <Text style={styles.heroBalance}>{stats.totalCoins}</Text>
+        </View>
+        <View style={styles.heroStats}>
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatValue}>{totalEarned}</Text>
+            <Text style={styles.heroStatLabel}>Total earned</Text>
+          </View>
+          <View style={styles.heroDivider} />
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatValue}>{stats.totalGamesPlayed}</Text>
+            <Text style={styles.heroStatLabel}>Games played</Text>
+          </View>
+        </View>
       </LinearGradient>
 
-      {/* Quick stats */}
-      <View style={styles.infoRow}>
-        <View style={styles.infoCard}>
-          <Ionicons name="game-controller" size={20} color={COLORS.primary} />
-          <Text style={styles.infoNum}>{stats.totalGamesPlayed}</Text>
-          <Text style={styles.infoLabel}>Games Played</Text>
-        </View>
-        <View style={styles.infoCard}>
-          <Ionicons name="cash" size={20} color="#F9A825" />
-          <Text style={styles.infoNum}>{totalEarned}</Text>
-          <Text style={styles.infoLabel}>Total Earned</Text>
-        </View>
-        <View style={styles.infoCard}>
-          <Ionicons name="trending-up" size={20} color="#2ED573" />
-          <Text style={styles.infoNum}>
-            {stats.totalGamesPlayed > 0 ? Math.round(totalEarned / stats.totalGamesPlayed) : 0}
-          </Text>
-          <Text style={styles.infoLabel}>Per Game</Text>
-        </View>
-      </View>
-
-      <RewardedAdButton onRewarded={load} />
-
-      {/* Game breakdown */}
+      {/* Where the coins came from */}
       <View style={styles.section}>
-        <View style={styles.sectionTitleRow}>
-          <Ionicons name="bar-chart" size={18} color={COLORS.text} />
-          <Text style={styles.sectionTitle}>Coins by Game</Text>
-        </View>
-        {gameBreakdown.map(g => (
-          <View key={g.id} style={styles.breakdownRow}>
-            <View style={[styles.breakdownIconBox, { backgroundColor: g.color + '20' }]}>
-              <Ionicons name={g.icon as any} size={24} color={g.color} />
-            </View>
-            <View style={styles.breakdownInfo}>
-              <Text style={styles.breakdownName}>{g.title}</Text>
-              <Text style={styles.breakdownPlays}>
-                {g.id === 'memory'
-                  ? `${g.plays} games · +10 coins per win`
-                  : g.id === 'water'
-                    ? `${g.plays} levels · up to 150 coins`
-                    : `${g.plays} plays × ${g.coinsPerPlay} coins each`}
-              </Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, {
-                  width: totalEarned > 0 ? `${Math.round((g.earned / totalEarned) * 100)}%` : '0%',
-                  backgroundColor: g.color,
-                }]} />
+        <Text style={styles.sectionTitle}>Where your coins came from</Text>
+        <View style={styles.card}>
+          {rows.map((r, i) => (
+            <View key={r.id} style={[styles.sourceRow, i > 0 && styles.sourceRowBorder]}>
+              <View style={[styles.sourceIcon, { backgroundColor: r.color + '1A' }]}>{r.icon}</View>
+              <View style={styles.sourceInfo}>
+                <Text style={styles.sourceTitle}>{r.title}</Text>
+                <Text style={styles.sourceSub}>{r.sub}</Text>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, {
+                    width: totalEarned > 0 ? `${Math.round((r.earned / totalEarned) * 100)}%` : '0%',
+                    backgroundColor: r.color,
+                  }]} />
+                </View>
               </View>
+              <Text style={styles.sourceEarned}>{r.earned}</Text>
             </View>
-            <View style={styles.breakdownRight}>
-              <Text style={styles.breakdownEarned}>{g.earned}</Text>
-              <Ionicons name="wallet" size={13} color="#F9A825" />
-            </View>
-          </View>
-        ))}
+          ))}
+        </View>
       </View>
 
-      {/* Game History */}
+      {/* History */}
       <View style={styles.section}>
-        <View style={styles.sectionTitleRow}>
-          <Ionicons name="receipt" size={18} color={COLORS.text} />
+        <View style={styles.historyHeader}>
           <Text style={styles.sectionTitle}>History</Text>
-          {history.length > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{history.length}</Text>
-            </View>
-          )}
+          <Text style={styles.historyNote}>Last {history.length} plays</Text>
         </View>
-        {history.length === 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+          {FILTERS.map(f => {
+            const active = filter === f.id;
+            return (
+              <TouchableOpacity key={f.id} onPress={() => pickFilter(f.id)} style={[styles.filterChip, active && styles.filterChipOn]} activeOpacity={0.8}>
+                <Text style={[styles.filterText, active && styles.filterTextOn]}>{f.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {filtered.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Ionicons name="game-controller-outline" size={48} color={COLORS.textLight} />
-            <Text style={styles.emptyTitle}>No games yet</Text>
-            <Text style={styles.emptyText}>Your game history will appear here</Text>
+            <Ionicons name="game-controller-outline" size={44} color={COLORS.textLight} />
+            <Text style={styles.emptyTitle}>{history.length === 0 ? 'No games yet' : 'Nothing here yet'}</Text>
+            <Text style={styles.emptyText}>Your plays will show up here</Text>
           </View>
         ) : (
-          dayGroups.map(group => (
-            <View key={group.label}>
-              <View style={styles.dayRow}>
-                <View style={styles.dayLine} />
+          <>
+            {dayGroups.map(group => (
+              <View key={group.label}>
                 <Text style={styles.dayLabel}>{group.label}</Text>
-                <View style={styles.dayLine} />
+                <View style={styles.card}>
+                  {group.entries.map((log, i) => <LogRow key={log.id} log={log} first={i === 0} />)}
+                </View>
               </View>
-              {group.entries.map(log => <LogRow key={log.id} log={log} />)}
-            </View>
-          ))
+            ))}
+            {filtered.length > shown && (
+              <TouchableOpacity style={styles.moreBtn} onPress={() => setShown(n => n + PAGE_SIZE)} activeOpacity={0.8}>
+                <Text style={styles.moreText}>Show more</Text>
+                <Ionicons name="chevron-down" size={16} color={COLORS.primary} />
+              </TouchableOpacity>
+            )}
+          </>
         )}
       </View>
     </ScrollView>
@@ -167,75 +187,61 @@ const CoinsScreen: React.FC = () => {
 };
 
 // ── Log Row ──────────────────────────────────────────────────────────────────
-const LogRow: React.FC<{ log: GameLog }> = ({ log }) => {
-  const isCoin   = log.gameType === 'coin';
-  const isSpin   = log.gameType === 'spin';
-  const isMemory = log.gameType === 'memory';
-  const isAd     = log.gameType === 'ad';
-  const isWater  = log.gameType === 'water';
+const Stars: React.FC<{ count: number }> = ({ count }) => (
+  <View style={styles.logStars}>
+    {[1, 2, 3].map(n => <Ionicons key={n} name="star" size={11} color={n <= count ? '#F5B820' : '#DADDE1'} />)}
+  </View>
+);
 
-  const coinWon     = log.coinWon;
-  const headsOrTails = log.outcome ? log.outcome.charAt(0).toUpperCase() + log.outcome.slice(1) : '';
-  const wheelVal    = log.wheelValue ?? 0;
+const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
+  const t = log.gameType;
 
-  const iconName  = isAd ? 'play-circle' : isCoin ? 'cash-outline' : isSpin ? 'refresh-circle-outline' : isWater ? 'water-outline' : 'albums-outline';
-  const iconColor = isAd ? '#A55EEA'     : isCoin ? '#F9A825'      : isSpin ? '#E91E8C'                : isWater ? '#2ED573' : '#00B4D8';
-  const iconBg    = isAd ? 'rgba(165,94,234,0.15)' : isCoin ? 'rgba(249,168,37,0.15)' : isSpin ? 'rgba(233,30,140,0.15)' : isWater ? 'rgba(46,213,115,0.15)' : 'rgba(0,180,216,0.15)';
-  const title     = isAd ? 'Rewarded Ad' : isCoin ? 'Coin Toss' : isSpin ? 'Spin Roulette' : isWater ? 'Water Sorting' : 'Memory Cards';
+  const title = t === 'ad' ? 'Rewarded Ad'
+    : t === 'coin' ? 'Coin Toss'
+    : t === 'memory' ? 'Memory Cards'
+    : 'Water Sorting';
 
-  const displayRight = isAd
-    ? { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'ad reward' }
-    : isCoin
-      ? { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'earned' }
-      : isSpin
-        ? wheelVal > 0
-          ? { label: `+${wheelVal}`, color: '#2ED573', sub: `−${log.costCoins} cost` }
-          : { label: '0', color: '#F9A825', sub: `−${log.costCoins} cost` }
-        : { label: `+${log.earnedCoins}`, color: '#2ED573', sub: 'won' };
+  const icon = t === 'ad'
+    ? <Ionicons name="play-circle" size={22} color="#A55EEA" />
+    : <GameIcon id={t} size={26} />;
+
+  let detail: React.ReactNode = null;
+  if (t === 'coin') {
+    const side = log.outcome ? log.outcome.charAt(0).toUpperCase() + log.outcome.slice(1) : '';
+    detail = (
+      <Text style={[styles.logDetail, { color: log.coinWon ? '#2ED573' : '#E74C3C' }]}>
+        {side} · {log.coinWon ? 'Won' : 'Lost'}
+      </Text>
+    );
+  } else if (t === 'memory') {
+    detail = log.memoryLevel
+      ? <View style={styles.detailRow}><Text style={styles.logDetail}>Level {log.memoryLevel}</Text>{log.stars ? <Stars count={log.stars} /> : null}</View>
+      : <Text style={styles.logDetail}>All pairs matched</Text>;
+  } else if (t === 'water') {
+    detail = (
+      <View style={styles.detailRow}>
+        <Text style={styles.logDetail}>Level {log.waterLevel ?? '?'} · {log.moves ?? '?'} moves</Text>
+        {log.stars ? <Stars count={log.stars} /> : null}
+      </View>
+    );
+  } else {
+    detail = <Text style={styles.logDetail}>Ad reward</Text>;
+  }
+
+  const net = log.earnedCoins;
 
   return (
-    <View style={styles.logRow}>
-      <View style={[styles.logIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={iconName as any} size={22} color={iconColor} />
-      </View>
+    <View style={[styles.logRow, !first && styles.sourceRowBorder]}>
+      <View style={styles.logIcon}>{icon}</View>
       <View style={styles.logInfo}>
         <Text style={styles.logTitle}>{title}</Text>
-        <View style={styles.logDetailRow}>
-          {isCoin && (
-            <View style={[styles.outcomePill, {
-              backgroundColor: coinWon ? 'rgba(46,213,115,0.15)' : 'rgba(231,76,60,0.15)',
-            }]}>
-              <Ionicons name={coinWon ? 'checkmark-circle' : 'close-circle'} size={12} color={coinWon ? '#2ED573' : '#e74c3c'} />
-              <Text style={[styles.outcomePillText, { color: coinWon ? '#2ED573' : '#e74c3c' }]}>
-                {headsOrTails} · {coinWon ? 'Won' : 'Lost'}
-              </Text>
-            </View>
-          )}
-          {isSpin && (
-            <View style={styles.outcomePill}>
-              <Text style={styles.outcomePillText}>Wheel: {wheelVal}</Text>
-            </View>
-          )}
-          {isMemory && (
-            <View style={[styles.outcomePill, { backgroundColor: 'rgba(46,213,115,0.12)' }]}>
-              <Ionicons name="checkmark-circle" size={12} color="#2ED573" />
-              <Text style={[styles.outcomePillText, { color: '#2ED573' }]}>All pairs matched</Text>
-            </View>
-          )}
-          {isWater && (
-            <View style={[styles.outcomePill, { backgroundColor: 'rgba(46,213,115,0.12)' }]}>
-              <Ionicons name="checkmark-circle" size={12} color="#2ED573" />
-              <Text style={[styles.outcomePillText, { color: '#2ED573' }]}>
-                Level {log.waterLevel ?? '?'} · {log.moves ?? '?'} moves
-              </Text>
-            </View>
-          )}
-          <Text style={styles.logTime}>{formatTime(log.timestamp)}</Text>
-        </View>
+        {detail}
       </View>
       <View style={styles.logRight}>
-        <Text style={[styles.logNet, { color: displayRight.color }]}>{displayRight.label}</Text>
-        <Text style={styles.logNetLabel}>{displayRight.sub}</Text>
+        <Text style={[styles.logNet, { color: net > 0 ? '#2ED573' : net < 0 ? '#E74C3C' : COLORS.textSecondary }]}>
+          {net > 0 ? `+${net}` : net}
+        </Text>
+        <Text style={styles.logTime}>{formatTime(log.timestamp)}</Text>
       </View>
     </View>
   );
@@ -244,51 +250,58 @@ const LogRow: React.FC<{ log: GameLog }> = ({ log }) => {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.background },
 
-  hero: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl, alignItems: 'center', gap: 6 },
-  heroBalance: { fontSize: 64, fontWeight: 'bold', color: 'white' },
-  heroLabel: { ...TYPOGRAPHY.caption, color: 'rgba(255,255,255,0.85)' },
+  hero: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.lg, alignItems: 'center', overflow: 'hidden', borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
+  glow: { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(255,200,61,0.10)', top: -60, right: -60 },
+  heroLabel: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.6)', letterSpacing: 2 },
+  balanceRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+  heroBalance: { fontSize: 44, fontWeight: '900', color: 'white' },
+  heroStats: { flexDirection: 'row', alignItems: 'center', marginTop: SPACING.md, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: BORDER_RADIUS.lg, paddingVertical: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', alignSelf: 'stretch' },
+  heroStat: { flex: 1, alignItems: 'center' },
+  heroStatValue: { fontSize: 18, fontWeight: '800', color: 'white' },
+  heroStatLabel: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.6)', marginTop: 1 },
+  heroDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.12)' },
 
-  infoRow: { flexDirection: 'row', margin: SPACING.md, gap: SPACING.sm },
-  infoCard: { flex: 1, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.md, padding: SPACING.md, alignItems: 'center', gap: 4, ...SHADOWS.card },
-  infoNum: { ...TYPOGRAPHY.h3, color: COLORS.text },
-  infoLabel: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, textAlign: 'center' },
 
-  section: { marginHorizontal: SPACING.md, marginBottom: SPACING.lg },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: SPACING.md },
-  sectionTitle: { ...TYPOGRAPHY.h4, color: COLORS.text, flex: 1 },
-  countBadge: { backgroundColor: COLORS.primaryGlow, borderRadius: BORDER_RADIUS.full, paddingHorizontal: 8, paddingVertical: 2 },
-  countBadgeText: { ...TYPOGRAPHY.small, color: COLORS.primary, fontWeight: '700' },
+  section: { marginHorizontal: SPACING.md, marginTop: SPACING.lg },
+  sectionTitle: { ...TYPOGRAPHY.h4, fontWeight: '800', color: COLORS.text, marginBottom: SPACING.sm },
+  card: { backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.lg, paddingHorizontal: SPACING.md, ...SHADOWS.card },
 
-  breakdownRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.md, padding: SPACING.md, marginBottom: 10, ...SHADOWS.card },
-  breakdownIconBox: { width: 44, height: 44, borderRadius: BORDER_RADIUS.md, justifyContent: 'center', alignItems: 'center', marginRight: SPACING.sm },
-  breakdownInfo: { flex: 1 },
-  breakdownName: { ...TYPOGRAPHY.captionBold, color: COLORS.text, marginBottom: 2 },
-  breakdownPlays: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, marginBottom: 6 },
-  progressBar: { height: 4, backgroundColor: COLORS.surfaceDark, borderRadius: 2 },
-  progressFill: { height: 4, borderRadius: 2, minWidth: 4 },
-  breakdownRight: { alignItems: 'center', gap: 2, marginLeft: SPACING.sm },
-  breakdownEarned: { ...TYPOGRAPHY.h4, color: COLORS.text },
+  sourceRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
+  sourceRowBorder: { borderTopWidth: 1, borderTopColor: COLORS.surfaceDark },
+  sourceIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: SPACING.sm },
+  sourceInfo: { flex: 1 },
+  sourceTitle: { ...TYPOGRAPHY.captionBold, color: COLORS.text },
+  sourceSub: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, marginTop: 1, marginBottom: 6 },
+  progressBar: { height: 4, backgroundColor: COLORS.surfaceDark, borderRadius: 2, overflow: 'hidden' },
+  progressFill: { height: 4, borderRadius: 2 },
+  sourceEarned: { fontSize: 17, fontWeight: '800', color: COLORS.text, marginLeft: SPACING.sm, minWidth: 40, textAlign: 'right' },
+
+  historyHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  historyNote: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, fontWeight: '600' },
+  filters: { gap: 8, paddingBottom: SPACING.sm },
+  filterChip: { backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.full, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: COLORS.border },
+  filterChipOn: { backgroundColor: '#002A52', borderColor: '#002A52' },
+  filterText: { fontSize: 13, fontWeight: '700', color: COLORS.textSecondary },
+  filterTextOn: { color: 'white' },
 
   emptyBox: { alignItems: 'center', padding: SPACING.xl, gap: SPACING.sm },
-  emptyTitle: { ...TYPOGRAPHY.h3, color: COLORS.text },
+  emptyTitle: { ...TYPOGRAPHY.h4, color: COLORS.text },
   emptyText: { ...TYPOGRAPHY.caption, color: COLORS.textSecondary },
 
-  dayRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: SPACING.sm, marginTop: SPACING.sm },
-  dayLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
-  dayLabel: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, fontWeight: '600' },
-
-  logRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.md, padding: SPACING.sm, marginBottom: 8, ...SHADOWS.card },
-  logIcon: { width: 42, height: 42, borderRadius: BORDER_RADIUS.md, alignItems: 'center', justifyContent: 'center', marginRight: SPACING.sm },
-  logInfo: { flex: 1, gap: 4 },
+  dayLabel: { ...TYPOGRAPHY.small, color: COLORS.textSecondary, fontWeight: '700', marginTop: SPACING.sm, marginBottom: 6, marginLeft: 4 },
+  logRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  logIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: COLORS.surfaceDark, alignItems: 'center', justifyContent: 'center', marginRight: SPACING.sm },
+  logInfo: { flex: 1, gap: 2 },
   logTitle: { ...TYPOGRAPHY.captionBold, color: COLORS.text },
-  logDetailRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  outcomePill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.surfaceDark, borderRadius: BORDER_RADIUS.full, paddingHorizontal: 8, paddingVertical: 3 },
-  outcomePillText: { ...TYPOGRAPHY.small, fontWeight: '600', color: COLORS.textSecondary },
-  logTime: { ...TYPOGRAPHY.small, color: COLORS.textLight },
-  logRight: { alignItems: 'flex-end', minWidth: 44 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  logDetail: { ...TYPOGRAPHY.small, fontWeight: '600', color: COLORS.textSecondary },
+  logStars: { flexDirection: 'row' },
+  logRight: { alignItems: 'flex-end', minWidth: 52 },
   logNet: { fontSize: 16, fontWeight: '800' },
-  logNetLabel: { ...TYPOGRAPHY.small, color: COLORS.textSecondary },
+  logTime: { ...TYPOGRAPHY.small, color: COLORS.textLight },
 
+  moreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: SPACING.md, paddingVertical: 12, borderRadius: BORDER_RADIUS.full, backgroundColor: COLORS.surface, ...SHADOWS.card },
+  moreText: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
 });
 
 export default CoinsScreen;

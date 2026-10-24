@@ -36,9 +36,9 @@ interface DailyChallenge {
 function getTodayChallenge(): DailyChallenge {
   return {
     date: new Date().toDateString(),
-    target: 5,
+    target: GAME_CONFIG.dailyChallenge.targetFlips,
     current: 0,
-    reward: 25,
+    reward: GAME_CONFIG.dailyChallenge.coinsReward,
     claimed: false,
   };
 }
@@ -59,7 +59,7 @@ const AnimatedNumber: React.FC<{ value: number; style: any }> = ({ value, style 
 
 const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { stats, recordGame } = useGameStats();
+  const { stats, addBonusCoins } = useGameStats();
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [showRewardPrompt, setShowRewardPrompt] = useState(false);
   const gamesSincePromptRef = useRef(0);
@@ -120,11 +120,8 @@ const HomeScreen: React.FC = () => {
     const updated = { ...daily, claimed: true };
     setDaily(updated);
     await AsyncStorage.setItem(DAILY_KEY, JSON.stringify(updated));
-    // Give reward: add coins + XP directly to stats
-    await recordGame('coin', {
-      totalCoins: stats.totalCoins + daily.reward,
-      totalXP: stats.totalXP + 20,
-    });
+    // A bonus, not a game: it must not count as a coin flip or add the flip's own coins.
+    await addBonusCoins(daily.reward, 'daily', GAME_CONFIG.dailyChallenge.xpReward);
   };
 
   const dailyProgress = daily.target > 0 ? daily.current / daily.target : 0;

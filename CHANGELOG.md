@@ -11,11 +11,11 @@ All notable releases of Tagda Fun are documented here.
 - **Coins Wallet** — Coins screen with balance, per-game breakdown and full game history.
 - **Memory Cards** — Match the pairs to win coins and XP.
 - **Water Sorting** — Level-based bottle sorting puzzle with hints. Coin reward depends on moves vs. par (10–150 coins) plus +15 XP per win. Progress is saved between sessions.
-- **Ads (Unity LevelPlay)** — Banner and native ads, plus optional rewarded ads (+50 coins) from the Coins screen and after a game. See `ADS_INTEGRATION.md`.
+- **Ads (Unity LevelPlay)** — Banner and native ads, plus optional rewarded ads (+50 coins) after a game. See `ADS_INTEGRATION.md`.
 - **Redesigned Navigation** — 4-tab layout: Home, Coins, Leaderboard, Profile.
 
 **Removed**
-- **Spin Roulette** — coins have no real-world value, so a wheel that costs coins to win coins added nothing. Old spin stats and history entries still load.
+- **Spin Roulette** — coins have no real-world value, so a wheel that costs coins to win coins added nothing. Old saved spin data is ignored, so older installs still load fine.
 
 **Improvements**
 - Upgraded to the latest Expo SDK and refreshed dependencies

@@ -416,6 +416,8 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({ onWin }) => {
       costCoins: GAME_CONFIG.memory.costToPlay,
       earnedCoins: GAME_CONFIG.memory.coinsPerWin,
       netCoins: GAME_CONFIG.memory.coinsPerWin,
+      memoryLevel: lvl,
+      stars,
       timestamp: Date.now(),
     });
     onWin();

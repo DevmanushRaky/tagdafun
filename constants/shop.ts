@@ -1,7 +1,7 @@
 // ─── SHOP CATALOG ────────────────────────────────────────────────────────────
 // Prices are in in-game coins. For scale: a coin flip pays 5–10, a Memory or Water
 // level 80–150 by stars, the daily challenge 25. Unlocking every skin and card back
-// costs 21,000, roughly 175 levels at a 2–3★ average.
+// costs 21,000 and every bottle theme another 7,200: about 235 levels at a 2–3★ average.
 
 export type PowerUpId = 'memoryHint' | 'waterHint' | 'waterBottle';
 
@@ -82,6 +82,45 @@ export const CARD_BACKS: CardBack[] = [
   { id: 'sunset', title: 'Sunset', price: 1500, colors: ['#FF8C42', '#D9384F'] },
   { id: 'ocean', title: 'Ocean', price: 3000, colors: ['#00B4D8', '#03578A'] },
 ];
+
+/** Look of the Water Sorting board: background, glass and lid. */
+export interface BottleTheme {
+  panel: [string, string];   // board background gradient
+  glass: string;             // translucent body behind the liquid
+  stroke: string;            // bottle outline
+  lip: string;               // rim at the mouth
+  floor: string;             // soft shadow under each bottle
+}
+
+export type BottleThemeId = 'classic' | 'night' | 'sunset' | 'forest' | 'gold';
+
+export interface BottleThemeItem { id: BottleThemeId; title: string; price: number; theme: BottleTheme }
+
+export const BOTTLE_THEMES: BottleThemeItem[] = [
+  {
+    id: 'classic', title: 'Classic', price: 0,
+    theme: { panel: ['#E9F5FF', '#D2E9FA'], glass: 'rgba(255,255,255,0.42)', stroke: 'rgba(95,115,135,0.6)', lip: 'rgba(110,130,150,0.6)', floor: 'rgba(40,80,120,0.16)' },
+  },
+  {
+    id: 'night', title: 'Night', price: 1200,
+    theme: { panel: ['#1B2A4A', '#0B1426'], glass: 'rgba(255,255,255,0.12)', stroke: 'rgba(170,200,240,0.75)', lip: 'rgba(170,200,240,0.6)', floor: 'rgba(0,0,0,0.35)' },
+  },
+  {
+    id: 'sunset', title: 'Sunset', price: 1500,
+    theme: { panel: ['#FFE6CC', '#FFC2A6'], glass: 'rgba(255,255,255,0.45)', stroke: 'rgba(176,98,64,0.7)', lip: 'rgba(176,98,64,0.6)', floor: 'rgba(150,70,40,0.16)' },
+  },
+  {
+    id: 'forest', title: 'Forest', price: 1500,
+    theme: { panel: ['#E3F6E6', '#BFE6C8'], glass: 'rgba(255,255,255,0.45)', stroke: 'rgba(60,120,75,0.7)', lip: 'rgba(60,120,75,0.6)', floor: 'rgba(30,90,45,0.16)' },
+  },
+  {
+    id: 'gold', title: 'Royal Gold', price: 3000,
+    theme: { panel: ['#FFF6DD', '#F3DDA0'], glass: 'rgba(255,255,255,0.5)', stroke: 'rgba(176,128,24,0.85)', lip: '#C9971F', floor: 'rgba(140,100,20,0.18)' },
+  },
+];
+
+export const bottleTheme = (id: BottleThemeId): BottleTheme =>
+  (BOTTLE_THEMES.find(t => t.id === id) ?? BOTTLE_THEMES[0]).theme;
 
 export const coinPalette = (id: CoinSkinId): CoinPalette =>
   (COIN_SKINS.find(s => s.id === id) ?? COIN_SKINS[0]).palette;

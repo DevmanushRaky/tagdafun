@@ -43,20 +43,22 @@ const bottlePath = (x: number) =>
 const LAYER_H = 8;
 const LAYER_BOTTOM = 57;
 
-const Bottle: React.FC<{ id: string; x: number; layers: string[] }> = ({ id, x, layers }) => (
+const Bottle: React.FC<{ id: string; x: number; layers: string[]; glass?: string; stroke?: string }> = ({
+  id, x, layers, glass = 'rgba(255,255,255,0.18)', stroke = '#FFFFFF',
+}) => (
   <>
     <Defs>
       <ClipPath id={id}>
         <Path d={bottlePath(x)} />
       </ClipPath>
     </Defs>
-    <Path d={bottlePath(x)} fill="#FFFFFF" fillOpacity="0.18" />
+    <Path d={bottlePath(x)} fill={glass} />
     <G clipPath={`url(#${id})`}>
       {layers.map((color, i) => (
         <Rect key={i} x={x} y={LAYER_BOTTOM - (i + 1) * LAYER_H} width="18" height={LAYER_H} fill={color} />
       ))}
     </G>
-    <Path d={bottlePath(x)} fill="none" stroke="#FFFFFF" strokeWidth="1.8" />
+    <Path d={bottlePath(x)} fill="none" stroke={stroke} strokeWidth="1.8" />
     <Line x1={x + 4} y1="25" x2={x + 4} y2="48" stroke="#FFFFFF" strokeOpacity="0.55" strokeWidth="1.6" strokeLinecap="round" />
   </>
 );
@@ -67,6 +69,14 @@ const WaterIcon: React.FC<{ size: number }> = ({ size }) => (
   <Svg width={size} height={size} viewBox="0 0 64 64">
     <Bottle id="wtA" x={11} layers={[hex('Red'), hex('Blue'), hex('Yellow'), hex('Blue')]} />
     <Bottle id="wtB" x={35} layers={[hex('Yellow'), hex('Red'), hex('Red')]} />
+  </Svg>
+);
+
+/** Shop preview of a Water Sorting bottle theme: two bottles in the theme's glass and outline. */
+export const WaterThemeIcon: React.FC<{ size: number; glass: string; stroke: string; idKey: string }> = ({ size, glass, stroke, idKey }) => (
+  <Svg width={size} height={size} viewBox="0 0 64 64">
+    <Bottle id={`th${idKey}A`} x={11} layers={[hex('Red'), hex('Blue'), hex('Yellow')]} glass={glass} stroke={stroke} />
+    <Bottle id={`th${idKey}B`} x={35} layers={[hex('Green'), hex('Purple'), hex('Purple'), hex('Purple')]} glass={glass} stroke={stroke} />
   </Svg>
 );
 

@@ -9,8 +9,9 @@ import { useGameStats } from '../contexts/GameStatsContext';
 import { useShop, BuyResult } from '../contexts/ShopContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
 import {
-  POWER_UPS, COIN_SKINS, CARD_BACKS, DAILY_GIFT_LADDER, PowerUp, CoinSkin, CardBack,
+  POWER_UPS, COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, DAILY_GIFT_LADDER, PowerUp, CoinSkin, CardBack, BottleThemeItem,
 } from '../constants/shop';
+import { WaterThemeIcon } from '../components/GameIcons';
 import { CoinFace } from '../components/CoinToss';
 import NativeAdCard from '../components/ads/NativeAdCard';
 
@@ -26,7 +27,8 @@ const BACK_TILE_W = tileWidth(4);
 type Pending =
   | { kind: 'power'; item: PowerUp }
   | { kind: 'skin'; item: CoinSkin }
-  | { kind: 'back'; item: CardBack };
+  | { kind: 'back'; item: CardBack }
+  | { kind: 'theme'; item: BottleThemeItem };
 
 const PriceTag: React.FC<{ price: number; affordable: boolean }> = ({ price, affordable }) => (
   <View style={[styles.price, !affordable && styles.priceOff]}>
@@ -43,10 +45,16 @@ const CardBackPreview: React.FC<{ colors: [string, string]; size: number }> = ({
   </LinearGradient>
 );
 
+const ThemePreview: React.FC<{ item: BottleThemeItem; size: number }> = ({ item, size }) => (
+  <LinearGradient colors={item.theme.panel} style={[styles.themePreview, { width: size * 1.25, height: size }]}>
+    <WaterThemeIcon size={size * 0.9} glass={item.theme.glass} stroke={item.theme.stroke} idKey={item.id} />
+  </LinearGradient>
+);
+
 const ShopScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { stats } = useGameStats();
-  const { shop, buyPowerUp, buySkin, selectSkin, buyBack, selectBack, giftToday, claimGift } = useShop();
+  const { shop, buyPowerUp, buySkin, selectSkin, buyBack, selectBack, buyTheme, selectTheme, giftToday, claimGift } = useShop();
   const [pending, setPending] = useState<Pending | null>(null);
   const [toast, setToast] = useState('');
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -79,7 +87,8 @@ const ShopScreen: React.FC = () => {
     let res: BuyResult;
     if (p.kind === 'power') res = await buyPowerUp(p.item.id);
     else if (p.kind === 'skin') res = await buySkin(p.item.id);
-    else res = await buyBack(p.item.id);
+    else if (p.kind === 'back') res = await buyBack(p.item.id);
+    else res = await buyTheme(p.item.id);
     if (res === 'ok') showToast(p.kind === 'power' ? `${p.item.title} added` : `${p.item.title} unlocked and equipped`);
     else if (res === 'poor') showToast('Not enough coins yet');
   };
@@ -236,6 +245,34 @@ const ShopScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Bottle themes */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Bottle themes</Text>
+          <Text style={styles.sectionSub}>Changes the board and bottles in Water Sorting.</Text>
+          <View style={styles.grid}>
+            {BOTTLE_THEMES.map(item => {
+              const owned = shop.ownedThemes.includes(item.id);
+              const equipped = shop.waterTheme === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.tile, { width: SKIN_TILE_W }, equipped && styles.tileOn]}
+                  onPress={() => (owned ? selectTheme(item.id) : ask({ kind: 'theme', item }))}
+                  activeOpacity={0.85}
+                >
+                  <ThemePreview item={item} size={52} />
+                  <Text style={styles.tileTitle} numberOfLines={1}>{item.title}</Text>
+                  {equipped
+                    ? <Text style={styles.equipped}>Equipped</Text>
+                    : owned
+                      ? <Text style={styles.useText}>Use</Text>
+                      : <PriceTag price={item.price} affordable={balance >= item.price} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         <NativeAdCard />
       </ScrollView>
 
@@ -254,6 +291,7 @@ const ShopScreen: React.FC = () => {
               <View style={styles.sheetArt}>
                 {pending.kind === 'skin' && <CoinFace side="heads" size={84} skin={pending.item.palette} />}
                 {pending.kind === 'back' && <CardBackPreview colors={pending.item.colors} size={70} />}
+                {pending.kind === 'theme' && <ThemePreview item={pending.item} size={76} />}
                 {pending.kind === 'power' && (
                   <View style={[styles.sheetPower, { backgroundColor: GAME_TINT[pending.item.game] + '1A' }]}>
                     <Ionicons name={pending.item.icon as any} size={40} color={GAME_TINT[pending.item.game]} />
@@ -343,6 +381,7 @@ const styles = StyleSheet.create({
   equipped: { fontSize: 12, fontWeight: '800', color: COLORS.primary, paddingVertical: 6 },
   useText: { fontSize: 12, fontWeight: '800', color: '#0077B6', paddingVertical: 6 },
 
+  themePreview: { borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   backPreview: { borderRadius: 10, padding: 3 },
   backInset: { flex: 1, borderRadius: 7, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   backMark: { fontWeight: '900', color: 'rgba(255,255,255,0.3)' },

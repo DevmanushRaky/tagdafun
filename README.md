@@ -101,7 +101,8 @@ Coins have no cash value; this is where they are spent. Catalog and prices live 
 - **Power-ups** (stack, used one at a time): Memory Hint 100, Water Hint 80, Extra Bottle 150. A game uses an owned power-up first and only falls back to a rewarded ad when you have none. The hint and bottle buttons show `×N` instead of `AD` while you own some
 - **Coin skins** for Coin Toss (also shown on the Home card): Gold (free), Silver 1,000, Rose Gold 2,500, Emerald 4,000, Diamond 7,500
 - **Card backs** for Memory Cards: Navy (free), Galaxy 1,500, Sunset 1,500, Ocean 3,000
-- Unlocking every skin and card back costs **21,000 coins**, about 175 levels at a 2–3★ average
+- **Bottle themes** for Water Sorting (board background, glass, outline, lid): Classic (free), Night 1,200, Sunset 1,500, Forest 1,500, Royal Gold 3,000
+- Unlocking every coin skin, card back and bottle theme costs **28,200 coins**, about 235 levels at a 2–3★ average
 - Every purchase asks for confirmation and is logged in the Coins history
 - No random "mystery box": paid random rewards count as loot boxes on Google Play
 

@@ -35,7 +35,7 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 | Current streak and best streak | Achievement tracking | Device only |
 | Achievement unlock status | Profile screen | Device only |
 | Daily challenge progress | Home screen challenge | Device only |
-| Shop items (power-ups, coin skins, card backs) and daily gift progress | Shop screen | Device only |
+| Shop items (power-ups, coin skins, card backs, bottle themes) and daily gift progress | Shop screen | Device only |
 
 ### 2.2 Game History Log (Stored Locally)
 

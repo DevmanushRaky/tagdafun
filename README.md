@@ -132,11 +132,20 @@ The app runs fully offline using AsyncStorage — no backend, no login required.
 ```bash
 git clone https://github.com/DevmanushRaky/tagdafun.git
 cd tagdafun
-npm install
-npx expo start
+npm ci
+npm run start:go
 ```
 
-Press `a` for Android, `i` for iOS in the terminal.
+Scan the QR code with **Expo Go** (phone and computer on the same WiFi).
+
+> **Use `npm run start:go`, not plain `npx expo start`, for Expo Go.**
+> The app uses the native LevelPlay ads SDK, which does not exist in Expo Go.
+> `start:go` runs `EXPO_GO=1 expo start --go --lan --clear`, which makes `metro.config.js`
+> swap in a no-op mock (`mocks/levelplay.js`). Without it, Expo Go crashes on launch with
+> an `Uncaught Error: [runtime not ready]`. Ads therefore do not show in Expo Go.
+
+For real ads, use a dev build instead: `npm run android` (or `npm run ios`, which needs a recent Xcode).
+Expo Go only supports the latest Expo SDK, so keep the project's SDK in step with the Expo Go version on your phone.
 
 ---
 

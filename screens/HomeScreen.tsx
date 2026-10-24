@@ -14,6 +14,8 @@ import { GAMES, GameConfig } from '../types';
 import CoinToss from '../components/CoinToss';
 import MemoryCards from '../components/MemoryCards';
 import WaterSorting from '../components/WaterSorting';
+import KiteFight from '../components/KiteFight';
+import BubbleShooter from '../components/BubbleShooter';
 import { GameIcon } from '../components/GameIcons';
 import AdBanner from '../components/ads/AdBanner';
 import NativeAdCard from '../components/ads/NativeAdCard';
@@ -225,6 +227,8 @@ const HomeScreen: React.FC = () => {
           <ScrollView
             contentContainerStyle={styles.gameContent}
             showsVerticalScrollIndicator={false}
+            // Dragging is how these games are played, so the screen must not scroll under the finger.
+            scrollEnabled={activeGame !== 'kite' && activeGame !== 'bubble'}
             keyboardShouldPersistTaps="handled"
           >
             {activeGame === 'coin' && (
@@ -248,10 +252,25 @@ const HomeScreen: React.FC = () => {
                 }}
               />
             )}
+            {activeGame === 'kite' && (
+              <KiteFight
+                onWin={() => {
+                  handleGamePlayed();
+                }}
+              />
+            )}
+            {activeGame === 'bubble' && (
+              <BubbleShooter
+                onWin={() => {
+                  handleGamePlayed();
+                }}
+              />
+            )}
           </ScrollView>
 
           <View style={{ paddingBottom: insets.bottom }}>
-            <NativeAdCard />
+            {/* Patang Baazi shows a banner under its board instead: one ad per screen. */}
+            {activeGame !== 'kite' && <NativeAdCard />}
           </View>
         </View>
       </Modal>
@@ -267,6 +286,8 @@ const CARD_META: Record<string, { tagline: string; coins: string; xp: number }> 
   coin: { tagline: 'Heads or tails? Call it.', coins: `+${GAME_CONFIG.coin.loseCoins}–${GAME_CONFIG.coin.winCoins}`, xp: GAME_CONFIG.coin.xpPerPlay },
   memory: { tagline: 'Flip the cards, match every pair.', coins: starRewardRange, xp: GAME_CONFIG.memory.xpPerWin },
   water: { tagline: 'Pour until every bottle is one colour.', coins: starRewardRange, xp: GAME_CONFIG.water.xpPerWin },
+  kite: { tagline: 'Fly high, cut their strings. Bo kaata!', coins: starRewardRange, xp: GAME_CONFIG.kite.xpPerWin },
+  bubble: { tagline: 'Aim, bounce, pop three of a colour.', coins: starRewardRange, xp: GAME_CONFIG.bubble.xpPerWin },
 };
 
 const GameCard: React.FC<{ game: GameConfig; onPress: () => void }> = ({ game, onPress }) => {

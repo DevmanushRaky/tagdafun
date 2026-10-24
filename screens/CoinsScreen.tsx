@@ -21,6 +21,8 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'coin', label: 'Coin Toss' },
   { id: 'memory', label: 'Memory' },
   { id: 'water', label: 'Water' },
+  { id: 'kite', label: 'Patang' },
+  { id: 'bubble', label: 'Bubble' },
   { id: 'ad', label: 'Ads' },
   { id: 'gift', label: 'Gifts' },
   { id: 'shop', label: 'Shop' },
@@ -66,6 +68,8 @@ const CoinsScreen: React.FC = () => {
     coin: `${played.coin} flips · +${GAME_CONFIG.coin.winCoins} win, +${GAME_CONFIG.coin.loseCoins} loss`,
     memory: `${played.memory} levels · ${starRewardRange} by stars`,
     water: `${played.water} levels · ${starRewardRange} by stars`,
+    kite: `${played.kite} levels · ${starRewardRange} by stars`,
+    bubble: `${played.bubble} levels · ${starRewardRange} by stars`,
   };
   const rows: SourceRow[] = [
     ...GAMES.map(g => ({
@@ -212,6 +216,8 @@ const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
     : t === 'ad' ? 'Rewarded Ad'
     : t === 'coin' ? 'Coin Toss'
     : t === 'memory' ? 'Memory Cards'
+    : t === 'kite' ? 'Patang Baazi'
+    : t === 'bubble' ? 'Bubble Shooter'
     : 'Water Sorting';
 
   const icon = t === 'shop'
@@ -238,6 +244,13 @@ const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
     detail = (
       <View style={styles.detailRow}>
         <Text style={styles.logDetail}>Level {log.waterLevel ?? '?'} · {log.moves ?? '?'} moves</Text>
+        {log.stars ? <Stars count={log.stars} /> : null}
+      </View>
+    );
+  } else if (t === 'kite' || t === 'bubble') {
+    detail = (
+      <View style={styles.detailRow}>
+        <Text style={styles.logDetail}>Level {(t === 'kite' ? log.kiteLevel : log.bubbleLevel) ?? '?'}</Text>
         {log.stars ? <Stars count={log.stars} /> : null}
       </View>
     );

@@ -16,7 +16,7 @@
 
 ## What is Tagda Fun?
 
-Tagda Fun is a gamified mini-game app with three games — **Coin Toss**, **Memory Cards** and **Water Sorting** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and a Shop where coins buy power-ups and skins. All data is stored locally on your device.
+Tagda Fun is a gamified mini-game app with five games — **Coin Toss**, **Memory Cards**, **Water Sorting**, **Patang Baazi** and **Bubble Shooter** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and a Shop where coins buy power-ups and skins. All data is stored locally on your device.
 
 ---
 
@@ -28,7 +28,7 @@ All values live in `constants/gameConfig.ts`.
 | Game | Coins |
 |------|-------|
 | Coin Toss | **+10** for a right call, **+5** for a wrong one |
-| Memory Cards and Water Sorting | per cleared level by stars: **3★ = 150**, **2★ = 100**, **1★ = 80** (`STAR_REWARDS`) |
+| Memory Cards, Water Sorting, Patang Baazi and Bubble Shooter | per cleared level by stars: **3★ = 150**, **2★ = 100**, **1★ = 80** (`STAR_REWARDS`) |
 | Daily challenge | +25 |
 | Daily gift (Shop) | 10 → 60 over a 7-day run |
 
@@ -59,6 +59,27 @@ All values live in `constants/gameConfig.ts`.
 - **Vibration** only when a level is cleared
 
 ---
+
+### Patang Baazi — Free to play
+- Drag on the sky to fly your kite; it follows your finger and drifts with the wind (wind shown in the top bar)
+- When your string crosses another kite's, a **pench** starts: swipe fast to pull and fill the meter to cut theirs ("Bo kaata!"). Hold still and the rival cuts yours
+- 3 kites (lives) per level. Cut the level's target (3 at Level 1, up to 10) to clear it; every 5th level adds a **boss kite**
+- Stars by kites left: 3 = 3★, 2 = 2★, 1 = 1★; coins by stars like the other level games, **+20 XP** per clear
+- Drawn with `@shopify/react-native-skia` (one picture per frame; the sky and rooftops are pre-drawn once). Rules and simulation live in `utils/kite.ts`, separate from drawing
+- Runs at **30 FPS** (`TARGET_FPS` in `components/KiteFight.tsx`); the simulation is time-based, so raising it to 60 only makes motion smoother
+- Sounds: strings rubbing during a pench, a swoosh when a kite is cut, a buzz when yours is, and a pizzicato jingle on a win (Kenney, CC0). Vibration only when a level is cleared
+
+### Bubble Shooter — Free to play
+- Drag on the board to aim (dotted line shows wall bounces), let go to shoot; release below the shooter to cancel
+- 3 or more of one colour pop; anything no longer hanging from the ceiling drops. Tap the small bubble to swap it with the loaded one; only colours still on the board are loaded
+- Every few shots without a pop (7 at Level 1, down to 4) the ceiling comes down a row; bubbles past the dashed line lose the level
+- Levels add rows (4 → 8) and colours (3 → 6); the start board never has a same-colour clump bigger than 4
+- Stars by how often the ceiling came down: 0–1 = 3★, 2–3 = 2★, more = 1★; coins by stars, **+15 XP** per clear
+- Rules in `utils/bubble.ts` (hex grid, snapping, pops, drops), drawing in `components/BubbleShooter.tsx` with Skia at 30 FPS
+- **Ghost bubble** shows where the shot will stick; the ceiling slides down (the board trembles one miss before it does); neighbours wobble when a bubble lands
+- **Score**: 10 per popped bubble, 20 per dropped one, times a combo of up to ×5 for popping shots in a row
+- **Specials**: clear 6+ with one shot to load a 💣 **bomb** (blasts everything around where it lands); pop 3 shots in a row for a 🌈 **rainbow** (joins the biggest neighbouring colour group)
+- Sounds: shot, pop, bomb (Kenney, CC0). Vibration only when a level is cleared
 
 ## Screens
 
@@ -147,7 +168,8 @@ Unity LevelPlay, all set up in code. Ad unit IDs, SDK quirks and build notes are
 | Format | Where | When |
 |--------|-------|------|
 | Banner | Home, below the daily challenge | Always |
-| Native | Home (after games), inside each game screen, bottom of the Shop | Always (hidden until an ad loads) |
+| Native | Home (after games), inside each game screen except Patang Baazi, bottom of the Shop | Always (hidden until an ad loads) |
+| Banner | Under the Patang Baazi board | Always |
 | Rewarded (+50 coins) | "Watch ad / Skip" popup after a game | **Capped**, see below |
 | Rewarded (no coins) | Memory Cards "Hint" button | Player taps it; 2 per level |
 | Rewarded (no coins) | Water Sorting "Hint" and "+ Bottle" | Player taps it; Hint any time, + Bottle once per level |

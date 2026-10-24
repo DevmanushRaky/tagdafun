@@ -56,4 +56,20 @@ export const GAMES: GameConfig[] = [
     color: '#2ED573',
     gradient: ['#2ED573', '#17B85A'],
   },
+  {
+    id: 'kite',
+    title: 'Patang Baazi',
+    description: `Cut the other kites' strings. Win ${starRewardRange} coins by stars.`,
+    icon: 'paper-plane-outline',
+    color: '#FF6B00',
+    gradient: ['#FFB347', '#FF5E00'],
+  },
+  {
+    id: 'bubble',
+    title: 'Bubble Shooter',
+    description: `Aim, bounce, pop three of a colour. Win ${starRewardRange} coins by stars.`,
+    icon: 'ellipse-outline',
+    color: '#5352ED',
+    gradient: ['#7B6CFF', '#3D2FC4'],
+  },
 ];

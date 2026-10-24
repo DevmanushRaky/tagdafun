@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const HISTORY_KEY = '@tagdafun_history_v1';
 const MAX_ENTRIES = 100;
 
-export type GameLogType = 'coin' | 'memory' | 'water' | 'ad' | 'gift' | 'shop';
+export type GameLogType = 'coin' | 'memory' | 'water' | 'kite' | 'bubble' | 'ad' | 'gift' | 'shop';
 
 export interface GameLog {
   id: string;
@@ -19,7 +19,11 @@ export interface GameLog {
   adNetwork?: string;
   // memory cards
   memoryLevel?: number;
-  // memory cards + water sorting
+  // patang baazi
+  kiteLevel?: number;
+  // bubble shooter
+  bubbleLevel?: number;
+  // memory cards, water sorting, patang baazi
   stars?: number;
   // water sorting
   moves?: number;

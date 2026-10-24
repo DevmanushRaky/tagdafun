@@ -13,6 +13,12 @@ export const GAME_CONFIG = {
   water: {
     xpPerWin: 15,         // coins come from STAR_REWARDS
   },
+  kite: {
+    xpPerWin: 20,         // coins come from STAR_REWARDS
+  },
+  bubble: {
+    xpPerWin: 15,         // coins come from STAR_REWARDS
+  },
   dailyChallenge: {
     targetFlips: 5,       // flips needed to complete daily challenge
     coinsReward: 25,

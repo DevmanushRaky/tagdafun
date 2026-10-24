@@ -67,7 +67,7 @@ All values live in `constants/gameConfig.ts`.
 | **Home** | Player card (level, XP bar, streak), daily challenge, game cards |
 | **Coins** | Coin balance, per-game breakdown, full game history log |
 | **Shop** | Daily gift, power-ups, coin skins and card backs bought with coins |
-| **Profile** | Level progress, all-time stats, detailed game stats, achievements |
+| **Profile** | Editable nickname, level + XP, streaks, per-game stats, Shop collection, achievements with progress |
 
 ---
 

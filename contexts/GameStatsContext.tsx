@@ -33,6 +33,7 @@ export interface PlayerStats {
   coinFlips: number;
   coinsEarned: Record<CoinSource, number>;
   coinsSpent: number;
+  playerName: string;
 }
 
 export interface LevelInfo {
@@ -55,6 +56,7 @@ interface GameStatsContextValue {
   addBonusCoins: (amount: number, source?: 'ad' | 'daily' | 'gift', xp?: number) => Promise<void>;
   /** Takes coins for a shop purchase; false (and nothing changes) if the balance is too low. */
   spendCoins: (amount: number) => Promise<boolean>;
+  setPlayerName: (name: string) => Promise<void>;
 }
 
 const STORAGE_KEY = '@tagdafun_stats_v3';
@@ -93,6 +95,7 @@ const defaultStats = (): PlayerStats => ({
   coinFlips: 0,
   coinsEarned: { coin: 0, memory: 0, water: 0, ad: 0, daily: 0, gift: 0 },
   coinsSpent: 0,
+  playerName: 'Tagda Player',
 });
 
 /**
@@ -275,8 +278,16 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
     return true;
   }, [stats, saveStats]);
 
+  const setPlayerName = useCallback(async (name: string): Promise<void> => {
+    const clean = name.trim().slice(0, 20);
+    if (!clean) return;
+    const s: PlayerStats = { ...stats, playerName: clean };
+    await saveStats(s);
+    setStats(s);
+  }, [stats, saveStats]);
+
   return (
-    <GameStatsContext.Provider value={{ stats, levelInfo, achievements: buildAchievements(), recordGame, newlyUnlocked, clearNewlyUnlocked, addBonusCoins, spendCoins }}>
+    <GameStatsContext.Provider value={{ stats, levelInfo, achievements: buildAchievements(), recordGame, newlyUnlocked, clearNewlyUnlocked, addBonusCoins, spendCoins, setPlayerName }}>
       {children}
     </GameStatsContext.Provider>
   );

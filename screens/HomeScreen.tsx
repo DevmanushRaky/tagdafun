@@ -145,7 +145,7 @@ const HomeScreen: React.FC = () => {
           <View style={styles.heroTopRow}>
             <View>
               <Text style={styles.heroGreet}>Welcome back</Text>
-              <Text style={styles.heroName}>Tagda Player</Text>
+              <Text style={styles.heroName} numberOfLines={1}>{stats.playerName}</Text>
             </View>
             <View style={styles.coinPill}>
               <Ionicons name="wallet" size={16} color="#FFC83D" />

@@ -3,16 +3,19 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Animated, Easing, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Line, Circle as SvgCircle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameStats } from '../contexts/GameStatsContext';
 import { useShop, BuyResult } from '../contexts/ShopContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
 import {
-  POWER_UPS, COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, DAILY_GIFT_LADDER, PowerUp, CoinSkin, CardBack, BottleThemeItem,
+  POWER_UPS, COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, SHER_BOARDS, PIECE_SETS, DAILY_GIFT_LADDER,
+  PowerUp, CoinSkin, CardBack, BottleThemeItem, SherBoardItem, PieceSetItem,
 } from '../constants/shop';
 import { WaterThemeIcon } from '../components/GameIcons';
 import { CoinFace } from '../components/CoinToss';
+import { SherToken, BakriToken } from '../components/SherBakriIcons';
 import NativeAdCard from '../components/ads/NativeAdCard';
 
 const GAME_TINT = { memory: '#0077B6', water: '#17B85A' } as const;
@@ -23,12 +26,15 @@ const GRID_GAP = 10;
 const tileWidth = (cols: number) => Math.floor((SCREEN_W - SPACING.md * 2 - GRID_GAP * (cols - 1)) / cols);
 const SKIN_TILE_W = tileWidth(3);
 const BACK_TILE_W = tileWidth(4);
+const PIECE_TILE_W = tileWidth(2);
 
 type Pending =
   | { kind: 'power'; item: PowerUp }
   | { kind: 'skin'; item: CoinSkin }
   | { kind: 'back'; item: CardBack }
-  | { kind: 'theme'; item: BottleThemeItem };
+  | { kind: 'theme'; item: BottleThemeItem }
+  | { kind: 'board'; item: SherBoardItem }
+  | { kind: 'pieces'; item: PieceSetItem };
 
 const PriceTag: React.FC<{ price: number; affordable: boolean }> = ({ price, affordable }) => (
   <View style={[styles.price, !affordable && styles.priceOff]}>
@@ -51,10 +57,46 @@ const ThemePreview: React.FC<{ item: BottleThemeItem; size: number }> = ({ item,
   </LinearGradient>
 );
 
+/** A small Sher aur Bakri board: a few lines and points in the theme's colours. */
+const BoardPreview: React.FC<{ item: SherBoardItem; size: number }> = ({ item, size }) => {
+  const w = size * 1.25;
+  const pad = size * 0.2;
+  const gx = (w - pad * 2) / 2;
+  const gy = (size - pad * 2) / 2;
+  const pts: [number, number][] = [];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) pts.push([pad + c * gx, pad + r * gy]);
+  const { line, dot, border } = item.theme;
+  return (
+    <LinearGradient colors={item.theme.panel} style={[styles.themePreview, { width: w, height: size, borderWidth: 2, borderColor: border }]}>
+      <Svg width="100%" height="100%" viewBox={`0 0 ${w} ${size}`} style={StyleSheet.absoluteFill}>
+        {[0, 1, 2].map(i => (
+          <React.Fragment key={i}>
+            <Line x1={pad} y1={pad + i * gy} x2={w - pad} y2={pad + i * gy} stroke={line} strokeWidth={1.6} />
+            <Line x1={pad + i * gx} y1={pad} x2={pad + i * gx} y2={size - pad} stroke={line} strokeWidth={1.6} />
+          </React.Fragment>
+        ))}
+        <Line x1={pad} y1={pad} x2={w - pad} y2={size - pad} stroke={line} strokeWidth={1.6} />
+        <Line x1={w - pad} y1={pad} x2={pad} y2={size - pad} stroke={line} strokeWidth={1.6} />
+        {pts.map(([x, y], i) => <SvgCircle key={i} cx={x} cy={y} r={2.6} fill={dot} />)}
+      </Svg>
+    </LinearGradient>
+  );
+};
+
+/** A sher and a bakri side by side in a set's colours. */
+const PiecePreview: React.FC<{ item: PieceSetItem; size: number }> = ({ item, size }) => (
+  <View style={styles.piecePreview}>
+    <SherToken size={size} id={`ps${item.id}`} colors={item.sher} />
+    <View style={{ marginLeft: -size * 0.12 }}>
+      <BakriToken size={size} id={`pb${item.id}`} colors={item.bakri} />
+    </View>
+  </View>
+);
+
 const ShopScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { stats } = useGameStats();
-  const { shop, buyPowerUp, buySkin, selectSkin, buyBack, selectBack, buyTheme, selectTheme, giftToday, claimGift } = useShop();
+  const { shop, buyPowerUp, buySkin, selectSkin, buyBack, selectBack, buyTheme, selectTheme, buyBoard, selectBoard, buyPieces, selectPieces, giftToday, claimGift } = useShop();
   const [pending, setPending] = useState<Pending | null>(null);
   const [toast, setToast] = useState('');
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -88,7 +130,9 @@ const ShopScreen: React.FC = () => {
     if (p.kind === 'power') res = await buyPowerUp(p.item.id);
     else if (p.kind === 'skin') res = await buySkin(p.item.id);
     else if (p.kind === 'back') res = await buyBack(p.item.id);
-    else res = await buyTheme(p.item.id);
+    else if (p.kind === 'theme') res = await buyTheme(p.item.id);
+    else if (p.kind === 'board') res = await buyBoard(p.item.id);
+    else res = await buyPieces(p.item.id);
     if (res === 'ok') showToast(p.kind === 'power' ? `${p.item.title} added` : `${p.item.title} unlocked and equipped`);
     else if (res === 'poor') showToast('Not enough coins yet');
   };
@@ -273,6 +317,62 @@ const ShopScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Sher aur Bakri boards */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Sher aur Bakri boards</Text>
+          <Text style={styles.sectionSub}>Changes the board in Sher aur Bakri.</Text>
+          <View style={styles.grid}>
+            {SHER_BOARDS.map(item => {
+              const owned = shop.ownedBoards.includes(item.id);
+              const equipped = shop.sherBoard === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.tile, { width: SKIN_TILE_W }, equipped && styles.tileOn]}
+                  onPress={() => (owned ? selectBoard(item.id) : ask({ kind: 'board', item }))}
+                  activeOpacity={0.85}
+                >
+                  <BoardPreview item={item} size={52} />
+                  <Text style={styles.tileTitle} numberOfLines={1}>{item.title}</Text>
+                  {equipped
+                    ? <Text style={styles.equipped}>Equipped</Text>
+                    : owned
+                      ? <Text style={styles.useText}>Use</Text>
+                      : <PriceTag price={item.price} affordable={balance >= item.price} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Sher aur Bakri pieces */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Sher and Bakri pieces</Text>
+          <Text style={styles.sectionSub}>Changes the colours of the sher and the bakri.</Text>
+          <View style={styles.grid}>
+            {PIECE_SETS.map(item => {
+              const owned = shop.ownedPieces.includes(item.id);
+              const equipped = shop.pieceSet === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.tile, { width: PIECE_TILE_W }, equipped && styles.tileOn]}
+                  onPress={() => (owned ? selectPieces(item.id) : ask({ kind: 'pieces', item }))}
+                  activeOpacity={0.85}
+                >
+                  <PiecePreview item={item} size={46} />
+                  <Text style={styles.tileTitle} numberOfLines={1}>{item.title}</Text>
+                  {equipped
+                    ? <Text style={styles.equipped}>Equipped</Text>
+                    : owned
+                      ? <Text style={styles.useText}>Use</Text>
+                      : <PriceTag price={item.price} affordable={balance >= item.price} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         <NativeAdCard />
       </ScrollView>
 
@@ -292,6 +392,8 @@ const ShopScreen: React.FC = () => {
                 {pending.kind === 'skin' && <CoinFace side="heads" size={84} skin={pending.item.palette} />}
                 {pending.kind === 'back' && <CardBackPreview colors={pending.item.colors} size={70} />}
                 {pending.kind === 'theme' && <ThemePreview item={pending.item} size={76} />}
+                {pending.kind === 'board' && <BoardPreview item={pending.item} size={76} />}
+                {pending.kind === 'pieces' && <PiecePreview item={pending.item} size={64} />}
                 {pending.kind === 'power' && (
                   <View style={[styles.sheetPower, { backgroundColor: GAME_TINT[pending.item.game] + '1A' }]}>
                     <Ionicons name={pending.item.icon as any} size={40} color={GAME_TINT[pending.item.game]} />
@@ -381,6 +483,7 @@ const styles = StyleSheet.create({
   equipped: { fontSize: 12, fontWeight: '800', color: COLORS.primary, paddingVertical: 6 },
   useText: { fontSize: 12, fontWeight: '800', color: '#0077B6', paddingVertical: 6 },
 
+  piecePreview: { flexDirection: 'row', alignItems: 'center' },
   themePreview: { borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   backPreview: { borderRadius: 10, padding: 3 },
   backInset: { flex: 1, borderRadius: 7, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },

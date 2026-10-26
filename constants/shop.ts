@@ -1,7 +1,8 @@
 // ─── SHOP CATALOG ────────────────────────────────────────────────────────────
 // Prices are in in-game coins. For scale: a coin flip pays 5–10, a Memory or Water
 // level 80–150 by stars, the daily challenge 25. Unlocking every skin and card back
-// costs 21,000 and every bottle theme another 7,200: about 235 levels at a 2–3★ average.
+// costs 21,000, every bottle theme another 7,200 and the Sher aur Bakri boards and pieces 16,200:
+// about 370 levels at a 2–3★ average.
 
 export type PowerUpId = 'memoryHint' | 'waterHint' | 'waterBottle';
 
@@ -118,6 +119,71 @@ export const BOTTLE_THEMES: BottleThemeItem[] = [
     theme: { panel: ['#FFF6DD', '#F3DDA0'], glass: 'rgba(255,255,255,0.5)', stroke: 'rgba(176,128,24,0.85)', lip: '#C9971F', floor: 'rgba(140,100,20,0.18)' },
   },
 ];
+
+/** Look of the Sher aur Bakri board. */
+export interface SherBoardTheme {
+  panel: [string, string];   // board background gradient
+  border: string;
+  line: string;              // the lines pieces move along
+  dot: string;               // the points
+}
+
+export type SherBoardId = 'wooden' | 'meadow' | 'ice' | 'night' | 'royal';
+
+export interface SherBoardItem { id: SherBoardId; title: string; price: number; theme: SherBoardTheme }
+
+export const SHER_BOARDS: SherBoardItem[] = [
+  { id: 'wooden', title: 'Wooden', price: 0, theme: { panel: ['#F3D9A9', '#E2B676'], border: '#B07C45', line: '#6B4423', dot: '#6B4423' } },
+  { id: 'meadow', title: 'Meadow', price: 1200, theme: { panel: ['#DDF3D2', '#A9D98F'], border: '#5E9B45', line: '#2F6B2A', dot: '#2F6B2A' } },
+  { id: 'ice', title: 'Ice', price: 2000, theme: { panel: ['#EAF8FF', '#BFE4F7'], border: '#6CB4DB', line: '#2E7BA6', dot: '#2E7BA6' } },
+  { id: 'night', title: 'Night', price: 2500, theme: { panel: ['#26345A', '#0F1830'], border: '#4C5F94', line: '#9DB4E8', dot: '#C9D8FF' } },
+  { id: 'royal', title: 'Royal', price: 4000, theme: { panel: ['#7A1F3D', '#4A0E24'], border: '#D4A93C', line: '#F0CF7A', dot: '#F8E2A0' } },
+];
+
+/** Colours for the sher and bakri tokens. */
+export interface SherColors {
+  ring: string;              // outer edge of the token
+  bg: [string, string];      // token background
+  mane: [string, string];
+  face: [string, string];
+}
+export interface BakriColors {
+  ring: string;
+  bg: [string, string];
+}
+
+export type PieceSetId = 'classic' | 'royal' | 'midnight' | 'crimson';
+
+export interface PieceSetItem { id: PieceSetId; title: string; price: number; sher: SherColors; bakri: BakriColors }
+
+export const PIECE_SETS: PieceSetItem[] = [
+  {
+    id: 'classic', title: 'Classic', price: 0,
+    sher: { ring: '#6B3407', bg: ['#FFE9A8', '#E8A317'], mane: ['#E08A1E', '#A9500C'], face: ['#FFD98A', '#F0B040'] },
+    bakri: { ring: '#2E6B3A', bg: ['#E9F7EC', '#7FC48D'] },
+  },
+  {
+    id: 'royal', title: 'Royal', price: 1500,
+    sher: { ring: '#2C0A4A', bg: ['#E6D2FF', '#8E4FD0'], mane: ['#6A2FA8', '#3A1068'], face: ['#FFE08A', '#E0A800'] },
+    bakri: { ring: '#7A4E00', bg: ['#FFF3BF', '#E0A800'] },
+  },
+  {
+    id: 'midnight', title: 'Midnight', price: 2000,
+    sher: { ring: '#0B1426', bg: ['#6F82AA', '#1B2A4A'], mane: ['#34456E', '#16213D'], face: ['#C9D4EA', '#8FA0C4'] },
+    bakri: { ring: '#4A5560', bg: ['#FFFFFF', '#C9D1D9'] },
+  },
+  {
+    id: 'crimson', title: 'Crimson', price: 3000,
+    sher: { ring: '#5A0F1B', bg: ['#FFC2B8', '#D9384F'], mane: ['#B3202F', '#6E0F1C'], face: ['#FFD6A8', '#F0A070'] },
+    bakri: { ring: '#03578A', bg: ['#D6F5FF', '#00B4D8'] },
+  },
+];
+
+export const sherBoardTheme = (id: SherBoardId): SherBoardTheme =>
+  (SHER_BOARDS.find(b => b.id === id) ?? SHER_BOARDS[0]).theme;
+
+export const pieceSet = (id: PieceSetId): PieceSetItem =>
+  PIECE_SETS.find(p => p.id === id) ?? PIECE_SETS[0];
 
 export const bottleTheme = (id: BottleThemeId): BottleTheme =>
   (BOTTLE_THEMES.find(t => t.id === id) ?? BOTTLE_THEMES[0]).theme;

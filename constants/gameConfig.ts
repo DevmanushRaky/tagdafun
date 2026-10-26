@@ -19,6 +19,9 @@ export const GAME_CONFIG = {
   bubble: {
     xpPerWin: 15,         // coins come from STAR_REWARDS
   },
+  bagh: {
+    xpPerWin: 20,         // coins come from STAR_REWARDS, scaled by difficulty
+  },
   dailyChallenge: {
     targetFlips: 5,       // flips needed to complete daily challenge
     coinsReward: 25,

@@ -72,4 +72,12 @@ export const GAMES: GameConfig[] = [
     color: '#5352ED',
     gradient: ['#7B6CFF', '#3D2FC4'],
   },
+  {
+    id: 'bagh',
+    title: 'Sher aur Bakri',
+    description: 'The village hunt game. Play as sher or bakri.',
+    icon: 'paw-outline',
+    color: '#8C5A2B',
+    gradient: ['#B07C45', '#6B4423'],
+  },
 ];

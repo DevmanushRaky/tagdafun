@@ -10,7 +10,7 @@
 
 ## 1. Overview
 
-Tagda Fun is a casual mobile gaming app featuring Coin Toss, Memory Cards, Water Sorting, Patang Baazi, and Bubble Shooter with a gamification system (XP, levels, achievements, and an in-app shop for virtual items bought with in-game coins). This policy explains what data the app stores, how it is handled, and your rights as a user.
+Tagda Fun is a casual mobile gaming app featuring Coin Toss, Memory Cards, Water Sorting, Patang Baazi, Bubble Shooter, and Sher aur Bakri with a gamification system (XP, levels, achievements, and an in-app shop for virtual items bought with in-game coins). This policy explains what data the app stores, how it is handled, and your rights as a user.
 
 **Short version:** Tagda Fun stores your game progress locally on your device. We do not collect personal information, run no backend server, and require no account. The app shows ads through Unity LevelPlay, which may collect certain device data (such as the advertising ID) as described in Section 5.3.
 
@@ -31,7 +31,7 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 | Memory card games played | Profile stats | Device only |
 | Water Sorting games played and current level | Profile stats and level progress | Device only |
 | Memory Cards level and best stars per level | Resume where you left off | Device only |
-| Patang Baazi and Bubble Shooter levels | Resume where you left off | Device only |
+| Patang Baazi and Bubble Shooter levels, last Sher aur Bakri setup | Resume where you left off | Device only |
 | Music on/off choice for each game | Remember your sound setting | Device only |
 | Player nickname you type on the Profile screen (optional) | Shown on the Home and Profile screens | Device only |
 | Current streak and best streak | Achievement tracking | Device only |
@@ -42,7 +42,7 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 ### 2.2 Game History Log (Stored Locally)
 
 The app saves a log of recent game plays (up to 100 entries) on your device, including:
-- Game type (Coin Toss, Memory Cards, Water Sorting, Patang Baazi, Bubble Shooter, a rewarded ad, a daily gift, or a shop purchase)
+- Game type (Coin Toss, Memory Cards, Water Sorting, Patang Baazi, Bubble Shooter, Sher aur Bakri, a rewarded ad, a daily gift, or a shop purchase)
 - Timestamp of each play
 - Coins earned or spent per play
 - Coin toss outcome (heads/tails)

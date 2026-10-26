@@ -6,6 +6,7 @@ import { CoinFace } from './CoinToss';
 import { useShop } from '../contexts/ShopContext';
 import { coinPalette } from '../constants/shop';
 import { WATER_COLORS } from '../utils/waterSort';
+import { SherBakriIcon } from './SherBakriIcons';
 
 // Game artwork for the home cards, drawn in a 64×64 box.
 
@@ -119,5 +120,6 @@ export const GameIcon: React.FC<{ id: string; size: number }> = ({ id, size }) =
   if (id === 'water') return <WaterIcon size={size} />;
   if (id === 'kite') return <KiteIcon size={size} />;
   if (id === 'bubble') return <BubbleIcon size={size} />;
+  if (id === 'bagh') return <SherBakriIcon size={size} />;
   return null;
 };

@@ -13,8 +13,9 @@ All notable releases of Tagda Fun are documented here.
 - **Water Sorting** — Level-based bottle sorting puzzle with hints. Coin reward depends on moves vs. par (10–150 coins) plus +15 XP per win. Progress is saved between sessions.
 - **Ads (Unity LevelPlay)** — Banner and native ads, plus optional rewarded ads (+50 coins) after a game. See `ADS_INTEGRATION.md`.
 - **Patang Baazi** — Kite-fighting game: fly your kite, cross strings and swipe fast to cut rivals. Levels, lives, a boss kite every 5th level, star-based coins. Built with React Native Skia.
+- **Sher aur Bakri** — The village game against the computer or a friend. Easy (1 sher, 16 bakri) and Hard (2 sher, 20 bakri) levels on a 5×5 board, the bakri starting at home in four equal stacks.
 - **Bubble Shooter** — Aim with wall bounces, pop 3+ of a colour, drop what hangs below; the ceiling comes down after misses. Levels, star-based coins.
-- **Shop** — Daily gift, power-ups (Memory hint, Water hint, extra bottle), coin skins, card backs and bottle themes, all bought with in-game coins.
+- **Shop** — Daily gift, power-ups (Memory hint, Water hint, extra bottle), coin skins, card backs, bottle themes, and Sher aur Bakri boards (5) and piece sets (4), all bought with in-game coins.
 - **Redesigned Navigation** — 4-tab layout: Home, Coins, Shop, Profile.
 
 **Removed**

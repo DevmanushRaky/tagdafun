@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGameStats, Achievement, PlayerStats } from '../contexts/GameStatsContext';
 import { useShop } from '../contexts/ShopContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
-import { COIN_SKINS, CARD_BACKS, BOTTLE_THEMES } from '../constants/shop';
+import { COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, SHER_BOARDS, PIECE_SETS } from '../constants/shop';
 import { GameIcon } from '../components/GameIcons';
 import { MEMORY_LEVEL_KEY, MEMORY_STARS_KEY } from '../components/MemoryCards';
 import { WATER_LEVEL_KEY } from '../components/WaterSorting';
@@ -153,9 +153,6 @@ const ProfileScreen: React.FC = () => {
             )}
             <Text style={styles.levelTitle}>Level {levelInfo.level} · {levelInfo.title}</Text>
           </View>
-          <TouchableOpacity style={styles.sharePill} onPress={shareGame} activeOpacity={0.8} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
-            <Ionicons name="share-social" size={16} color="white" />
-          </TouchableOpacity>
         </View>
 
         <View style={styles.xpBlock}>
@@ -183,6 +180,20 @@ const ProfileScreen: React.FC = () => {
         </View>
       </LinearGradient>
 
+      {/* Invite */}
+      <TouchableOpacity style={styles.invite} onPress={shareGame} activeOpacity={0.88}>
+        <LinearGradient colors={['#FF8C42', '#FF5E00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.inviteGrad}>
+          <View style={styles.inviteIcon}>
+            <Ionicons name="people" size={22} color="white" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.inviteTitle}>Invite friends</Text>
+            <Text style={styles.inviteSub}>Share your level and the game link</Text>
+          </View>
+          <Ionicons name="share-social" size={20} color="white" />
+        </LinearGradient>
+      </TouchableOpacity>
+
       {/* Games */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your games</Text>
@@ -207,40 +218,38 @@ const ProfileScreen: React.FC = () => {
             id="bubble" title="Bubble Shooter" border
             cells={[{ label: 'Cleared', value: stats.gamesPlayed.bubble }, { label: 'Level', value: bubbleLevel }, { label: 'Coins', value: stats.coinsEarned.bubble }]}
           />
+          <GameStatRow
+            id="bagh" title="Sher aur Bakri" border
+            cells={[{ label: 'Wins', value: stats.gamesPlayed.bagh }, { label: 'Coins', value: stats.coinsEarned.bagh }]}
+          />
         </View>
       </View>
 
       {/* Collection */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Collection</Text>
-        <View style={styles.collection}>
-          {[
+        {[
+          [
             { icon: 'ellipse', color: '#E0A800', label: 'Coin skins', owned: shop.ownedSkins.length, total: COIN_SKINS.length },
             { icon: 'albums', color: '#0077B6', label: 'Card backs', owned: shop.ownedBacks.length, total: CARD_BACKS.length },
             { icon: 'water', color: '#17B85A', label: 'Bottle themes', owned: shop.ownedThemes.length, total: BOTTLE_THEMES.length },
-          ].map(c => (
-            <View key={c.label} style={styles.collectTile}>
-              <Ionicons name={c.icon as any} size={20} color={c.color} />
-              <Text style={styles.collectValue}>{c.owned}/{c.total}</Text>
-              <Text style={styles.collectLabel}>{c.label}</Text>
-            </View>
-          ))}
-        </View>
+          ],
+          [
+            { icon: 'grid', color: '#B07C45', label: 'Sher boards', owned: shop.ownedBoards.length, total: SHER_BOARDS.length },
+            { icon: 'paw', color: '#E8590C', label: 'Sher & Bakri pieces', owned: shop.ownedPieces.length, total: PIECE_SETS.length },
+          ],
+        ].map((row, r) => (
+          <View key={r} style={[styles.collection, r > 0 && { marginTop: 10 }]}>
+            {row.map(c => (
+              <View key={c.label} style={styles.collectTile}>
+                <Ionicons name={c.icon as any} size={20} color={c.color} />
+                <Text style={styles.collectValue}>{c.owned}/{c.total}</Text>
+                <Text style={styles.collectLabel}>{c.label}</Text>
+              </View>
+            ))}
+          </View>
+        ))}
       </View>
-
-      {/* Invite */}
-      <TouchableOpacity style={styles.invite} onPress={shareGame} activeOpacity={0.88}>
-        <LinearGradient colors={['#FF8C42', '#FF5E00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.inviteGrad}>
-          <View style={styles.inviteIcon}>
-            <Ionicons name="people" size={22} color="white" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.inviteTitle}>Invite friends</Text>
-            <Text style={styles.inviteSub}>Share your level and the game link</Text>
-          </View>
-          <Ionicons name="share-social" size={20} color="white" />
-        </LinearGradient>
-      </TouchableOpacity>
 
       {/* Achievements */}
       <View style={styles.section}>
@@ -289,7 +298,6 @@ const ProfileScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>More</Text>
         <View style={styles.card}>
           <MoreRow icon="star" color="#E0A800" label="Rate Tagda Fun" onPress={rateApp} />
-          <MoreRow icon="share-social" color={COLORS.primary} label="Share with friends" onPress={shareGame} border />
           <MoreRow icon="shield-checkmark" color="#17B85A" label="Privacy Policy" onPress={openPrivacy} border />
           <View style={[styles.moreRow, styles.rowBorder]}>
             <View style={[styles.moreIcon, { backgroundColor: COLORS.surfaceDark }]}>
@@ -352,7 +360,6 @@ const styles = StyleSheet.create({
   nameEditRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   nameInput: { flex: 1, fontSize: 18, fontWeight: '800', color: 'white', borderBottomWidth: 1.5, borderBottomColor: 'rgba(255,255,255,0.4)', paddingVertical: 4 },
   nameBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
-  sharePill: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' },
   levelTitle: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.7)', marginTop: 3 },
 
   xpBlock: { marginTop: SPACING.md },

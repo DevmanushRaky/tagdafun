@@ -23,6 +23,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'water', label: 'Water' },
   { id: 'kite', label: 'Patang' },
   { id: 'bubble', label: 'Bubble' },
+  { id: 'bagh', label: 'Sher-Bakri' },
   { id: 'ad', label: 'Ads' },
   { id: 'gift', label: 'Gifts' },
   { id: 'shop', label: 'Shop' },
@@ -70,6 +71,7 @@ const CoinsScreen: React.FC = () => {
     water: `${played.water} levels · ${starRewardRange} by stars`,
     kite: `${played.kite} levels · ${starRewardRange} by stars`,
     bubble: `${played.bubble} levels · ${starRewardRange} by stars`,
+    bagh: `${played.bagh} wins · more on Hard`,
   };
   const rows: SourceRow[] = [
     ...GAMES.map(g => ({
@@ -218,6 +220,7 @@ const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
     : t === 'memory' ? 'Memory Cards'
     : t === 'kite' ? 'Patang Baazi'
     : t === 'bubble' ? 'Bubble Shooter'
+    : t === 'bagh' ? 'Sher aur Bakri'
     : 'Water Sorting';
 
   const icon = t === 'shop'
@@ -251,6 +254,15 @@ const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
     detail = (
       <View style={styles.detailRow}>
         <Text style={styles.logDetail}>Level {(t === 'kite' ? log.kiteLevel : log.bubbleLevel) ?? '?'}</Text>
+        {log.stars ? <Stars count={log.stars} /> : null}
+      </View>
+    );
+  } else if (t === 'bagh') {
+    detail = (
+      <View style={styles.detailRow}>
+        <Text style={styles.logDetail}>
+          Won as {log.baghSide === 'sher' ? 'sher' : 'bakri'}{log.baghDifficulty ? ` · ${log.baghDifficulty}` : ''}
+        </Text>
         {log.stars ? <Stars count={log.stars} /> : null}
       </View>
     );

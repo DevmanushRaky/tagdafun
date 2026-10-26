@@ -16,6 +16,7 @@ import MemoryCards from '../components/MemoryCards';
 import WaterSorting from '../components/WaterSorting';
 import KiteFight from '../components/KiteFight';
 import BubbleShooter from '../components/BubbleShooter';
+import SherBakri from '../components/SherBakri';
 import { GameIcon } from '../components/GameIcons';
 import AdBanner from '../components/ads/AdBanner';
 import NativeAdCard from '../components/ads/NativeAdCard';
@@ -266,6 +267,13 @@ const HomeScreen: React.FC = () => {
                 }}
               />
             )}
+            {activeGame === 'bagh' && (
+              <SherBakri
+                onWin={() => {
+                  handleGamePlayed();
+                }}
+              />
+            )}
           </ScrollView>
 
           <View style={{ paddingBottom: insets.bottom }}>
@@ -288,6 +296,7 @@ const CARD_META: Record<string, { tagline: string; coins: string; xp: number }> 
   water: { tagline: 'Pour until every bottle is one colour.', coins: starRewardRange, xp: GAME_CONFIG.water.xpPerWin },
   kite: { tagline: 'Fly high, cut their strings. Bo kaata!', coins: starRewardRange, xp: GAME_CONFIG.kite.xpPerWin },
   bubble: { tagline: 'Aim, bounce, pop three of a colour.', coins: starRewardRange, xp: GAME_CONFIG.bubble.xpPerWin },
+  bagh: { tagline: 'Trap the sher, or hunt the bakri.', coins: '40–225', xp: GAME_CONFIG.bagh.xpPerWin },
 };
 
 const GameCard: React.FC<{ game: GameConfig; onPress: () => void }> = ({ game, onPress }) => {

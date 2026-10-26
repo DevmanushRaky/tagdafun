@@ -17,9 +17,9 @@ Tagda Fun: Fun Mini Games
 ## Short description (max 80 characters)
 
 ```
-Flip coins, match cards, sort water and level up in quick, fun mini games!
+Flip coins, match cards, sort water, fly kites, pop bubbles and more!
 ```
-74 / 80 characters
+69 / 80 characters
 
 ---
 
@@ -27,14 +27,20 @@ Flip coins, match cards, sort water and level up in quick, fun mini games!
 
 ```
 Tagda Fun is a simple, fast, and fun mini-game app — flip a coin, match
-cards, sort colourful water, and see how far you can climb.
+cards, sort colourful water, fight kites, pop bubbles and more, and see how
+far you can climb.
 
-PLAY THREE GAMES
-• Coin Toss — pick Heads or Tails and watch a realistic gold coin flip. Free
-  to play, every time.
+PLAY SEVEN GAMES
+• Coin Toss — pick Heads or Tails and watch a realistic coin flip.
 • Memory Cards — flip the cards and match every pair.
 • Water Sorting — pour water between bottles until every bottle holds a
   single colour. Level after level of relaxing puzzles.
+• Patang Baazi — fly your kite, cross strings and swipe fast to cut rival
+  kites. Beat a boss kite every five levels.
+• Bubble Shooter — aim, bounce and pop three or more of a colour.
+• Sher aur Bakri — the village game of the herd against the sher. Play as
+  either side against the computer or a friend.
+• Tic-Tac-Toe — classic three in a row, against the computer or a friend.
 
 LEVEL UP AS YOU PLAY
 Every game earns you XP. Climb through 11 levels — from Newbie all the way
@@ -53,16 +59,18 @@ CHASE ACHIEVEMENTS
 status. Build a streak and see how many you can collect.
 
 SHOP
-Spend your coins on new coin skins, card designs and power-ups, and claim
-a free daily gift that grows every day you come back.
+Spend your coins on coin skins, card designs, bottle themes, Sher aur Bakri
+boards and pieces, Tic-Tac-Toe symbols and power-ups, and claim a free daily
+gift that grows every day you come back.
 
 SIMPLE, CLEAN, AND FAST
 No clutter, no confusing menus — just open the app and play. All games work
-offline, so you can enjoy them anytime, anywhere.
+offline, so you can enjoy them anytime, anywhere. The app shows ads, and you
+can choose to watch a short video for bonus coins.
 
 Download Tagda Fun and start playing today!
 ```
-Character count: 1,261 / 4000
+Character count: 1788 / 4000
 
 ---
 

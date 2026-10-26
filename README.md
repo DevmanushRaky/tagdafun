@@ -7,7 +7,7 @@
 **Play. Challenge. Enjoy!**
 
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-brightgreen)](https://github.com/DevmanushRaky/tagdafun)
-[![Version](https://img.shields.io/badge/version-1.2.0-orange)](https://github.com/DevmanushRaky/tagdafun/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-orange)](https://github.com/DevmanushRaky/tagdafun/releases)
 [![Expo](https://img.shields.io/badge/Expo-SDK%2057-blue)](https://expo.dev)
 
 </div>
@@ -312,7 +312,7 @@ tagdafun/
 ## Android Info
 
 - **Package:** `com.tagdafun.app`
-- **Version:** `1.2.0`
+- **Version:** `1.3.0`
 - **Target SDK:** 36
 - **Min SDK:** 24
 

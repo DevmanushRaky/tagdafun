@@ -16,7 +16,7 @@
 
 ## What is Tagda Fun?
 
-Tagda Fun is a gamified mini-game app with six games — **Coin Toss**, **Memory Cards**, **Water Sorting**, **Patang Baazi**, **Bubble Shooter** and **Sher aur Bakri** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and a Shop where coins buy power-ups and skins. All data is stored locally on your device.
+Tagda Fun is a gamified mini-game app with seven games — **Coin Toss**, **Memory Cards**, **Water Sorting**, **Patang Baazi**, **Bubble Shooter**, **Sher aur Bakri** and **Tic-Tac-Toe** — wrapped in a full progression system with XP, levels, achievements, daily challenges, and a Shop where coins buy power-ups and skins. All data is stored locally on your device.
 
 ---
 
@@ -29,6 +29,7 @@ All values live in `constants/gameConfig.ts`.
 |------|-------|
 | Coin Toss | **+10** for a right call, **+5** for a wrong one |
 | Memory Cards, Water Sorting, Patang Baazi and Bubble Shooter | per cleared level by stars: **3★ = 150**, **2★ = 100**, **1★ = 80** (`STAR_REWARDS`) |
+| Tic-Tac-Toe vs the computer | **+50** for a win, **+30** for a loss or a draw; 2-player games give no coins |
 | Daily challenge | +25 |
 | Daily gift (Shop) | 10 → 60 over a 7-day run |
 
@@ -81,6 +82,12 @@ All values live in `constants/gameConfig.ts`.
 - **Specials**: clear 6+ with one shot to load a 💣 **bomb** (blasts everything around where it lands); pop 3 shots in a row for a 🌈 **rainbow** (joins the biggest neighbouring colour group)
 - Sounds: shot, pop, bomb (Kenney, CC0). Vibration only when a level is cleared
 
+### Tic-Tac-Toe — Free to play
+- Classic 3×3: three in a row wins. Play the computer (as X, moving first, or as O) or 2 players on one phone; there are no levels
+- The computer plays perfectly most of the time but slips to a random square 1 time in 4 (`SLIP_CHANCE` in `utils/ticTacToe.ts`), so it can be beaten
+- Every finished game against the computer pays: win **+50** coins, loss or draw **+30**, plus 15 XP
+- An interstitial ad comes up by itself after every 3rd finished game, once an Interstitial ad unit ID is set in `app.json` (`levelPlayInterstitialAdUnitId`); with none set, or none loaded, no ad shows
+
 ### Sher aur Bakri — Free to play
 - The village game on a lattice board (diagonals from every other point). Pieces step one point along a line; a sher jumps over a bakri to an empty point to hunt it
 - Every level starts with all its bakri on the board, an equal number to a "ghar" (as in Ludo) on each corner of the middle four squares; the sher wait at the ends of the centre row (1 sher: left end; 2 sher: left and right ends). A sher can jump a stack too but takes only one bakri from it, and bakri cannot step back onto a stack
@@ -102,7 +109,7 @@ All values live in `constants/gameConfig.ts`.
 |--------|--------------|
 | **Home** | Player card (level, XP bar, streak), daily challenge, game cards |
 | **Coins** | Coin balance, per-game breakdown, full game history log |
-| **Shop** | Daily gift, power-ups, coin skins, card backs, bottle themes, Sher aur Bakri boards and pieces bought with coins |
+| **Shop** | Daily gift, power-ups, coin skins, card backs, bottle themes, Sher aur Bakri boards and pieces, and Tic-Tac-Toe symbols bought with coins |
 | **Profile** | Editable nickname, level + XP, streaks, per-game stats, Shop collection, achievements with progress |
 
 ---
@@ -140,7 +147,8 @@ Coins have no cash value; this is where they are spent. Catalog and prices live 
 - **Bottle themes** for Water Sorting (board background, glass, outline, lid): Classic (free), Night 1,200, Sunset 1,500, Forest 1,500, Royal Gold 3,000
 - **Sher aur Bakri boards** (board colours, lines and points): Wooden (free), Meadow 1,200, Ice 2,000, Night 2,500, Royal 4,000
 - **Sher and Bakri pieces** (colours of both tokens): Classic (free), Royal 1,500, Midnight 2,000, Crimson 3,000
-- Unlocking everything costs **44,400 coins**, about 370 levels at a 2–3★ average
+- **Tic-Tac-Toe symbols** (the X and O marks): Classic (free), Neon 1,000, Royal 1,500, Sun & Moon 2,000, Star & Heart 2,500, Sher & Bakri 3,500
+- Unlocking everything costs **54,900 coins**, about 460 levels at a 2–3★ average
 - Every purchase asks for confirmation and is logged in the Coins history
 - No random "mystery box": paid random rewards count as loot boxes on Google Play
 
@@ -170,7 +178,7 @@ The app runs fully offline using AsyncStorage — no backend, no login required.
 - All three games with full coin and XP logic
 - Ads via Unity LevelPlay (banner, native, optional rewarded +50 coins) — see `ADS_INTEGRATION.md`
 - Persistent stats, history, and achievements (AsyncStorage)
-- Shop with daily gift, power-ups, coin skins, card backs, bottle themes, and Sher aur Bakri boards and pieces
+- Shop with daily gift, power-ups, coin skins, card backs, bottle themes, Sher aur Bakri boards and pieces, and Tic-Tac-Toe symbols
 - Daily challenge with auto-reset
 - 11-level XP progression
 

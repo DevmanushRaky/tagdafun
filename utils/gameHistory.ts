@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const HISTORY_KEY = '@tagdafun_history_v1';
 const MAX_ENTRIES = 100;
 
-export type GameLogType = 'coin' | 'memory' | 'water' | 'kite' | 'bubble' | 'bagh' | 'ad' | 'gift' | 'shop';
+export type GameLogType = 'coin' | 'memory' | 'water' | 'kite' | 'bubble' | 'bagh' | 'tictac' | 'ad' | 'gift' | 'shop';
 
 export interface GameLog {
   id: string;
@@ -26,6 +26,8 @@ export interface GameLog {
   // sher aur bakri
   baghSide?: 'bakri' | 'sher';
   baghDifficulty?: 'easy' | 'medium' | 'hard';
+  // tic-tac-toe
+  tictacResult?: 'win' | 'loss' | 'draw';
   // memory cards, water sorting, patang baazi
   stars?: number;
   // water sorting

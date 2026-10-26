@@ -10,7 +10,7 @@
 
 ## 1. Overview
 
-Tagda Fun is a casual mobile gaming app featuring Coin Toss, Memory Cards, Water Sorting, Patang Baazi, Bubble Shooter, and Sher aur Bakri with a gamification system (XP, levels, achievements, and an in-app shop for virtual items bought with in-game coins). This policy explains what data the app stores, how it is handled, and your rights as a user.
+Tagda Fun is a casual mobile gaming app featuring Coin Toss, Memory Cards, Water Sorting, Patang Baazi, Bubble Shooter, Sher aur Bakri, and Tic-Tac-Toe with a gamification system (XP, levels, achievements, and an in-app shop for virtual items bought with in-game coins). This policy explains what data the app stores, how it is handled, and your rights as a user.
 
 **Short version:** Tagda Fun stores your game progress locally on your device. We do not collect personal information, run no backend server, and require no account. The app shows ads through Unity LevelPlay, which may collect certain device data (such as the advertising ID) as described in Section 5.3.
 
@@ -42,7 +42,7 @@ All game data is stored **only on your device** using AsyncStorage (local storag
 ### 2.2 Game History Log (Stored Locally)
 
 The app saves a log of recent game plays (up to 100 entries) on your device, including:
-- Game type (Coin Toss, Memory Cards, Water Sorting, Patang Baazi, Bubble Shooter, Sher aur Bakri, a rewarded ad, a daily gift, or a shop purchase)
+- Game type (Coin Toss, Memory Cards, Water Sorting, Patang Baazi, Bubble Shooter, Sher aur Bakri, Tic-Tac-Toe, a rewarded ad, a daily gift, or a shop purchase)
 - Timestamp of each play
 - Coins earned or spent per play
 - Coin toss outcome (heads/tails)

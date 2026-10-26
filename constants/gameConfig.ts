@@ -22,6 +22,12 @@ export const GAME_CONFIG = {
   bagh: {
     xpPerWin: 20,         // coins come from STAR_REWARDS, scaled by difficulty
   },
+  tictac: {
+    winCoins: 50,         // win against the computer
+    loseCoins: 30,        // loss against the computer
+    drawCoins: 30,        // draw against the computer
+    xpPerPlay: 15,        // 2-player games give no coins or XP
+  },
   dailyChallenge: {
     targetFlips: 5,       // flips needed to complete daily challenge
     coinsReward: 25,

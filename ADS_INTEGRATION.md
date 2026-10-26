@@ -21,7 +21,7 @@ Unity LevelPlay is a mediation platform: it routes ad requests to whichever unde
 | rawarded ads | `jqvx5o80z4v2i70t` | Rewarded | Memory Cards "Hint" button (no coins, reveals the cards), Water Sorting "Hint" and "+ Bottle" (no coins), and an automatic prompt after every 4th finished game (at most once every 3 minutes) |
 | native ads   | `d1das3rlcdyyqouj` | Native   | Home screen (after Games section), inside the gameplay screen (every game except Patang Baazi, which has the banner instead), and at the bottom of the Shop screen |
 
-Interstitial and legacy ad formats were intentionally not added — a full-screen interruption ad was judged too disruptive for this app's flow.
+Interstitial ads are used in one place only: **Tic-Tac-Toe** shows one by itself after every 3rd finished game (`services/interstitialAd.ts`). It needs an Interstitial ad unit in the LevelPlay dashboard; put its ID in `app.json` → `expo.extra.levelPlayInterstitialAdUnitId`. While that is empty, or no ad is loaded, nothing shows and the game goes on. Other games stay free of full-screen interruptions, and legacy ad formats were intentionally not added.
 
 **Note on Native ads:** the RN SDK does not take an ad unit ID directly in code. `LevelPlayNativeAd.builder()` only accepts a `placement` (left as the SDK default), and LevelPlay automatically serves whichever Native ad unit is configured for the app. The ad unit ID above is kept for reference only, not used in code.
 

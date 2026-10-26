@@ -15,8 +15,7 @@ import { COLORS, TYPOGRAPHY, BORDER_RADIUS, SPACING, SHADOWS } from '../constant
 import { GAME_CONFIG, coinsForStars } from '../constants/gameConfig';
 import { logGame } from '../utils/gameHistory';
 import { playSound } from '../utils/sound';
-import { ADS } from '../services/ads';
-import { showRewardedAd } from '../services/rewardedAd';
+import WatchVideoButton from './ads/WatchVideoButton';
 import StarRewardTiers from './StarRewardTiers';
 import { SherToken, BakriToken } from './SherBakriIcons';
 import {
@@ -86,7 +85,7 @@ const Token = memo(({ kind, size, id, sher, bakri }: { kind: number; size: numbe
 interface SherBakriProps { onWin: () => void }
 
 const SherBakri: React.FC<SherBakriProps> = ({ onWin }) => {
-  const { stats, recordGame, addBonusCoins } = useGameStats();
+  const { stats, recordGame } = useGameStats();
   const { shop } = useShop();
   const set = pieceSet(shop.pieceSet);
   const boardTheme = sherBoardTheme(shop.sherBoard);
@@ -99,8 +98,6 @@ const SherBakri: React.FC<SherBakriProps> = ({ onWin }) => {
   const [selected, setSelected] = useState<number | null>(null);
   const [lastMove, setLastMove] = useState<Move | null>(null);
   const [thinking, setThinking] = useState(false);
-  // The video ad on the result card: ready to watch, playing, already watched, or none available.
-  const [video, setVideo] = useState<'ready' | 'loading' | 'done' | 'none'>('ready');
   const [over, setOver] = useState<{ winner: Side; reason: string; stars: number; coins: number } | null>(null);
 
   const piecesRef = useRef<Piece[]>([]);
@@ -188,7 +185,6 @@ const SherBakri: React.FC<SherBakriProps> = ({ onWin }) => {
     setSelected(null);
     setLastMove(null);
     setOver(null);
-    setVideo('ready');
     setScreen('play');
     playingRef.current = true;
     // The herd gathers in the middle, then the sher take their places at the ends of the centre row.
@@ -326,21 +322,6 @@ const SherBakri: React.FC<SherBakriProps> = ({ onWin }) => {
       await recordGame('bagh', undefined, coins);
       await logGame({ timestamp: Date.now(), gameType: 'bagh', costCoins: 0, earnedCoins: coins, netCoins: coins, baghSide: side, baghDifficulty: difficulty, stars });
       onWin();
-    }
-  };
-
-  // The viewer chooses to watch: a video ad for bonus coins after any finished game.
-  const watchVideo = async () => {
-    if (video !== 'ready') return;
-    setVideo('loading');
-    const res = await showRewardedAd();
-    if (!mounted.current) return;
-    if (res === 'rewarded') {
-      await addBonusCoins(ADS.rewardedCoinsAmount);
-      logGame({ timestamp: Date.now(), gameType: 'ad', costCoins: 0, earnedCoins: ADS.rewardedCoinsAmount, netCoins: ADS.rewardedCoinsAmount }).catch(() => {});
-      setVideo('done');
-    } else {
-      setVideo(res === 'unavailable' ? 'none' : 'ready');
     }
   };
 
@@ -608,17 +589,7 @@ const SherBakri: React.FC<SherBakriProps> = ({ onWin }) => {
                   <Text style={styles.xp}>+{GAME_CONFIG.bagh.xpPerWin} XP · balance {stats.totalCoins}</Text>
                 </>
               )}
-              {!!ADS.rewardedAdUnitId && (
-                <TouchableOpacity style={[styles.videoBtn, video !== 'ready' && styles.videoBtnOff]} onPress={watchVideo} disabled={video !== 'ready'} activeOpacity={0.85}>
-                  <Ionicons name={video === 'done' ? 'checkmark-circle' : 'play-circle'} size={20} color={video === 'ready' ? '#E8590C' : COLORS.textSecondary} />
-                  <Text style={[styles.videoText, video !== 'ready' && styles.videoTextOff]}>
-                    {video === 'done' ? `+${ADS.rewardedCoinsAmount} coins added`
-                      : video === 'loading' ? 'Loading video…'
-                      : video === 'none' ? 'No video available right now'
-                      : `Watch a video · +${ADS.rewardedCoinsAmount} coins`}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <WatchVideoButton resetKey={over} />
               <TouchableOpacity style={styles.primaryBtn} onPress={startGame} activeOpacity={0.85}>
                 <LinearGradient colors={['#FF8C42', '#E8590C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.primaryGrad}>
                   <Ionicons name="refresh" size={18} color="white" />
@@ -710,10 +681,6 @@ const styles = StyleSheet.create({
   reward: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: BORDER_RADIUS.full, paddingVertical: 12, width: '100%' },
   rewardText: { fontSize: 17, fontWeight: '800', color: 'white' },
   xp: { ...TYPOGRAPHY.small, fontWeight: '800', color: '#A55EEA' },
-  videoBtn: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: BORDER_RADIUS.full, borderWidth: 2, borderColor: '#E8590C', backgroundColor: '#FFF4E8', marginTop: 4 },
-  videoBtnOff: { borderColor: COLORS.surfaceDark, backgroundColor: COLORS.surfaceDark },
-  videoText: { fontSize: 15, fontWeight: '800', color: '#E8590C' },
-  videoTextOff: { color: COLORS.textSecondary },
   primaryBtn: { width: '100%', borderRadius: BORDER_RADIUS.full, overflow: 'hidden', marginTop: 4 },
   primaryGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15 },
   primaryText: { fontSize: 16, fontWeight: '800', color: 'white' },

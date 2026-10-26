@@ -56,7 +56,8 @@
       "levelPlayAppKey": "27c2ca195",
       "levelPlayBannerAdUnitId": "suwmraw3whvjtbco",
       "levelPlayRewardedAdUnitId": "jqvx5o80z4v2i70t",
-      "levelPlayNativeAdUnitId": "d1das3rlcdyyqouj"
+      "levelPlayNativeAdUnitId": "d1das3rlcdyyqouj",
+      "levelPlayInterstitialAdUnitId": ""
     },
     "owner": "devmanushraky"
   }

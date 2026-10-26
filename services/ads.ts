@@ -9,6 +9,8 @@ export const ADS = {
   bannerAdUnitId: extra.levelPlayBannerAdUnitId as string,
   rewardedAdUnitId: extra.levelPlayRewardedAdUnitId as string,
   nativeAdUnitId: extra.levelPlayNativeAdUnitId as string,
+  // Optional: Tic-Tac-Toe shows this between games when it is set. Create an Interstitial ad unit in the LevelPlay dashboard.
+  interstitialAdUnitId: extra.levelPlayInterstitialAdUnitId as string | undefined,
   rewardedCoinsAmount: 50,
 };
 

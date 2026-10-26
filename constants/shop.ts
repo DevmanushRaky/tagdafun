@@ -1,8 +1,8 @@
 // ─── SHOP CATALOG ────────────────────────────────────────────────────────────
 // Prices are in in-game coins. For scale: a coin flip pays 5–10, a Memory or Water
 // level 80–150 by stars, the daily challenge 25. Unlocking every skin and card back
-// costs 21,000, every bottle theme another 7,200 and the Sher aur Bakri boards and pieces 16,200:
-// about 370 levels at a 2–3★ average.
+// costs 21,000, every bottle theme another 7,200, the Sher aur Bakri boards and pieces 16,200 and the
+// Tic-Tac-Toe symbols 10,500: about 460 levels at a 2–3★ average.
 
 export type PowerUpId = 'memoryHint' | 'waterHint' | 'waterBottle';
 
@@ -178,6 +178,29 @@ export const PIECE_SETS: PieceSetItem[] = [
     bakri: { ring: '#03578A', bg: ['#D6F5FF', '#00B4D8'] },
   },
 ];
+
+/** Tic-Tac-Toe symbols: what the two players' marks look like. The drawing itself is in components/TicTacMarks. */
+export type MarkSetId = 'classic' | 'neon' | 'royal' | 'sunmoon' | 'starheart' | 'sherbakri';
+
+export interface MarkSetItem {
+  id: MarkSetId;
+  title: string;
+  price: number;
+  x: string;   // accent colour of the first player's mark
+  o: string;   // accent colour of the second player's mark
+}
+
+export const MARK_SETS: MarkSetItem[] = [
+  { id: 'classic', title: 'Classic', price: 0, x: '#FF6B00', o: '#0077B6' },
+  { id: 'neon', title: 'Neon', price: 1000, x: '#FF2E93', o: '#18B8D8' },
+  { id: 'royal', title: 'Royal', price: 1500, x: '#C8921A', o: '#7B3FBF' },
+  { id: 'sunmoon', title: 'Sun & Moon', price: 2000, x: '#F29A00', o: '#5B7BD5' },
+  { id: 'starheart', title: 'Star & Heart', price: 2500, x: '#F2B000', o: '#E0314B' },
+  { id: 'sherbakri', title: 'Sher & Bakri', price: 3500, x: '#E8A317', o: '#2E9E50' },
+];
+
+export const markSet = (id: MarkSetId): MarkSetItem =>
+  MARK_SETS.find(m => m.id === id) ?? MARK_SETS[0];
 
 export const sherBoardTheme = (id: SherBoardId): SherBoardTheme =>
   (SHER_BOARDS.find(b => b.id === id) ?? SHER_BOARDS[0]).theme;

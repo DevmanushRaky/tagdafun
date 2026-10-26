@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGameStats, Achievement, PlayerStats } from '../contexts/GameStatsContext';
 import { useShop } from '../contexts/ShopContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
-import { COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, SHER_BOARDS, PIECE_SETS } from '../constants/shop';
+import { COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, SHER_BOARDS, PIECE_SETS, MARK_SETS } from '../constants/shop';
 import { GameIcon } from '../components/GameIcons';
 import { MEMORY_LEVEL_KEY, MEMORY_STARS_KEY } from '../components/MemoryCards';
 import { WATER_LEVEL_KEY } from '../components/WaterSorting';
@@ -222,6 +222,10 @@ const ProfileScreen: React.FC = () => {
             id="bagh" title="Sher aur Bakri" border
             cells={[{ label: 'Wins', value: stats.gamesPlayed.bagh }, { label: 'Coins', value: stats.coinsEarned.bagh }]}
           />
+          <GameStatRow
+            id="tictac" title="Tic-Tac-Toe" border
+            cells={[{ label: 'Played', value: stats.gamesPlayed.tictac }, { label: 'Coins', value: stats.coinsEarned.tictac }]}
+          />
         </View>
       </View>
 
@@ -236,7 +240,8 @@ const ProfileScreen: React.FC = () => {
           ],
           [
             { icon: 'grid', color: '#B07C45', label: 'Sher boards', owned: shop.ownedBoards.length, total: SHER_BOARDS.length },
-            { icon: 'paw', color: '#E8590C', label: 'Sher & Bakri pieces', owned: shop.ownedPieces.length, total: PIECE_SETS.length },
+            { icon: 'paw', color: '#E8590C', label: 'Sher pieces', owned: shop.ownedPieces.length, total: PIECE_SETS.length },
+            { icon: 'close-circle', color: '#0077B6', label: 'Tic-Tac-Toe', owned: shop.ownedMarks.length, total: MARK_SETS.length },
           ],
         ].map((row, r) => (
           <View key={r} style={[styles.collection, r > 0 && { marginTop: 10 }]}>

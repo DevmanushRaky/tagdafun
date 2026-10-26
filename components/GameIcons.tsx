@@ -109,6 +109,17 @@ const BubbleIcon: React.FC<{ size: number }> = ({ size }) => {
   );
 };
 
+const TicTacIcon: React.FC<{ size: number }> = ({ size }) => (
+  <Svg width={size} height={size} viewBox="0 0 64 64">
+    <Rect x="2" y="2" width="60" height="60" rx="14" fill="#EAF4FB" />
+    <Path d="M23 10 V54 M41 10 V54 M10 23 H54 M10 41 H54" stroke="#9DB8CC" strokeWidth="3" strokeLinecap="round" />
+    <Path d="M12 12 L20 20 M20 12 L12 20" stroke="#FF6B00" strokeWidth="4" strokeLinecap="round" />
+    <Circle cx="32" cy="32" r="6" stroke="#0077B6" strokeWidth="4" fill="none" />
+    <Path d="M44 44 L52 52 M52 44 L44 52" stroke="#FF6B00" strokeWidth="4" strokeLinecap="round" />
+    <Circle cx="48" cy="16" r="5" stroke="#0077B6" strokeWidth="4" fill="none" />
+  </Svg>
+);
+
 // The coin icon shows the coin skin the player picked in the Shop.
 const CoinIcon: React.FC<{ size: number }> = ({ size }) => (
   <CoinFace side="heads" size={size} skin={coinPalette(useShop().shop.coinSkin)} />
@@ -121,5 +132,6 @@ export const GameIcon: React.FC<{ id: string; size: number }> = ({ id, size }) =
   if (id === 'kite') return <KiteIcon size={size} />;
   if (id === 'bubble') return <BubbleIcon size={size} />;
   if (id === 'bagh') return <SherBakriIcon size={size} />;
+  if (id === 'tictac') return <TicTacIcon size={size} />;
   return null;
 };

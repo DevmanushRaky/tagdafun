@@ -24,6 +24,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'kite', label: 'Patang' },
   { id: 'bubble', label: 'Bubble' },
   { id: 'bagh', label: 'Sher-Bakri' },
+  { id: 'tictac', label: 'Tic-Tac-Toe' },
   { id: 'ad', label: 'Ads' },
   { id: 'gift', label: 'Gifts' },
   { id: 'shop', label: 'Shop' },
@@ -72,6 +73,7 @@ const CoinsScreen: React.FC = () => {
     kite: `${played.kite} levels · ${starRewardRange} by stars`,
     bubble: `${played.bubble} levels · ${starRewardRange} by stars`,
     bagh: `${played.bagh} wins · more on Hard`,
+    tictac: `${played.tictac} games · +${GAME_CONFIG.tictac.winCoins} win, +${GAME_CONFIG.tictac.loseCoins} loss or draw`,
   };
   const rows: SourceRow[] = [
     ...GAMES.map(g => ({
@@ -221,6 +223,7 @@ const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
     : t === 'kite' ? 'Patang Baazi'
     : t === 'bubble' ? 'Bubble Shooter'
     : t === 'bagh' ? 'Sher aur Bakri'
+    : t === 'tictac' ? 'Tic-Tac-Toe'
     : 'Water Sorting';
 
   const icon = t === 'shop'
@@ -265,6 +268,12 @@ const LogRow: React.FC<{ log: GameLog; first: boolean }> = ({ log, first }) => {
         </Text>
         {log.stars ? <Stars count={log.stars} /> : null}
       </View>
+    );
+  } else if (t === 'tictac') {
+    detail = (
+      <Text style={[styles.logDetail, { color: log.tictacResult === 'win' ? '#2ED573' : log.tictacResult === 'loss' ? '#E74C3C' : COLORS.textSecondary }]}>
+        {log.tictacResult === 'win' ? 'Won' : log.tictacResult === 'loss' ? 'Lost' : 'Draw'} vs computer
+      </Text>
     );
   } else if (t === 'shop') {
     detail = <Text style={styles.logDetail}>Shop purchase</Text>;

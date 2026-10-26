@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGameStats } from './GameStatsContext';
 import { logGame } from '../utils/gameHistory';
 import {
-  POWER_UPS, COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, SHER_BOARDS, PIECE_SETS, DAILY_GIFT_LADDER,
-  PowerUpId, CoinSkinId, CardBackId, BottleThemeId, SherBoardId, PieceSetId,
+  POWER_UPS, COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, SHER_BOARDS, PIECE_SETS, MARK_SETS, DAILY_GIFT_LADDER,
+  PowerUpId, CoinSkinId, CardBackId, BottleThemeId, SherBoardId, PieceSetId, MarkSetId,
 } from '../constants/shop';
 
 const SHOP_KEY = '@tagdafun_shop_v1';
@@ -21,6 +21,8 @@ interface ShopState {
   sherBoard: SherBoardId;
   ownedPieces: PieceSetId[];
   pieceSet: PieceSetId;
+  ownedMarks: MarkSetId[];
+  markSet: MarkSetId;
   giftLastDate: string;   // toDateString() of the last claim
   giftStreak: number;     // consecutive days claimed, 1-based
 }
@@ -37,6 +39,8 @@ const defaultShop = (): ShopState => ({
   sherBoard: 'wooden',
   ownedPieces: ['classic'],
   pieceSet: 'classic',
+  ownedMarks: ['classic'],
+  markSet: 'classic',
   giftLastDate: '',
   giftStreak: 0,
 });
@@ -58,6 +62,8 @@ interface ShopContextValue {
   selectBoard: (id: SherBoardId) => void;
   buyPieces: (id: PieceSetId) => Promise<BuyResult>;
   selectPieces: (id: PieceSetId) => void;
+  buyMarks: (id: MarkSetId) => Promise<BuyResult>;
+  selectMarks: (id: MarkSetId) => void;
   /** Today's gift amount and which ladder step it is, or null when already claimed today. */
   giftToday: { amount: number; day: number } | null;
   claimGift: () => Promise<number>;
@@ -173,6 +179,18 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (shop.ownedPieces.includes(id)) save({ ...shop, pieceSet: id });
   };
 
+  const buyMarks = async (id: MarkSetId): Promise<BuyResult> => {
+    if (shop.ownedMarks.includes(id)) return 'owned';
+    const m = MARK_SETS.find(x => x.id === id)!;
+    if (!(await pay(m.price, `${m.title} Tic-Tac-Toe symbols`))) return 'poor';
+    save({ ...shop, ownedMarks: [...shop.ownedMarks, id], markSet: id });
+    return 'ok';
+  };
+
+  const selectMarks = (id: MarkSetId) => {
+    if (shop.ownedMarks.includes(id)) save({ ...shop, markSet: id });
+  };
+
   const nextStreak = shop.giftLastDate === yesterday() ? shop.giftStreak + 1 : 1;
   const giftToday = shop.giftLastDate === today()
     ? null
@@ -187,7 +205,7 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <ShopContext.Provider value={{ shop, buyPowerUp, consumePowerUp, buySkin, selectSkin, buyBack, selectBack, buyTheme, selectTheme, buyBoard, selectBoard, buyPieces, selectPieces, giftToday, claimGift }}>
+    <ShopContext.Provider value={{ shop, buyPowerUp, consumePowerUp, buySkin, selectSkin, buyBack, selectBack, buyTheme, selectTheme, buyBoard, selectBoard, buyPieces, selectPieces, buyMarks, selectMarks, giftToday, claimGift }}>
       {children}
     </ShopContext.Provider>
   );

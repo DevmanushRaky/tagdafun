@@ -80,4 +80,12 @@ export const GAMES: GameConfig[] = [
     color: '#8C5A2B',
     gradient: ['#B07C45', '#6B4423'],
   },
+  {
+    id: 'tictac',
+    title: 'Tic-Tac-Toe',
+    description: 'Three in a row wins. Play the computer or a friend.',
+    icon: 'grid-outline',
+    color: '#0077B6',
+    gradient: ['#33A1E0', '#005B8F'],
+  },
 ];

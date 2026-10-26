@@ -10,12 +10,13 @@ import { useGameStats } from '../contexts/GameStatsContext';
 import { useShop, BuyResult } from '../contexts/ShopContext';
 import { COLORS, TYPOGRAPHY, SHADOWS, BORDER_RADIUS, SPACING } from '../constants/theme';
 import {
-  POWER_UPS, COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, SHER_BOARDS, PIECE_SETS, DAILY_GIFT_LADDER,
-  PowerUp, CoinSkin, CardBack, BottleThemeItem, SherBoardItem, PieceSetItem,
+  POWER_UPS, COIN_SKINS, CARD_BACKS, BOTTLE_THEMES, SHER_BOARDS, PIECE_SETS, MARK_SETS, DAILY_GIFT_LADDER,
+  PowerUp, CoinSkin, CardBack, BottleThemeItem, SherBoardItem, PieceSetItem, MarkSetItem,
 } from '../constants/shop';
 import { WaterThemeIcon } from '../components/GameIcons';
 import { CoinFace } from '../components/CoinToss';
 import { SherToken, BakriToken } from '../components/SherBakriIcons';
+import { TicTacMark } from '../components/TicTacMarks';
 import NativeAdCard from '../components/ads/NativeAdCard';
 
 const GAME_TINT = { memory: '#0077B6', water: '#17B85A' } as const;
@@ -34,7 +35,8 @@ type Pending =
   | { kind: 'back'; item: CardBack }
   | { kind: 'theme'; item: BottleThemeItem }
   | { kind: 'board'; item: SherBoardItem }
-  | { kind: 'pieces'; item: PieceSetItem };
+  | { kind: 'pieces'; item: PieceSetItem }
+  | { kind: 'marks'; item: MarkSetItem };
 
 const PriceTag: React.FC<{ price: number; affordable: boolean }> = ({ price, affordable }) => (
   <View style={[styles.price, !affordable && styles.priceOff]}>
@@ -83,6 +85,14 @@ const BoardPreview: React.FC<{ item: SherBoardItem; size: number }> = ({ item, s
   );
 };
 
+/** Both Tic-Tac-Toe marks of a symbol set, on a small board square. */
+const MarksPreview: React.FC<{ item: MarkSetItem; size: number }> = ({ item, size }) => (
+  <View style={[styles.marksPreview, { height: size * 1.1 }]}>
+    <TicTacMark setId={item.id} mark="X" size={size} id={`pv${item.id}`} />
+    <TicTacMark setId={item.id} mark="O" size={size} id={`pv${item.id}`} />
+  </View>
+);
+
 /** A sher and a bakri side by side in a set's colours. */
 const PiecePreview: React.FC<{ item: PieceSetItem; size: number }> = ({ item, size }) => (
   <View style={styles.piecePreview}>
@@ -96,7 +106,7 @@ const PiecePreview: React.FC<{ item: PieceSetItem; size: number }> = ({ item, si
 const ShopScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { stats } = useGameStats();
-  const { shop, buyPowerUp, buySkin, selectSkin, buyBack, selectBack, buyTheme, selectTheme, buyBoard, selectBoard, buyPieces, selectPieces, giftToday, claimGift } = useShop();
+  const { shop, buyPowerUp, buySkin, selectSkin, buyBack, selectBack, buyTheme, selectTheme, buyBoard, selectBoard, buyPieces, selectPieces, buyMarks, selectMarks, giftToday, claimGift } = useShop();
   const [pending, setPending] = useState<Pending | null>(null);
   const [toast, setToast] = useState('');
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -132,7 +142,8 @@ const ShopScreen: React.FC = () => {
     else if (p.kind === 'back') res = await buyBack(p.item.id);
     else if (p.kind === 'theme') res = await buyTheme(p.item.id);
     else if (p.kind === 'board') res = await buyBoard(p.item.id);
-    else res = await buyPieces(p.item.id);
+    else if (p.kind === 'pieces') res = await buyPieces(p.item.id);
+    else res = await buyMarks(p.item.id);
     if (res === 'ok') showToast(p.kind === 'power' ? `${p.item.title} added` : `${p.item.title} unlocked and equipped`);
     else if (res === 'poor') showToast('Not enough coins yet');
   };
@@ -373,6 +384,34 @@ const ShopScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Tic-Tac-Toe symbols */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tic-Tac-Toe symbols</Text>
+          <Text style={styles.sectionSub}>Changes how the marks look in Tic-Tac-Toe.</Text>
+          <View style={styles.grid}>
+            {MARK_SETS.map(item => {
+              const owned = shop.ownedMarks.includes(item.id);
+              const equipped = shop.markSet === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.tile, { width: PIECE_TILE_W }, equipped && styles.tileOn]}
+                  onPress={() => (owned ? selectMarks(item.id) : ask({ kind: 'marks', item }))}
+                  activeOpacity={0.85}
+                >
+                  <MarksPreview item={item} size={44} />
+                  <Text style={styles.tileTitle} numberOfLines={1}>{item.title}</Text>
+                  {equipped
+                    ? <Text style={styles.equipped}>Equipped</Text>
+                    : owned
+                      ? <Text style={styles.useText}>Use</Text>
+                      : <PriceTag price={item.price} affordable={balance >= item.price} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         <NativeAdCard />
       </ScrollView>
 
@@ -394,6 +433,7 @@ const ShopScreen: React.FC = () => {
                 {pending.kind === 'theme' && <ThemePreview item={pending.item} size={76} />}
                 {pending.kind === 'board' && <BoardPreview item={pending.item} size={76} />}
                 {pending.kind === 'pieces' && <PiecePreview item={pending.item} size={64} />}
+                {pending.kind === 'marks' && <MarksPreview item={pending.item} size={64} />}
                 {pending.kind === 'power' && (
                   <View style={[styles.sheetPower, { backgroundColor: GAME_TINT[pending.item.game] + '1A' }]}>
                     <Ionicons name={pending.item.icon as any} size={40} color={GAME_TINT[pending.item.game]} />
@@ -483,6 +523,7 @@ const styles = StyleSheet.create({
   equipped: { fontSize: 12, fontWeight: '800', color: COLORS.primary, paddingVertical: 6 },
   useText: { fontSize: 12, fontWeight: '800', color: '#0077B6', paddingVertical: 6 },
 
+  marksPreview: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   piecePreview: { flexDirection: 'row', alignItems: 'center' },
   themePreview: { borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   backPreview: { borderRadius: 10, padding: 3 },

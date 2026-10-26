@@ -92,6 +92,7 @@ Tagda Fun shows banner, native, and optional rewarded video ads through **Unity 
 - Your device's **advertising ID** (Google Advertising ID)
 - IP address and approximate location derived from it
 - Device and app information (model, OS version, app version)
+- Information about other apps installed on your device, used by some ad networks to measure ad performance and prevent fraud
 - Ad interaction data (impressions, clicks, rewarded ad completions)
 
 This data is collected by those providers for ad delivery, measurement, fraud prevention, and personalization. It is not accessible to us as the developer. See [Unity's Privacy Policy](https://unity.com/legal/privacy-policy) and [Google's Privacy Policy](https://policies.google.com/privacy).

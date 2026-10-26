@@ -26,51 +26,55 @@ Flip coins, match cards, sort water, fly kites, pop bubbles and more!
 ## Full description (max 4000 characters)
 
 ```
-Tagda Fun is a simple, fast, and fun mini-game app — flip a coin, match
-cards, sort colourful water, fight kites, pop bubbles and more, and see how
-far you can climb.
+Tagda Fun brings seven quick, colourful mini games together in one light
+app. Flip a coin, match cards, sort water, fight kites, pop bubbles, play
+Sher aur Bakri or Tic-Tac-Toe — one tap and you're playing.
 
-PLAY SEVEN GAMES
-• Coin Toss — pick Heads or Tails and watch a realistic coin flip.
-• Memory Cards — flip the cards and match every pair.
-• Water Sorting — pour water between bottles until every bottle holds a
-  single colour. Level after level of relaxing puzzles.
-• Patang Baazi — fly your kite, cross strings and swipe fast to cut rival
-  kites. Beat a boss kite every five levels.
-• Bubble Shooter — aim, bounce and pop three or more of a colour.
-• Sher aur Bakri — the village game of the herd against the sher. Play as
-  either side against the computer or a friend.
-• Tic-Tac-Toe — classic three in a row, against the computer or a friend.
+🎮 SEVEN GAMES, ONE APP
+• Patang Baazi — Fly your kite, cross strings and swipe fast to cut rival
+  kites. Face a tough boss kite every five levels.
+• Sher aur Bakri — The classic village strategy game. Play as the sher or
+  the bakri herd, against the computer or a friend on the same phone.
+• Bubble Shooter — Aim, bounce off the walls and pop three or more of a
+  colour before the ceiling comes down.
+• Water Sorting — Pour water between bottles until each one holds a single
+  colour. Level after level of relaxing puzzles, with hints when stuck.
+• Memory Cards — Flip the cards, remember where they are and match every
+  pair.
+• Tic-Tac-Toe — Three in a row, against the computer or a friend.
+• Coin Toss — Call Heads or Tails and watch a realistic coin flip.
 
-LEVEL UP AS YOU PLAY
-Every game earns you XP. Climb through 11 levels — from Newbie all the way
-to Grandmaster.
+⭐ LEVEL UP AS YOU PLAY
+Every game earns XP. Climb 11 levels — from Newbie all the way to
+Grandmaster — and unlock 11 achievements along the way.
 
-COLLECT COINS
-Earn in-game coins every time you play. Track your balance and your full
-play history right inside the app.
+🪙 COLLECT COINS
+Earn in-game coins each time you play and see your full play history in
+the app. Coins are just for fun inside the game.
 
-DAILY CHALLENGE
-Come back each day for a quick challenge. Complete it and give your coins
-and XP an extra boost.
+📅 DAILY CHALLENGE & DAILY GIFT
+Come back every day for a quick challenge and a free gift that grows the
+more days in a row you visit.
 
-CHASE ACHIEVEMENTS
-11 achievements to unlock — from your very first flip to reaching Legend
-status. Build a streak and see how many you can collect.
-
-SHOP
+🛍️ SHOP
 Spend your coins on coin skins, card designs, bottle themes, Sher aur Bakri
-boards and pieces, Tic-Tac-Toe symbols and power-ups, and claim a free daily
-gift that grows every day you come back.
+boards and pieces, Tic-Tac-Toe symbols, and handy power-ups like hints and
+an extra bottle.
 
-SIMPLE, CLEAN, AND FAST
-No clutter, no confusing menus — just open the app and play. All games work
-offline, so you can enjoy them anytime, anywhere. The app shows ads, and you
-can choose to watch a short video for bonus coins.
+⚡ LIGHT, CLEAN AND OFFLINE
+No clutter and no confusing menus. All games work offline, so you can play
+anytime, anywhere. Fun for kids and grown-ups alike.
+
+🚀 MORE GAMES ON THE WAY
+Tagda Fun keeps growing! New games, levels and shop items are added
+regularly — keep the app updated so you never miss a new one. Got an idea
+for a game? Tell us in your review.
+
+The app shows ads. You can choose to watch a short video for bonus coins.
 
 Download Tagda Fun and start playing today!
 ```
-Character count: 1788 / 4000
+Character count: 2045 / 4000
 
 ---
 

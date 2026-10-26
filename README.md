@@ -150,6 +150,7 @@ Coins have no cash value; this is where they are spent. Catalog and prices live 
 - **Tic-Tac-Toe symbols** (the X and O marks): Classic (free), Neon 1,000, Royal 1,500, Sun & Moon 2,000, Star & Heart 2,500, Sher & Bakri 3,500
 - Unlocking everything costs **54,900 coins**, about 460 levels at a 2–3★ average
 - Every purchase asks for confirmation and is logged in the Coins history
+- Coins, XP and the shop's owned items are saved **signed** (HMAC-SHA256, `utils/protectedStore.ts`): a value edited by hand or copied from another key no longer matches and is ignored, with a signed backup copy kept. This stops casual editing only; nothing kept just on the phone can stop someone who extracts the key from the app, or who puts back an older signed copy
 - No random "mystery box": paid random rewards count as loot boxes on Google Play
 
 ### Achievements (11 total)

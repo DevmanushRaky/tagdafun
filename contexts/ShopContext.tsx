@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { loadProtected, saveProtected } from '../utils/protectedStore';
 import { useGameStats } from './GameStatsContext';
 import { logGame } from '../utils/gameHistory';
 import {
@@ -85,10 +85,9 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [shop, setShop] = useState<ShopState>(defaultShop());
 
   useEffect(() => {
-    AsyncStorage.getItem(SHOP_KEY).then(raw => {
-      if (!raw) return;
+    loadProtected<Partial<ShopState>>(SHOP_KEY).then(({ data: saved }) => {
+      if (!saved) return;
       try {
-        const saved = JSON.parse(raw);
         const def = defaultShop();
         setShop({ ...def, ...saved, powerUps: { ...def.powerUps, ...(saved.powerUps ?? {}) } });
       } catch {}
@@ -97,7 +96,7 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const save = useCallback((next: ShopState) => {
     setShop(next);
-    AsyncStorage.setItem(SHOP_KEY, JSON.stringify(next)).catch(() => {});
+    saveProtected(SHOP_KEY, next).catch(() => {});
   }, []);
 
   const pay = async (price: number, item: string) => {

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { loadProtected, saveProtected } from '../utils/protectedStore';
 import { GAME_CONFIG, LEVELS, ACHIEVEMENT_XP } from '../constants/gameConfig';
 
 export type GameType = 'coin' | 'memory' | 'water' | 'kite' | 'bubble' | 'bagh' | 'tictac';
@@ -203,10 +204,9 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement[]>([]);
 
   useEffect(() => {
-    Promise.all([AsyncStorage.getItem(STORAGE_KEY), AsyncStorage.getItem(HISTORY_KEY)]).then(([raw, historyRaw]) => {
-      if (raw) {
+    Promise.all([loadProtected<Partial<PlayerStats>>(STORAGE_KEY), AsyncStorage.getItem(HISTORY_KEY)]).then(([{ data: saved }, historyRaw]) => {
+      if (saved) {
         try {
-          const saved = JSON.parse(raw);
           const def = defaultStats();
           setStats({
             ...def,
@@ -220,7 +220,7 @@ export const GameStatsProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   const saveStats = useCallback(async (s: PlayerStats) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    await saveProtected(STORAGE_KEY, s);
   }, []);
 
   const levelInfo = getLevelInfo(stats.totalXP);

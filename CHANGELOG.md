@@ -17,6 +17,7 @@ All notable releases of Tagda Fun are documented here.
 - **Tic-Tac-Toe** — Classic 3×3 against the computer or a friend, no levels. Win +50 coins, loss or draw +30. An interstitial ad shows after every 3rd game once an ad unit is configured.
 - **Bubble Shooter** — Aim with wall bounces, pop 3+ of a colour, drop what hangs below; the ceiling comes down after misses. Levels, star-based coins.
 - **Shop** — Daily gift, power-ups (Memory hint, Water hint, extra bottle), coin skins, card backs, bottle themes, and Sher aur Bakri boards (5) and piece sets (4), and Tic-Tac-Toe symbol sets (6), all bought with in-game coins.
+- **Tamper-resistant saves** — Coins, XP and shop ownership are now saved with a signature, so editing the stored numbers by hand no longer works.
 - **Redesigned Navigation** — 4-tab layout: Home, Coins, Shop, Profile.
 
 **Removed**

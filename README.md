@@ -267,6 +267,40 @@ eas build --platform android --profile preview
 eas build --platform android --profile production
 ```
 
+Run `npm ci` first: EAS reads the app config locally and fails with `Failed to resolve plugin for module "expo-font"` when `node_modules` is missing.
+
+### Android build memory limits (read before changing build settings)
+
+From 26 Oct to 2 Nov 2026 every production build failed. Before that, builds took 5–12 minutes. The first build that worked again was 1.3.2 (versionCode 28).
+
+**Why builds broke.** Bubble Shooter and Patang Baazi draw with `@shopify/react-native-skia`, which also brings in `react-native-reanimated` and `react-native-worklets`. All three compile C++ on every build. Expo SDK 58 also makes `expo-modules-core` depend on worklets. The free EAS worker has 4 vCPUs and 15.6 GB RAM. Ninja starts one compiler per core for every native module, so RAM runs out and Linux kills the Gradle daemon. The failure shows up in one of two ways:
+
+- `EAS_BUILD_UNKNOWN_GRADLE_ERROR` with `Gradle build daemon disappeared unexpectedly` right after a `buildCMake…`/`configureCMake…` task.
+- The log goes silent and the build is `CANCELED` at exactly 45 minutes, the free-plan time limit.
+
+**What makes it work now (keep all of these):**
+
+| File | Setting | Why |
+|---|---|---|
+| `android/build.gradle` | `subprojects { … CMAKE_JOB_POOLS=native=2 … }` | Caps C++ compile/link jobs at 2 in every Android module. This is the fix that matters. |
+| `android/gradle.properties` | `org.gradle.parallel=false`, `org.gradle.workers.max=1` | One Gradle task at a time |
+| `android/gradle.properties` | `kotlin.compiler.execution.strategy=in-process` | No separate Kotlin daemon JVM (saves about 1.5–2 GB) |
+| `android/gradle.properties` | `reactNativeArchitectures=arm64-v8a` | Native code compiles once instead of twice. The 32-bit `armeabi-v7a` Skia build used to stall the build for 30+ minutes. |
+| `eas.json` → `production.env.GRADLE_OPTS` | 3 GB heap, parallel off, 1 worker | EAS sets its own `GRADLE_OPTS` (4 GB heap, `parallel=true`), and it overrides `gradle.properties` |
+
+**What did not help:**
+
+- Only `org.gradle.workers.max=2`/`1`: it does not limit the C++ compiler jobs that Ninja runs.
+- Uninstalling reanimated/worklets: Skia and `expo-modules-core` pull them back in.
+
+**Things to know:**
+
+- The build supports 64-bit phones only. Google Play requires 64-bit anyway; very old 32-bit-only phones won't see the app.
+- Adding another native library, or adding `armeabi-v7a` back, can push the build over the memory limit again. Watch the first build after such a change.
+- To make builds fast again for good, replace Skia in `components/BubbleShooter.tsx` and `components/KiteFight.tsx` with `react-native-svg`. Reanimated and worklets then drop out too.
+- Each failed build still uses up a versionCode, because EAS increments it remotely.
+- To read EAS logs for a failed build: `eas build:view <id> --json` → `logFiles` URLs. The logs are gzip-compressed JSON lines.
+
 ---
 
 ## Project Structure

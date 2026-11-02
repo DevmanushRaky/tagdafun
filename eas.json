@@ -21,6 +21,9 @@
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "GRADLE_OPTS": "-Dorg.gradle.jvmargs=\"-Xmx3g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8\" -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=1 -Dorg.gradle.daemon=false"
+      },
       "android": {
         "buildType": "app-bundle",
         "gradleCommand": ":app:bundleRelease"

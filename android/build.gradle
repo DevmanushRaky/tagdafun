@@ -21,5 +21,20 @@ allprojects {
   }
 }
 
+// Ninja runs one compiler per CPU core for every native (CMake) module. With skia, reanimated
+// and worklets that runs the EAS worker out of memory and the Gradle daemon gets killed.
+// Cap native compile and link jobs at 2 in every Android module.
+subprojects {
+  ['com.android.application', 'com.android.library'].each { pluginId ->
+    plugins.withId(pluginId) {
+      android.defaultConfig.externalNativeBuild.cmake.arguments(
+        '-DCMAKE_JOB_POOLS=native=2',
+        '-DCMAKE_JOB_POOL_COMPILE=native',
+        '-DCMAKE_JOB_POOL_LINK=native'
+      )
+    }
+  }
+}
+
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
